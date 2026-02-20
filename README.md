@@ -59,6 +59,14 @@ hokuriku-tourism-ai-governance/
 | **Route Search Impressions (RSI)** | Daily route searches, map views, reviews for 47 Fukui tourism locations | 2024-01 → 2026-02 |
 | **Hokuriku Tourism Survey** | 95,653 responses (satisfaction, NPS, free text) across Fukui/Ishikawa/Toyama | 2023 → 2026 |
 
+### Data Source Attribution
+
+> **JMA Weather Data**
+> This repository utilizes weather data provided by the Japan Meteorological Agency (JMA).
+> - **Source:** [JMA Past Weather Data Download](https://www.data.jma.go.jp/gmd/risk/obsdl/index.php)
+> - **License:** [Terms of Use of the Japan Meteorological Agency website](https://www.jma.go.jp/jma/kishou/info/coment.html) (Compatible with CC BY 4.0 — Government of Japan Standard Terms of Use v2.0)
+> - **Processing:** The raw hourly data has been merged, cleaned, and processed by the author into `jma/jma_hourly_cleaned_merged_8fields.csv` for demand forecasting analysis. Processing script: [`jma/orig-full-monthly/merge_clean_jma_8fields.py`](jma/orig-full-monthly/merge_clean_jma_8fields.py)
+
 ### Analysis Pipeline (16 Sections)
 
 1. Data loading & cleaning (zero-day exclusion, outlier flags, ADF stationarity)

@@ -107,7 +107,31 @@ camera_daily = camera_daily[camera_daily["count"] > 0].reset_index(drop=True)
 report(f"Usable camera days after removing zeros: {len(camera_daily)}")
 
 # --- 1b. JMA Weather data ---
-weather = pd.read_csv(os.path.join(_REPO_DIR, "jma/jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv"), parse_dates=["timestamp"])
+weather_path_new = os.path.join(_REPO_DIR, "jma/jma_hourly_cleaned_merged_8fields.csv")
+weather_path_legacy = os.path.join(_REPO_DIR, "jma/jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv")
+
+if os.path.exists(weather_path_new):
+    weather = pd.read_csv(weather_path_new, parse_dates=["timestamp"])
+    report(f"Using JMA weather file: {weather_path_new}")
+elif os.path.exists(weather_path_legacy):
+    weather = pd.read_csv(weather_path_legacy, parse_dates=["timestamp"])
+    report(f"Using JMA weather file (legacy): {weather_path_legacy}")
+else:
+    raise FileNotFoundError(
+        "No JMA merged weather file found. Expected jma_hourly_cleaned_merged_8fields.csv "
+        "or jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv in jma/."
+    )
+
+# Normalize new 8-field schema to existing pipeline names
+if "temp_c" in weather.columns and "temp" not in weather.columns:
+    weather["temp"] = pd.to_numeric(weather["temp_c"], errors="coerce")
+if "precip_1h_mm" in weather.columns and "precip" not in weather.columns:
+    weather["precip"] = pd.to_numeric(weather["precip_1h_mm"], errors="coerce")
+if "sun_1h_h" in weather.columns and "sun" not in weather.columns:
+    weather["sun"] = pd.to_numeric(weather["sun_1h_h"], errors="coerce")
+if "wind_speed_ms" in weather.columns and "wind" not in weather.columns:
+    weather["wind"] = pd.to_numeric(weather["wind_speed_ms"], errors="coerce")
+
 weather["date"] = weather["timestamp"].dt.normalize()
 weather_daily = weather.groupby("date").agg(
     precip=("precip", "sum"),
