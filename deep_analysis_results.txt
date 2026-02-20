@@ -5,7 +5,7 @@ Total camera days: 424
 Zero-count days (camera outage): 17
   Dates: 2024-12-30, 2025-01-22, 2025-05-02, 2025-05-17, 2025-06-13, 2025-06-24, 2025-08-06, 2025-08-16, 2025-08-26, 2025-08-30, 2025-09-10, 2025-09-26, 2025-09-27, 2025-09-28, 2025-10-03, 2025-10-10, 2025-11-12
 Usable camera days after removing zeros: 407
-Using JMA weather file: /home/amil/active/hokuriku-tourism-ai-governance/jma/jma_hourly_cleaned_merged_8fields.csv
+Using JMA weather file: /home/amil/active/hokuriku-tourism-ai-governance/jma/jma_hourly_8f.csv
 Weather daily rows: 447
 RSI intent rows: 774
 Using RSI intent column: 'directions'
@@ -69,7 +69,7 @@ Dep. Variable:                      y   R-squared:                       0.810
 Model:                            OLS   Adj. R-squared:                  0.802
 Method:                 Least Squares   F-statistic:                     100.7
 Date:                Fri, 20 Feb 2026   Prob (F-statistic):          1.52e-125
-Time:                        11:25:30   Log-Likelihood:                -3573.9
+Time:                        14:58:08   Log-Likelihood:                -3573.9
 No. Observations:                 396   AIC:                             7182.
 Df Residuals:                     379   BIC:                             7249.
 Df Model:                          16                                         
@@ -594,3 +594,60 @@ Key Findings:
 10. UNDER-VIBRANCY QUALITATIVE EVIDENCE
     65 low-satisfaction responses mention quietness/emptiness (6.2%)
     → Supports "Loneliness" hypothesis for Fukui 47th/47
+
+
+================================================================================
+SECTION 17 – Socio-Technical Governance: Economic Weighting & Weather Barriers
+================================================================================
+Loading survey data from /home/amil/active/fukui-kanko-survey/all.csv...
+Mean Spending per Visitor: ¥13,811
+Total Annual Economic Revenue Loss (Opportunity Gap): ¥1,179,509,545
+Saved ultimate_fig1_economic_gap.png
+
+--- Behavioral Segmentation (Social vs Search) ---
+Social-Nudged Visitors: 9870
+Search-Driven Visitors: 33957
+
+--- Ambassador Optimization: Vibrancy Threshold (Eiheiji vs Tojinbo) ---
+Saved ultimate_fig2_vibrancy_threshold.png
+Eiheiji 'Zen-Silence' Overtourism Threshold (Proxy): ~23 relative density
+Tojinbo 'Fun-Crowd' Overtourism Threshold (Proxy): ~inf relative density
+
+================================================================================
+SECTION 18 – Global Generalization: Fukui Station Hub
+================================================================================
+Fukui Station OLS R²: 0.440
+Insight: The Distributed Human Data Engine (DHDE) successfully generalizes to regional transport hubs.
+
+================================================================================
+SECTION 19 – Exporting Sovereign-Grade Governance Report
+================================================================================
+Successfully exported /home/amil/active/hokuriku-tourism-ai-governance/ultimate_governance_report.txt
+
+================================================================================
+SECTION 17 – Socio-Technical Governance: Economic Weighting & Weather Barriers
+================================================================================
+Loading survey data from /home/amil/active/fukui-kanko-survey/all.csv...
+Mean Spending per Visitor: ¥13,811
+Total Annual Economic Revenue Loss (Opportunity Gap): ¥1,179,509,545
+Saved ultimate_fig1_economic_gap.png
+
+--- Behavioral Segmentation (Social vs Search) ---
+Social-Nudged Visitors: 9870
+Search-Driven Visitors: 33957
+
+--- Ambassador Optimization: Vibrancy Threshold (Eiheiji vs Tojinbo) ---
+Saved ultimate_fig2_vibrancy_threshold.png
+Eiheiji 'Zen-Silence' Overtourism Threshold (Proxy): ~23 relative density
+Tojinbo 'Fun-Crowd' Overtourism Threshold (Proxy): ~inf relative density
+
+================================================================================
+SECTION 18 – Global Generalization: Fukui Station Hub
+================================================================================
+Fukui Station OLS R²: 0.440
+Insight: The Distributed Human Data Engine (DHDE) successfully generalizes to regional transport hubs.
+
+================================================================================
+SECTION 19 – Exporting Sovereign-Grade Governance Report
+================================================================================
+Successfully exported /home/amil/active/hokuriku-tourism-ai-governance/ultimate_governance_report.txt
