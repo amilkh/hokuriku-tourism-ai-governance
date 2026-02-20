@@ -107,7 +107,7 @@ camera_daily = camera_daily[camera_daily["count"] > 0].reset_index(drop=True)
 report(f"Usable camera days after removing zeros: {len(camera_daily)}")
 
 # --- 1b. JMA Weather data ---
-weather_path_new = os.path.join(_REPO_DIR, "jma/jma_hourly_cleaned_merged_8fields.csv")
+weather_path_new = os.path.join(_REPO_DIR, "jma/jma_mikuni_hourly_8.csv")
 weather_path_legacy = os.path.join(_REPO_DIR, "jma/jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv")
 
 if os.path.exists(weather_path_new):
@@ -118,8 +118,9 @@ elif os.path.exists(weather_path_legacy):
     report(f"Using JMA weather file (legacy): {weather_path_legacy}")
 else:
     raise FileNotFoundError(
-        "No JMA merged weather file found. Expected jma_hourly_cleaned_merged_8fields.csv "
-        "or jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv in jma/."
+        "No JMA merged weather file found. Expected jma/jma_mikuni_hourly_8.csv "
+        "(or legacy jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv) "
+        "— run jma/merge_clean_jma.py to regenerate."
     )
 
 # Normalize new 8-field schema to existing pipeline names

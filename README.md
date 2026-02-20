@@ -65,7 +65,7 @@ hokuriku-tourism-ai-governance/
 > This repository utilizes weather data provided by the Japan Meteorological Agency (JMA).
 > - **Source:** [JMA Past Weather Data Download](https://www.data.jma.go.jp/gmd/risk/obsdl/index.php)
 > - **License:** [Terms of Use of the Japan Meteorological Agency website](https://www.jma.go.jp/jma/kishou/info/coment.html) (Compatible with CC BY 4.0 — Government of Japan Standard Terms of Use v2.0)
-> - **Processing:** The raw hourly data has been merged, cleaned, and processed by the author into `jma/jma_hourly_cleaned_merged_8fields.csv` for demand forecasting analysis. Processing script: [`jma/orig-full-monthly/merge_clean_jma_8fields.py`](jma/orig-full-monthly/merge_clean_jma_8fields.py)
+> - **Processing:** The raw hourly data has been merged, cleaned, and processed by the author into `jma/jma_mikuni_hourly_8.csv` for demand forecasting analysis. Processing script: [jma/merge_clean_jma.py](jma/merge_clean_jma.py)
 
 ### Analysis Pipeline (16 Sections)
 

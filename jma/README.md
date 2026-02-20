@@ -1,58 +1,51 @@
 # JMA Weather Data (Reproducible Pipeline)
 
-This folder stores weather data used by `deep_analysis_tojinbo.py`.
+This folder stores the canonical JMA weather dataset used by `deep_analysis_tojinbo.py`.
 
 ## Canonical analysis input
 
-The analysis script now uses this file by default:
+```
+jma/jma_mikuni_hourly_8.csv
+```
 
-- `jma_hourly_cleaned_merged_8fields.csv`
+8 hourly fields from Mikuni (三国) station, cleaned and merged.
 
-If this file is missing, it falls back to the legacy file:
+## Schema
 
-- `jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv`
+| Column | Description |
+|---|---|
+| `timestamp` | Hourly datetime (local JST) |
+| `snow_depth_cm` | Snow depth (cm) |
+| `snowfall_1h_cm` | 1-hour snowfall (cm) |
+| `temp_c` | Temperature (°C) |
+| `precip_1h_mm` | 1-hour precipitation (mm) |
+| `sun_1h_h` | 1-hour sunshine duration (h) |
+| `wind_speed_ms` | Wind speed (m/s) |
+| `weather_type` | Weather symbol code |
+| `humidity_pct` | Relative humidity (%) |
 
-## 8-field schema (hourly)
+`deep_analysis_tojinbo.py` maps to legacy names internally:
+`temp_c` → `temp`, `precip_1h_mm` → `precip`, `sun_1h_h` → `sun`, `wind_speed_ms` → `wind`
 
-- `timestamp`
-- `snow_depth_cm`
-- `snowfall_1h_cm`
-- `temp_c`
-- `precip_1h_mm`
-- `sun_1h_h`
-- `wind_speed_ms`
-- `weather_type`
-- `humidity_pct`
+## Adding new months (extending the dataset)
 
-The analysis script internally maps these into legacy names for compatibility:
-
-- `temp_c` -> `temp`
-- `precip_1h_mm` -> `precip`
-- `sun_1h_h` -> `sun`
-- `wind_speed_ms` -> `wind`
-
-## How to regenerate from JMA monthly downloads
-
-1. Download hourly monthly CSVs from JMA ObsDL:
+1. Download new monthly hourly CSVs from JMA ObsDL:
    - https://www.data.jma.go.jp/risk/obsdl/
-2. Put files in:
-   - `jma/orig-full-monthly/`
-   - naming pattern: `data.csv`, `data (1).csv`, `data (2).csv`, ...
-3. Run merger script:
-
-```bash
-cd jma/orig-full-monthly
-python merge_clean_jma_8fields.py
-```
-
-4. Copy/rename output as canonical input:
-
-```bash
-cp jma_hourly_cleaned_merged_8fields_<start>_<end>.csv ../jma_hourly_cleaned_merged_8fields.csv
-```
+   - Station: Mikuni (三国), all 8 fields, hourly
+2. Put the downloaded files in `jma/rawdata/`
+   - Any `.csv` filename is accepted
+   - Preferred naming for monthly files: `mikuni_hourly_8_YYYY_MM.csv` (example: `mikuni_hourly_8_2025_06.csv`)
+   - Raw files are excluded from git (`.gitignore`) — they live only on your machine
+3. Run the merger from the repo root:
+   ```bash
+   python jma/merge_clean_jma.py
+   ```
+4. The script extends `jma_mikuni_hourly_8.csv` in-place (new months merged, duplicates removed).
+5. Commit the updated `jma_mikuni_hourly_8.csv`.
 
 ## Notes
 
 - Raw encoding is CP932 (Shift-JIS family).
-- Script extracts primary value columns and ignores quality/homogeneity side columns.
-- See `jma/orig-full-monthly/README.md` for detailed field setup and JMA options.
+- The script auto-detects column positions from the JMA header rows.
+- Upsert logic: newly parsed rows always win over existing rows for the same timestamp.
+- See `jma/rawdata/README.md` for JMA ObsDL export settings used.
