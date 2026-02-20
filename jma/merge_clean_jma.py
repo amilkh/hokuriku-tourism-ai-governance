@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 """
-Merge and clean JMA hourly CSV downloads into the canonical dataset.
+Merge and clean JMA hourly CSV downloads into canonical station datasets.
 
-Workflow
---------
-1. Place CSV files downloaded from https://www.data.jma.go.jp/risk/obsdl/
-    into jma/rawdata/ using any .csv filename.
-    Preferred convention for monthly files: mikuni_hourly_8_YYYY_MM.csv
-    (e.g., mikuni_hourly_8_2025_06.csv)
-2. Run this script from anywhere:
-       python jma/merge_clean_jma.py
-3. The script:
-    a. Parses every .csv in jma/rawdata/.
-    b. Loads the existing jma/jma_mikuni_hourly_8.csv if it is already present
-      (i.e., the previously committed clean dataset).
-   c. Merges old + new, deduplicates by timestamp (newly parsed data wins).
-    d. Writes the result back to jma/jma_mikuni_hourly_8.csv.
+Standardized workflow
+---------------------
+1. Place JMA CSV downloads into station folders under `jma/`:
+    - `jma/mikuni_rawdata/`
+    - `jma/fukui_rawdata/`
+    - `jma/katsuyama_rawdata/`
+2. Run from anywhere:
+        python jma/merge_clean_jma.py
+    Outputs are regenerated locally (not tracked in git).
+3. For each station, the script:
+    a. Parses all `.csv` files in that station's raw folders.
+    b. Loads existing canonical output CSV if present.
+    c. Upserts by timestamp (newly parsed data wins on duplicates).
+    d. Writes station output:
+        - `jma/jma_mikuni_hourly_8.csv`
+        - `jma/jma_fukui_hourly_8.csv`
+        - `jma/jma_katsuyama_hourly_8.csv`
 
-You only ever need to add the *new* monthly CSVs to rawdata/ — the script
-extends the committed file in-place rather than re-processing everything.
+Input expectations
+------------------
+- Encoding: CP932 (Shift-JIS family), as downloaded from JMA ObsDL.
+- Filename: any `.csv` (monthly naming recommended).
+- Export fields: standard hourly 8-field package.
 
-Input file expectations
------------------------
-- Encoding: CP932 (Shift-JIS family) — as downloaded from JMA.
-- Filename: any .csv (preferred: mikuni_hourly_8_YYYY_MM.csv)
-- Station: Mikuni (三国), 8-field export.
-
-Output columns (jma_mikuni_hourly_8.csv)
------------------------------------
+Output schema
+-------------
 timestamp, snow_depth_cm, snowfall_1h_cm, temp_c, precip_1h_mm,
 sun_1h_h, wind_speed_ms, weather_type, humidity_pct
 """
@@ -45,8 +45,38 @@ import pandas as pd
 # Paths (relative to this script's directory = jma/)
 # ---------------------------------------------------------------------------
 _HERE = os.path.dirname(os.path.abspath(__file__))
-RAW_DIR = os.path.join(_HERE, "rawdata")
-OUTPUT_FILE = os.path.join(_HERE, "jma_mikuni_hourly_8.csv")
+
+
+@dataclass
+class StationConfig:
+    key: str
+    output_file: str
+    raw_dirs: list[str]
+
+
+STATIONS: list[StationConfig] = [
+    StationConfig(
+        key="mikuni",
+        output_file=os.path.join(_HERE, "jma_mikuni_hourly_8.csv"),
+        raw_dirs=[
+            os.path.join(_HERE, "mikuni_rawdata"),
+        ],
+    ),
+    StationConfig(
+        key="fukui",
+        output_file=os.path.join(_HERE, "jma_fukui_hourly_8.csv"),
+        raw_dirs=[
+            os.path.join(_HERE, "fukui_rawdata"),
+        ],
+    ),
+    StationConfig(
+        key="katsuyama",
+        output_file=os.path.join(_HERE, "jma_katsuyama_hourly_8.csv"),
+        raw_dirs=[
+            os.path.join(_HERE, "katsuyama_rawdata"),
+        ],
+    ),
+]
 
 OUTPUT_COLS = [
     "timestamp",
@@ -155,6 +185,39 @@ def _to_float(value: str):
         return pd.NA
 
 
+def _is_pre_cleaned_csv(path: str) -> bool:
+    """Check if a file is already in canonical clean format (from fetch_jma_monthly.py)."""
+    try:
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            header = f.readline().strip()
+        return header.startswith("timestamp,")
+    except Exception:
+        return False
+
+
+def _parse_clean_file(path: str) -> pd.DataFrame:
+    """Parse a pre-cleaned CSV (output of fetch_jma_monthly.py)."""
+    df = pd.read_csv(path, dtype=str)
+    if "timestamp" not in df.columns:
+        return pd.DataFrame(columns=OUTPUT_COLS + ["source_file"])
+
+    # Convert numeric columns
+    for col in ["snow_depth_cm", "snowfall_1h_cm", "temp_c", "precip_1h_mm",
+                "sun_1h_h", "wind_speed_ms", "humidity_pct"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Ensure all output columns exist
+    for col in OUTPUT_COLS:
+        if col not in df.columns:
+            df[col] = pd.NA
+
+    df["source_file"] = os.path.basename(path)
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+    df = df.dropna(subset=["timestamp"]).reset_index(drop=True)
+    return df[OUTPUT_COLS + ["source_file"]]
+
+
 def _parse_raw_file(path: str) -> pd.DataFrame:
     with open(path, "r", encoding="cp932", errors="replace", newline="") as f:
         rows = list(csv.reader(f))
@@ -200,19 +263,32 @@ def _parse_raw_file(path: str) -> pd.DataFrame:
 # Main
 # ---------------------------------------------------------------------------
 
-def main() -> None:
-    # 1. Parse new raw files
-    raw_files = sorted(glob.glob(os.path.join(RAW_DIR, "*.csv")))
-    if not raw_files:
-        print(f"No raw input files found in {RAW_DIR}/")
-        print("Add any .csv files downloaded from JMA ObsDL and re-run.")
-        return
+def _collect_station_raw_files(config: StationConfig) -> list[str]:
+    files: list[str] = []
+    for raw_dir in config.raw_dirs:
+        if os.path.isdir(raw_dir):
+            files.extend(sorted(glob.glob(os.path.join(raw_dir, "*.csv"))))
+    return sorted(set(files))
 
-    print(f"Parsing {len(raw_files)} raw file(s) from rawdata/ …")
+
+def _merge_station(config: StationConfig) -> bool:
+    raw_files = _collect_station_raw_files(config)
+    if not raw_files:
+        print(f"[{config.key}] No raw input files found. Checked:")
+        for d in config.raw_dirs:
+            print(f"  - {d}")
+        return False
+
+    print(f"\n[{config.key}] Parsing {len(raw_files)} raw file(s) …")
     frames: list[pd.DataFrame] = []
     for path in raw_files:
-        df = _parse_raw_file(path)
-        print(f"  {os.path.basename(path):20s}  {len(df):5d} rows")
+        if _is_pre_cleaned_csv(path):
+            df = _parse_clean_file(path)
+            fmt = "clean"
+        else:
+            df = _parse_raw_file(path)
+            fmt = "JMA"
+        print(f"  {os.path.basename(path):30s}  {len(df):5d} rows  ({fmt})")
         frames.append(df)
 
     new_data = pd.concat(frames, ignore_index=True)
@@ -223,10 +299,9 @@ def main() -> None:
         .drop_duplicates(subset=["timestamp"], keep="last")
     )
 
-    # 2. Load existing committed dataset (if present) for upsert
-    if os.path.exists(OUTPUT_FILE):
-        existing = pd.read_csv(OUTPUT_FILE, parse_dates=["timestamp"])
-        print(f"\nExisting dataset: {len(existing):,} rows")
+    if os.path.exists(config.output_file):
+        existing = pd.read_csv(config.output_file, parse_dates=["timestamp"])
+        print(f"[{config.key}] Existing dataset: {len(existing):,} rows")
         # Drop rows whose timestamps are already covered by new data (new wins)
         existing = existing[~existing["timestamp"].isin(new_data["timestamp"])]
         combined = pd.concat(
@@ -234,10 +309,9 @@ def main() -> None:
             ignore_index=True,
         )
     else:
-        print("\nNo existing dataset found — creating from scratch.")
+        print(f"[{config.key}] No existing dataset found — creating from scratch.")
         combined = new_data[OUTPUT_COLS].copy()
 
-    # 3. Sort, final dedup, write
     combined = (
         combined
         .sort_values("timestamp")
@@ -248,10 +322,26 @@ def main() -> None:
     start = combined["timestamp"].min().strftime("%Y-%m-%d")
     end   = combined["timestamp"].max().strftime("%Y-%m-%d")
 
-    combined.to_csv(OUTPUT_FILE, index=False)
+    combined.to_csv(config.output_file, index=False)
 
-    print(f"\nDone — wrote {len(combined):,} rows  [{start} → {end}]")
-    print(f"  → {OUTPUT_FILE}")
+    print(f"[{config.key}] Done — wrote {len(combined):,} rows  [{start} → {end}]")
+    print(f"[{config.key}]   → {config.output_file}")
+    return True
+
+
+def main() -> None:
+    processed = 0
+    for station in STATIONS:
+        ok = _merge_station(station)
+        if ok:
+            processed += 1
+
+    if processed == 0:
+        print("\nNo station raw files found. Add CSVs and re-run.")
+        print("Expected folders:")
+        for station in STATIONS:
+            for d in station.raw_dirs:
+                print(f"  - {d}")
 
 
 if __name__ == "__main__":

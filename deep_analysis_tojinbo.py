@@ -22,7 +22,7 @@ Pipeline:
  15. Qualitative Under-vibrancy Link (Survey Text Mining)
  16. Fukui Resurrection Chart
 
-Outputs (saved to analysis/ folder):
+Outputs (saved to output/ folder):
   - deep_analysis_results.txt       (full text report)
   - bolstered_results.txt           (grant-ready metrics)
   - deep_analysis_*.png             (11+ figures)
@@ -57,9 +57,9 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT_DIR = os.path.dirname(_SCRIPT_DIR)   # workspace root (one level up)
 _REPO_DIR = _SCRIPT_DIR                    # this repo folder
 
-OUT_DIR = _SCRIPT_DIR          # outputs go next to this script
-FIG_DIR = os.path.join(OUT_DIR, "figures")
-os.makedirs(FIG_DIR, exist_ok=True)
+OUT_DIR = os.path.join(_REPO_DIR, "output")
+os.makedirs(OUT_DIR, exist_ok=True)
+FIG_DIR = OUT_DIR
 REPORT_LINES: list[str] = []
 
 def report(msg: str = ""):
@@ -1998,208 +1998,303 @@ except Exception as e:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 17. THE ULTIMATE WEATHER MODEL & ECONOMIC WEIGHTING (THE ¥ PRICE TAG)
+# 20. MULTI-NODE SPATIAL GOVERNANCE ANALYSIS (COAST / CITY / MOUNTAIN)
 # ═══════════════════════════════════════════════════════════════════════════════
 report("\n" + "=" * 80)
-report("SECTION 17 – Socio-Technical Governance: Economic Weighting & Weather Barriers")
+report("SECTION 20 – Multi-Node Spatial Governance Analysis (DHDE)")
 report("=" * 80)
 
-# 17a. Load Survey Data for Economic Weighting
-survey_path = os.path.join(_ROOT_DIR, "fukui-kanko-survey/all.csv")
-report(f"Loading survey data from {survey_path}...")
-try:
-    survey_df = pd.read_csv(survey_path, low_memory=False)
-    
-    # Map spending categories to midpoints
-    spending_map = {
-        '1,000円未満': 500,
-        '1,000円以上 3,000円未満': 2000,
-        '3,000円以上 5,000円未満': 4000,
-        '5,000円以上 10,000円未満': 7500,
-        '10,000円以上 20,000円未満': 15000,
-        '20,000円以上 30,000円未満': 25000,
-        '30,000円以上 40,000円未満': 35000,
-        '40,000円以上 50,000円未満': 45000,
-        '50,000円以上 100,000円未満': 75000,
-        '100,000円以上': 150000,
-        '使わない': 0
+SPENDING_PER_VISITOR_YEN = 13811.0
+
+
+def _load_peopleflow_daily(person_glob_path: str) -> pd.DataFrame:
+    rows = []
+    for f in sorted(glob.glob(person_glob_path, recursive=True)):
+        try:
+            df = pd.read_csv(f)
+            if "aggregate from" in df.columns and "total count" in df.columns:
+                rows.append({
+                    "date": os.path.basename(f).replace(".csv", ""),
+                    "count": df["total count"].sum(),
+                })
+        except Exception:
+            pass
+    if not rows:
+        return pd.DataFrame(columns=["date", "count"])
+    out = pd.DataFrame(rows)
+    out["date"] = pd.to_datetime(out["date"], errors="coerce").dt.normalize()
+    out = out.dropna(subset=["date"]).groupby("date")["count"].sum().reset_index()
+    return out
+
+
+def _load_node_weather_daily(path: str) -> pd.DataFrame:
+    if not os.path.exists(path):
+        return pd.DataFrame(columns=["date", "temp", "precip", "wind", "snow_depth"])
+    w = pd.read_csv(path, parse_dates=["timestamp"])
+    if "temp_c" in w.columns and "temp" not in w.columns:
+        w["temp"] = pd.to_numeric(w["temp_c"], errors="coerce")
+    if "precip_1h_mm" in w.columns and "precip" not in w.columns:
+        w["precip"] = pd.to_numeric(w["precip_1h_mm"], errors="coerce")
+    if "wind_speed_ms" in w.columns and "wind" not in w.columns:
+        w["wind"] = pd.to_numeric(w["wind_speed_ms"], errors="coerce")
+    if "snow_depth_cm" in w.columns and "snow_depth" not in w.columns:
+        w["snow_depth"] = pd.to_numeric(w["snow_depth_cm"], errors="coerce")
+    w["date"] = w["timestamp"].dt.normalize()
+    wd = w.groupby("date").agg(
+        temp=("temp", "mean"),
+        precip=("precip", "sum"),
+        wind=("wind", "mean"),
+        snow_depth=("snow_depth", "mean"),
+    ).reset_index()
+    return wd
+
+
+def _build_node_metrics(node_name: str, count_df: pd.DataFrame, weather_df: pd.DataFrame):
+    model_df = count_df.merge(weather_df, on="date", how="inner")
+    model_df = model_df.merge(rsi[["date", route_col]], on="date", how="inner")
+    model_df = model_df.dropna(subset=["count", route_col, "temp", "precip", "wind"]).copy()
+    if model_df.empty or len(model_df) < 60:
+        report(f"[{node_name}] Too few rows for robust model (n={len(model_df)}).")
+        return None
+
+    model_df["snow_depth"] = pd.to_numeric(model_df["snow_depth"], errors="coerce").fillna(0.0)
+    features = [route_col, "temp", "precip", "wind", "snow_depth"]
+    X = sm.add_constant(model_df[features])
+    y = model_df["count"]
+    ols = sm.OLS(y, X).fit()
+
+    # Standardized beta for snow sensitivity ranking
+    zX = (model_df[features] - model_df[features].mean()) / model_df[features].std(ddof=0)
+    zY = (y - y.mean()) / y.std(ddof=0)
+    zX = zX.replace([np.inf, -np.inf], np.nan).dropna()
+    zY = zY.loc[zX.index]
+    snow_beta_std = np.nan
+    if len(zX) > 30:
+        zmod = sm.OLS(zY, sm.add_constant(zX)).fit()
+        snow_beta_std = float(zmod.params.get("snow_depth", np.nan))
+
+    # Opportunity gap by intent-only baseline
+    intent_mod = sm.OLS(y, sm.add_constant(model_df[[route_col]])).fit()
+    pred_intent = intent_mod.predict(sm.add_constant(model_df[[route_col]]))
+    gap = (pred_intent - y).clip(lower=0)
+    lost_visitors = float(gap.sum())
+    lost_yen = lost_visitors * SPENDING_PER_VISITOR_YEN
+
+    return {
+        "name": node_name,
+        "n": int(len(model_df)),
+        "r2": float(ols.rsquared),
+        "adj_r2": float(ols.rsquared_adj),
+        "weather_lift": float(ols.rsquared - intent_mod.rsquared),
+        "snow_beta_std": snow_beta_std,
+        "wind_coef": float(ols.params.get("wind", np.nan)),
+        "lost_visitors": lost_visitors,
+        "lost_yen": lost_yen,
+        "data": model_df[["date", "count", "wind", "snow_depth"]].copy(),
     }
-    survey_df['spending_midpoint'] = survey_df['県内消費額'].map(spending_map)
-    mean_spending = survey_df['spending_midpoint'].mean()
-    report(f"Mean Spending per Visitor: ¥{mean_spending:,.0f}")
-    
-    # Calculate Total Annual Economic Revenue Loss (¥)
-    total_yen_loss = abs(total_lost) * mean_spending
-    report(f"Total Annual Economic Revenue Loss (Opportunity Gap): ¥{total_yen_loss:,.0f}")
-    
-    # Calculate Discomfort Index (DI)
-    if "temp" in weather_daily.columns and "humidity" in weather_daily.columns:
-        weather_daily["discomfort_index"] = 0.81 * weather_daily["temp"] + 0.01 * weather_daily["humidity"] * (0.99 * weather_daily["temp"] - 14.3) + 46.3
-        report(f"Calculated Discomfort Index (DI). Mean DI: {weather_daily['discomfort_index'].mean():.1f}")
-        
-    # Calculate Winter Barrier Index
-    if "snow_depth" in weather_daily.columns and "wind" in weather_daily.columns and "gap" in gap_model.columns:
-        gap_weather = gap_model.merge(weather_daily, on="date", how="inner")
-        gap_weather["winter_barrier_index"] = gap_weather["snow_depth"].fillna(0) * 10 + gap_weather["wind"].fillna(0)
-        barrier_corr = gap_weather["winter_barrier_index"].corr(gap_weather["gap"])
-        report(f"Winter Barrier Index correlation with Opportunity Gap: r = {barrier_corr:+.3f}")
-    
-    # Figure 1: Economic Revenue Gap (Monthly ¥)
-    if "lost_population" in gap_model.columns:
-        gap_model["lost_revenue"] = gap_model["lost_population"] * mean_spending
-        gap_monthly = gap_model.set_index("date").resample("ME")["lost_revenue"].sum().reset_index()
-        
-        plt.figure(figsize=(10, 6))
-        sns.barplot(data=gap_monthly, x=gap_monthly["date"].dt.strftime("%Y-%m"), y="lost_revenue", color="crimson")
-        plt.title("Economic Revenue Gap (Monthly ¥ Loss due to Planning Friction)", fontsize=14)
-        plt.ylabel("Lost Revenue (¥)", fontsize=12)
-        plt.xlabel("Month", fontsize=12)
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(os.path.join(FIG_DIR, "ultimate_fig1_economic_gap.png"), dpi=300)
-        plt.close()
-        report("Saved ultimate_fig1_economic_gap.png")
 
-    # 17b. Behavioral Segmentation (Targeting the Nudge)
-    report("\n--- Behavioral Segmentation (Social vs Search) ---")
-    survey_df['is_social'] = survey_df['Instagram'].fillna(0).astype(int) | survey_df['Twitter'].fillna(0).astype(int) | survey_df['Facebook'].fillna(0).astype(int)
-    survey_df['is_search'] = survey_df['インターネット・アプリ'].fillna(0).astype(int)
-    
-    social_segment = survey_df[survey_df['is_social'] == 1]
-    search_segment = survey_df[(survey_df['is_search'] == 1) & (survey_df['is_social'] == 0)]
-    
-    report(f"Social-Nudged Visitors: {len(social_segment)}")
-    report(f"Search-Driven Visitors: {len(search_segment)}")
-    
-    survey_df['date'] = pd.to_datetime(survey_df['回答日時'], errors='coerce').dt.normalize()
-    survey_weather = survey_df.dropna(subset=['date']).merge(weather_daily, on='date', how='inner')
-    
-    if not survey_weather.empty and 'snow_depth' in survey_weather.columns:
-        social_snow = survey_weather[survey_weather['is_social'] == 1]['snow_depth'].mean()
-        search_snow = survey_weather[(survey_weather['is_search'] == 1) & (survey_weather['is_social'] == 0)]['snow_depth'].mean()
-        report(f"Average Snow Depth on visit days - Social: {social_snow:.2f}cm vs Search: {search_snow:.2f}cm")
-        if social_snow > search_snow:
-            report("Insight: Social-Nudged visitors are MORE resilient to snow barriers.")
-        else:
-            report("Insight: Search-Driven visitors are MORE resilient to snow barriers.")
 
-    # 17c. Ambassador Optimization (Eiheiji vs. Tojinbo)
-    report("\n--- Ambassador Optimization: Vibrancy Threshold (Eiheiji vs Tojinbo) ---")
-    eiheiji_mask = survey_df['回答エリア'].str.contains('永平寺', na=False) | survey_df['市町村'].str.contains('永平寺', na=False)
-    eiheiji_df = survey_df[eiheiji_mask].copy()
-    tojinbo_mask = survey_df['回答エリア'].str.contains('東尋坊', na=False)
-    tojinbo_df = survey_df[tojinbo_mask].copy()
-    
-    sat_map = {'とても不満': 1, '不満': 2, 'どちらでもない': 3, '満足': 4, 'とても満足': 5}
-    eiheiji_df['sat_score'] = eiheiji_df['満足度'].map(sat_map)
-    tojinbo_df['sat_score'] = tojinbo_df['満足度'].map(sat_map)
-    
-    eiheiji_daily = eiheiji_df.groupby('date').agg(responses=('会員ID', 'count'), mean_sat=('sat_score', 'mean')).dropna()
-    tojinbo_daily = tojinbo_df.groupby('date').agg(responses=('会員ID', 'count'), mean_sat=('sat_score', 'mean')).dropna()
-    
-    if len(eiheiji_daily) > 10 and len(tojinbo_daily) > 10:
-        plt.figure(figsize=(10, 6))
-        sns.regplot(data=eiheiji_daily, x='responses', y='mean_sat', order=2, label='Eiheiji (Sacred)', scatter_kws={'alpha':0.5})
-        sns.regplot(data=tojinbo_daily, x='responses', y='mean_sat', order=2, label='Tojinbo (Natural)', scatter_kws={'alpha':0.5})
-        plt.title("Vibrancy Threshold: Satisfaction vs Crowd Density (Survey Proxy)", fontsize=14)
-        plt.xlabel("Daily Crowd Density (Survey Responses Proxy)", fontsize=12)
-        plt.ylabel("Mean Satisfaction Score (1-5)", fontsize=12)
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(os.path.join(FIG_DIR, "ultimate_fig2_vibrancy_threshold.png"), dpi=300)
-        plt.close()
-        report("Saved ultimate_fig2_vibrancy_threshold.png")
-        
-        e_poly = np.polyfit(eiheiji_daily['responses'], eiheiji_daily['mean_sat'], 2)
-        t_poly = np.polyfit(tojinbo_daily['responses'], tojinbo_daily['mean_sat'], 2)
-        
-        e_vertex = -e_poly[1] / (2 * e_poly[0]) if e_poly[0] < 0 else float('inf')
-        t_vertex = -t_poly[1] / (2 * t_poly[0]) if t_poly[0] < 0 else float('inf')
-        
-        report(f"Eiheiji 'Zen-Silence' Overtourism Threshold (Proxy): ~{e_vertex:.0f} relative density")
-        report(f"Tojinbo 'Fun-Crowd' Overtourism Threshold (Proxy): ~{t_vertex:.0f} relative density")
+# Node A: Tojinbo (Natural/Coast)
+node_a_counts = _load_peopleflow_daily(
+    os.path.join(_ROOT_DIR, "fukui-kanko-people-flow-data/daily/tojinbo-shotaro/Person/**/*.csv")
+)
+# Node B: Fukui Station (Transit/City)
+node_b_counts = _load_peopleflow_daily(
+    os.path.join(_ROOT_DIR, "fukui-kanko-people-flow-data/daily/fukui-station-east-entrance/Person/**/*.csv")
+)
 
-except Exception as e:
-    report(f"Error processing survey data: {e}")
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 18. GLOBAL GENERALIZATION (FUKUI STATION)
-# ═══════════════════════════════════════════════════════════════════════════════
-report("\n" + "=" * 80)
-report("SECTION 18 – Global Generalization: Fukui Station Hub")
-report("=" * 80)
-
-fukui_files = sorted(glob.glob(
-    os.path.join(_ROOT_DIR, "fukui-kanko-people-flow-data/daily/fukui-station-east-entrance/Person/**/*.csv"),
-    recursive=True
-))
-fukui_rows = []
-for f in fukui_files:
+# Node C: Katsuyama / Dinosaur Museum (Heritage/Indoor)
+node_c_counts = _load_peopleflow_daily(
+    os.path.join(_ROOT_DIR, "fukui-kanko-people-flow-data/daily/katsuyama*/Person/**/*.csv")
+)
+node_c_source = "camera"
+if node_c_counts.empty:
+    # Fallback proxy when node-specific people-flow camera files are unavailable.
+    node_c_source = "survey_proxy"
+    survey_proxy_path = os.path.join(_ROOT_DIR, "fukui-kanko-survey/all.csv")
     try:
-        df = pd.read_csv(f)
-        if "aggregate from" in df.columns and "total count" in df.columns:
-            daily_total = df["total count"].sum()
-            date_str = os.path.basename(f).replace(".csv", "")
-            fukui_rows.append({"date": date_str, "count": daily_total})
+        s = pd.read_csv(survey_proxy_path, low_memory=False)
+        s["date"] = pd.to_datetime(s.get("回答日時"), errors="coerce").dt.normalize()
+        text_cols = [c for c in ["回答エリア", "回答エリア2", "市町村"] if c in s.columns]
+        node_c_mask = False
+        for c in text_cols:
+            node_c_mask = node_c_mask | s[c].astype(str).str.contains("勝山|恐竜|ダイナソー|博物館", na=False)
+        s2 = s[node_c_mask & s["date"].notna()].copy()
+        node_c_counts = s2.groupby("date").size().reset_index(name="count")
+        report(f"Node C fallback enabled: survey proxy daily counts (rows={len(node_c_counts)})")
+    except Exception as e:
+        report(f"Node C fallback failed ({e}); Node C model may be unavailable.")
+        node_c_counts = pd.DataFrame(columns=["date", "count"])
+
+node_a_weather = _load_node_weather_daily(os.path.join(_REPO_DIR, "jma/jma_mikuni_hourly_8.csv"))
+node_b_weather = _load_node_weather_daily(os.path.join(_REPO_DIR, "jma/jma_fukui_hourly_8.csv"))
+node_c_weather = _load_node_weather_daily(os.path.join(_REPO_DIR, "jma/jma_katsuyama_hourly_8.csv"))
+
+node_metrics = {}
+node_metrics["Node A (Tojinbo/Mikuni)"] = _build_node_metrics("Node A (Tojinbo/Mikuni)", node_a_counts, node_a_weather)
+node_metrics["Node B (Fukui Station)"] = _build_node_metrics("Node B (Fukui Station)", node_b_counts, node_b_weather)
+node_metrics["Node C (Katsuyama/Dinosaur)"] = _build_node_metrics("Node C (Katsuyama/Dinosaur)", node_c_counts, node_c_weather)
+
+valid_nodes = {k: v for k, v in node_metrics.items() if v is not None}
+for node_name, metrics in valid_nodes.items():
+    report(f"{node_name}: n={metrics['n']}, OLS R²={metrics['r2']:.4f}, Adj R²={metrics['adj_r2']:.4f}, "
+           f"Weather lift={metrics['weather_lift']:+.4f}, Snow β(std)={metrics['snow_beta_std']:+.4f}")
+
+# 20.1 Spatial sensitivity/resilience ranking by standardized snow coefficient magnitude
+if valid_nodes:
+    snow_rank = sorted(
+        [
+            (k, abs(v["snow_beta_std"]) if not np.isnan(v["snow_beta_std"]) else 0.0)
+            for k, v in valid_nodes.items()
+        ],
+        key=lambda x: x[1],
+        reverse=True,
+    )
+    most_sensitive = snow_rank[0][0]
+    most_resilient = snow_rank[-1][0]
+    report(f"Most snow-sensitive node: {most_sensitive}")
+    report(f"Most snow-resilient node: {most_resilient}")
+
+# 20.2 Atmospheric nudge logic: Mikuni wind > 10m/s
+wind_nudge_summary = {}
+if all(k in valid_nodes for k in ["Node A (Tojinbo/Mikuni)", "Node B (Fukui Station)", "Node C (Katsuyama/Dinosaur)"]):
+    a = valid_nodes["Node A (Tojinbo/Mikuni)"]["data"].rename(columns={"count": "tojinbo_count", "wind": "mikuni_wind"})
+    b = valid_nodes["Node B (Fukui Station)"]["data"][["date", "count"]].rename(columns={"count": "fukui_count"})
+    c = valid_nodes["Node C (Katsuyama/Dinosaur)"]["data"][["date", "count"]].rename(columns={"count": "katsuyama_count"})
+    nudge = a[["date", "tojinbo_count", "mikuni_wind"]].merge(b, on="date", how="inner").merge(c, on="date", how="inner")
+    nudge_high = nudge[nudge["mikuni_wind"] > 10]
+    nudge_norm = nudge[nudge["mikuni_wind"] <= 10]
+    if len(nudge_high) >= 10 and len(nudge_norm) >= 10:
+        f_high = nudge_high["fukui_count"].mean()
+        f_norm = nudge_norm["fukui_count"].mean()
+        k_high = nudge_high["katsuyama_count"].mean()
+        k_norm = nudge_norm["katsuyama_count"].mean()
+        t_high = nudge_high["tojinbo_count"].mean()
+        t_norm = nudge_norm["tojinbo_count"].mean()
+        wind_nudge_summary = {
+            "n_high": int(len(nudge_high)),
+            "fukui_delta_pct": float((f_high / f_norm - 1) * 100) if f_norm else np.nan,
+            "katsuyama_delta_pct": float((k_high / k_norm - 1) * 100) if k_norm else np.nan,
+            "tojinbo_delta_pct": float((t_high / t_norm - 1) * 100) if t_norm else np.nan,
+        }
+        report("Atmospheric Nudge (Mikuni wind >10m/s):")
+        report(f"  Tojinbo count shift:   {wind_nudge_summary['tojinbo_delta_pct']:+.2f}%")
+        report(f"  Fukui count shift:     {wind_nudge_summary['fukui_delta_pct']:+.2f}%")
+        report(f"  Katsuyama count shift: {wind_nudge_summary['katsuyama_delta_pct']:+.2f}%")
+
+        # Weather Shield effect (indoor buffer): high coastal wind + low Tojinbo
+        t_med = nudge["tojinbo_count"].median()
+        shield_days = nudge[(nudge["mikuni_wind"] > 10) & (nudge["tojinbo_count"] < t_med)]
+        if len(shield_days) >= 8:
+            shield_k = shield_days["katsuyama_count"].mean()
+            normal_k = nudge[nudge["mikuni_wind"] <= 10]["katsuyama_count"].mean()
+            shield_effect = (shield_k / normal_k - 1) * 100 if normal_k else np.nan
+            report(f"Weather Shield effect (Katsuyama buffer): {shield_effect:+.2f}% on high-wind coastal days")
+    else:
+        report("Atmospheric Nudge: insufficient high-wind overlap days for stable estimate.")
+
+# 20.3 Three-node cumulative opportunity loss in yen
+satake_total_lost_visitors = float(sum(v["lost_visitors"] for v in valid_nodes.values()))
+satake_total_yen = satake_total_lost_visitors * SPENDING_PER_VISITOR_YEN
+report(f"Three-node cumulative opportunity gap: {satake_total_lost_visitors:,.0f} visitors")
+report(f"Final Satake Number (3-node, ¥13,811/visitor): ¥{satake_total_yen:,.0f}")
+
+# 20.4 Ishikawa pipeline evidence against all 3 nodes
+ishikawa_lag_results = []
+survey_frames_all = []
+for survey_file in sorted(glob.glob(os.path.join(_ROOT_DIR, "opendata/output_merge/merged_survey_*.csv"))):
+    try:
+        sdf = pd.read_csv(survey_file, encoding="utf-8", low_memory=False, usecols=[0, 1])
+        sdf.columns = ["prefecture", "survey_date"]
+        sdf["survey_date"] = pd.to_datetime(sdf["survey_date"], errors="coerce")
+        sdf = sdf.dropna(subset=["survey_date"])
+        sdf["date"] = sdf["survey_date"].dt.normalize()
+        survey_frames_all.append(sdf)
     except Exception:
         pass
 
-if fukui_rows:
-    fukui_daily = pd.DataFrame(fukui_rows)
-    fukui_daily["date"] = pd.to_datetime(fukui_daily["date"])
-    fukui_daily = fukui_daily.groupby("date")["count"].sum().reset_index()
-    
-    fukui_model = fukui_daily.merge(weather_daily, on="date", how="inner").merge(rsi, on="date", how="inner")
-    fukui_model = fukui_model.dropna(subset=["count", route_col, "temp", "precip"])
-    
-    if len(fukui_model) > 30:
-        X_fukui = fukui_model[[route_col, "temp", "precip"]]
-        y_fukui = fukui_model["count"]
-        X_fukui = sm.add_constant(X_fukui)
-        fukui_ols = sm.OLS(y_fukui, X_fukui).fit()
-        report(f"Fukui Station OLS R²: {fukui_ols.rsquared:.3f}")
-        report("Insight: The Distributed Human Data Engine (DHDE) successfully generalizes to regional transport hubs.")
-    else:
-        report("Not enough overlapping data for Fukui Station model.")
-else:
-    report("No Fukui Station data found.")
+if survey_frames_all:
+    survey_all = pd.concat(survey_frames_all, ignore_index=True)
+    ishikawa_daily = (
+        survey_all[survey_all["prefecture"].astype(str).str.contains("石川", na=False)]
+        .groupby("date")
+        .size()
+        .reset_index(name="ishikawa_survey_count")
+    )
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 19. ULTIMATE GOVERNANCE REPORT EXPORT
-# ═══════════════════════════════════════════════════════════════════════════════
-report("\n" + "=" * 80)
-report("SECTION 19 – Exporting Sovereign-Grade Governance Report")
-report("=" * 80)
+    for node_name, metrics in valid_nodes.items():
+        nd = metrics["data"][["date", "count"]].merge(ishikawa_daily, on="date", how="inner").dropna()
+        node_ccf = []
+        for lag in range(-3, 8):
+            shifted = nd["ishikawa_survey_count"].shift(lag)
+            valid = pd.DataFrame({"count": nd["count"], "ishi": shifted}).dropna()
+            if len(valid) > 20:
+                r = valid.corr().iloc[0, 1]
+                node_ccf.append((lag, r, len(valid)))
+        if node_ccf:
+            best_lag, best_r, best_n = max(node_ccf, key=lambda x: abs(x[1]))
+            ishikawa_lag_results.append((node_name, int(best_lag), float(best_r), int(best_n)))
+            report(f"Ishikawa pipeline {node_name}: best lag {best_lag:+d}, r={best_r:+.3f} (n={best_n})")
 
-gov_report_path = os.path.join(OUT_DIR, "ultimate_governance_report.txt")
-try:
-    with open(gov_report_path, "w") as f:
-        f.write("=================================================================\n")
-        f.write(" SOVEREIGN-GRADE GOVERNANCE REPORT: FUKUI REGIONAL ECONOMY\n")
-        f.write("=================================================================\n\n")
-        f.write("1. ECONOMIC MANDATE (THE ¥ PRICE TAG)\n")
-        f.write(f"   - Mean Spending per Visitor: ¥{mean_spending:,.0f}\n")
-        f.write(f"   - Total Annual Economic Revenue Loss (Opportunity Gap): ¥{total_yen_loss:,.0f}\n")
-        f.write("   - Strategic Action: Implement AI-driven Nudge platform to recover lost revenue during weather-driven planning friction.\n\n")
-        
-        f.write("2. BEHAVIORAL LOAD-BALANCING (TARGETING THE NUDGE)\n")
-        f.write(f"   - Social-Nudged Segment (Instagram/Twitter/Facebook): {len(social_segment)} visitors\n")
-        f.write(f"   - Search-Driven Segment (RSI/Yahoo): {len(search_segment)} visitors\n")
-        f.write("   - Strategic Action: Target Social-Nudged segments during winter barriers, as they exhibit different resilience profiles.\n\n")
-        
-        f.write("3. AMBASSADOR OPTIMIZATION (SACRED VS NATURAL NODES)\n")
-        f.write("   - Eiheiji (Sacred Site) exhibits a distinct 'Zen-Silence' overtourism threshold compared to Tojinbo's 'Fun-Crowd' threshold.\n")
-        f.write("   - Strategic Action: Cap nudges to Eiheiji before the Vibrancy-Satisfaction correlation turns negative.\n\n")
-        
-        f.write("4. GLOBAL GENERALIZABILITY (DHDE FRAMEWORK)\n")
-        if fukui_rows and len(fukui_model) > 30:
-            f.write(f"   - Fukui Station Hub Model R²: {fukui_ols.rsquared:.3f}\n")
-        f.write("   - Conclusion: The Lagged-Correlation Inference model is exportable to global high-density heritage environments (e.g., Madinah, Dubai).\n")
-        
-    report(f"Successfully exported {gov_report_path}")
-except Exception as e:
-    report(f"Failed to export governance report: {e}")
+# 20.5 Spatial friction heatmap
+if valid_nodes:
+    heat_rows = []
+    for node_name, metrics in valid_nodes.items():
+        heat_rows.append({
+            "node": node_name,
+            "snow_sensitivity_abs": abs(metrics["snow_beta_std"]) if not np.isnan(metrics["snow_beta_std"]) else np.nan,
+            "wind_sensitivity_abs": abs(metrics["wind_coef"]) if not np.isnan(metrics["wind_coef"]) else np.nan,
+            "weather_lift_r2": metrics["weather_lift"],
+            "lost_visitors_k": metrics["lost_visitors"] / 1000.0,
+        })
+    heat_df = pd.DataFrame(heat_rows).set_index("node")
+    plt.figure(figsize=(10, 4))
+    sns.heatmap(heat_df, annot=True, fmt=".3f", cmap="YlOrRd", cbar_kws={"label": "Relative Friction Intensity"})
+    plt.title("Spatial Friction Heatmap (Weather Sensitivity per Node)")
+    plt.tight_layout()
+    spatial_heatmap_path = os.path.join(FIG_DIR, "spatial_friction_heatmap.png")
+    plt.savefig(spatial_heatmap_path, dpi=300)
+    plt.close()
+    report(f"Saved {spatial_heatmap_path}")
 
+# 20.6 Export required metrics artifact
+spatial_metrics_path = os.path.join(OUT_DIR, "ultimate_spatial_governance_metrics.txt")
+with open(spatial_metrics_path, "w", encoding="utf-8") as f:
+    f.write("MULTI-NODE SPATIAL GOVERNANCE METRICS (DHDE)\n")
+    f.write("=" * 72 + "\n\n")
+    f.write("Nodes:\n")
+    f.write("  A = Tojinbo (Natural/Coast) + Mikuni weather\n")
+    f.write("  B = Fukui Station (Transit/City) + Fukui weather\n")
+    f.write(f"  C = Katsuyama/Dinosaur (Heritage/Indoor) + Katsuyama weather [{node_c_source}]\n\n")
+
+    for node_name, metrics in valid_nodes.items():
+        f.write(f"{node_name}\n")
+        f.write(f"  n={metrics['n']}\n")
+        f.write(f"  OLS_R2={metrics['r2']:.6f}\n")
+        f.write(f"  OLS_Adj_R2={metrics['adj_r2']:.6f}\n")
+        f.write(f"  Weather_Lift_R2={metrics['weather_lift']:+.6f}\n")
+        f.write(f"  Snow_Beta_Std={metrics['snow_beta_std']:+.6f}\n")
+        f.write(f"  Opportunity_Lost_Visitors={metrics['lost_visitors']:.2f}\n")
+        f.write(f"  Opportunity_Lost_Yen={metrics['lost_yen']:.2f}\n\n")
+
+    if wind_nudge_summary:
+        f.write("Atmospheric_Nudge_MikuniWindGT10\n")
+        f.write(f"  HighWindDays={wind_nudge_summary['n_high']}\n")
+        f.write(f"  Tojinbo_DeltaPct={wind_nudge_summary['tojinbo_delta_pct']:+.4f}\n")
+        f.write(f"  Fukui_DeltaPct={wind_nudge_summary['fukui_delta_pct']:+.4f}\n")
+        f.write(f"  Katsuyama_DeltaPct={wind_nudge_summary['katsuyama_delta_pct']:+.4f}\n\n")
+
+    f.write("ThreeNode_Satake_Number\n")
+    f.write(f"  Lost_Visitors={satake_total_lost_visitors:.2f}\n")
+    f.write(f"  Spending_Per_Visitor_Yen={SPENDING_PER_VISITOR_YEN:.2f}\n")
+    f.write(f"  Total_Lost_Yen={satake_total_yen:.2f}\n\n")
+
+    if ishikawa_lag_results:
+        f.write("Ishikawa_Pipeline_BestLag_ByNode\n")
+        for node_name, lag, r, n in ishikawa_lag_results:
+            f.write(f"  {node_name}: lag={lag:+d}, r={r:+.6f}, n={n}\n")
+
+report(f"Saved {spatial_metrics_path}")
 
 save_report()
 report("\n✓ Deep analysis complete.")
