@@ -8,7 +8,7 @@ Pipeline:
   3. Multi-variable modelling  (OLS + Random Forest feature importance)
   4. Regional insight          (Opportunity Gap = high RSI intent but low arrivals)
   5. Explaining negative correlation
-  6. Visualisations (7 figures)
+  6. Visualisations (7 output)
   --- BOLSTERED SECTIONS ---
   7. Cross-Prefectural Signal Test (Ishikawa → Fukui pipeline)
   8. Kansei (Emotional) Feedback Loop – Overtourism Threshold
@@ -23,9 +23,9 @@ Pipeline:
  16. Fukui Resurrection Chart
 
 Outputs (saved to analysis/ folder):
-  - deep_analysis_results.txt       (full text report)
+  - comprehensive_analysis_results.txt       (full text report)
   - bolstered_results.txt           (grant-ready metrics)
-  - deep_analysis_*.png             (11+ figures)
+  - deep_analysis_*.png             (11+ output)
 """
 
 import warnings
@@ -37,6 +37,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import japanize_matplotlib
 import matplotlib.dates as mdates
 import seaborn as sns
 
@@ -54,7 +55,7 @@ _ROOT_DIR = os.path.dirname(_SCRIPT_DIR)   # workspace root (one level up)
 _REPO_DIR = _SCRIPT_DIR                    # this repo folder
 
 OUT_DIR = _SCRIPT_DIR          # outputs go next to this script
-FIG_DIR = os.path.join(OUT_DIR, "figures")
+FIG_DIR = os.path.join(OUT_DIR, "output")
 os.makedirs(FIG_DIR, exist_ok=True)
 REPORT_LINES: list[str] = []
 
@@ -64,9 +65,9 @@ def report(msg: str = ""):
     REPORT_LINES.append(msg)
 
 def save_report():
-    with open(os.path.join(OUT_DIR, "deep_analysis_results.txt"), "w") as f:
+    with open(os.path.join(FIG_DIR, "comprehensive_analysis_results.txt"), "w") as f:
         f.write("\n".join(REPORT_LINES))
-    report(f">>> Report saved to {OUT_DIR}/deep_analysis_results.txt")
+    report(f">>> Report saved to {FIG_DIR}/comprehensive_analysis_results.txt")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1.  DATA LOADING & CLEANING
@@ -479,6 +480,62 @@ fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_timeseries.png")
 fig.savefig(fname, dpi=150)
 report(f"  Saved {fname}")
+if "fig1" in fname and "timeseries" in fname:
+    ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+    ax1.set_ylabel("訪問者数")
+    ax2.set_ylabel("検索意図 (RSI)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig2" in fname:
+    ax.set_title("特徴量相関マトリックス")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig3" in fname:
+    ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+    ax.set_xlabel("重要度")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig4" in fname:
+    ax.set_title("曜日別訪問者数")
+    ax.set_xlabel("曜日")
+    ax.set_ylabel("訪問者数")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig5" in fname:
+    ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['実測値', '予測値'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig6" in fname:
+    ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['訪問者数', '機会損失日'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig7" in fname:
+    ax.set_title("ラグ相関：検索意図 → 訪問者数")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig8" in fname:
+    ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig9" in fname:
+    ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+    ax.set_xlabel("日次訪問者数")
+    ax.set_ylabel("平均満足度スコア")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig10" in fname:
+    ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+    ax.set_ylabel("損失人口")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig11" in fname:
+    ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+    ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+    ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig12" in fname:
+    ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+    ax.set_xlabel("月")
+    ax.set_ylabel("曜日")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
 plt.close(fig)
 
 # --- Fig 2: Correlation heatmap ---
@@ -490,6 +547,62 @@ fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_correlation.png")
 fig.savefig(fname, dpi=150)
 report(f"  Saved {fname}")
+if "fig1" in fname and "timeseries" in fname:
+    ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+    ax1.set_ylabel("訪問者数")
+    ax2.set_ylabel("検索意図 (RSI)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig2" in fname:
+    ax.set_title("特徴量相関マトリックス")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig3" in fname:
+    ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+    ax.set_xlabel("重要度")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig4" in fname:
+    ax.set_title("曜日別訪問者数")
+    ax.set_xlabel("曜日")
+    ax.set_ylabel("訪問者数")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig5" in fname:
+    ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['実測値', '予測値'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig6" in fname:
+    ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['訪問者数', '機会損失日'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig7" in fname:
+    ax.set_title("ラグ相関：検索意図 → 訪問者数")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig8" in fname:
+    ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig9" in fname:
+    ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+    ax.set_xlabel("日次訪問者数")
+    ax.set_ylabel("平均満足度スコア")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig10" in fname:
+    ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+    ax.set_ylabel("損失人口")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig11" in fname:
+    ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+    ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+    ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig12" in fname:
+    ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+    ax.set_xlabel("月")
+    ax.set_ylabel("曜日")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
 plt.close(fig)
 
 # --- Fig 3: Feature importance comparison ---
@@ -513,6 +626,62 @@ fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_feature_importance.png")
 fig.savefig(fname, dpi=150)
 report(f"  Saved {fname}")
+if "fig1" in fname and "timeseries" in fname:
+    ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+    ax1.set_ylabel("訪問者数")
+    ax2.set_ylabel("検索意図 (RSI)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig2" in fname:
+    ax.set_title("特徴量相関マトリックス")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig3" in fname:
+    ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+    ax.set_xlabel("重要度")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig4" in fname:
+    ax.set_title("曜日別訪問者数")
+    ax.set_xlabel("曜日")
+    ax.set_ylabel("訪問者数")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig5" in fname:
+    ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['実測値', '予測値'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig6" in fname:
+    ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['訪問者数', '機会損失日'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig7" in fname:
+    ax.set_title("ラグ相関：検索意図 → 訪問者数")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig8" in fname:
+    ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig9" in fname:
+    ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+    ax.set_xlabel("日次訪問者数")
+    ax.set_ylabel("平均満足度スコア")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig10" in fname:
+    ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+    ax.set_ylabel("損失人口")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig11" in fname:
+    ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+    ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+    ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig12" in fname:
+    ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+    ax.set_xlabel("月")
+    ax.set_ylabel("曜日")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
 plt.close(fig)
 
 # --- Fig 4: Day-of-week boxplot ---
@@ -528,6 +697,62 @@ fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_dow_boxplot.png")
 fig.savefig(fname, dpi=150)
 report(f"  Saved {fname}")
+if "fig1" in fname and "timeseries" in fname:
+    ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+    ax1.set_ylabel("訪問者数")
+    ax2.set_ylabel("検索意図 (RSI)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig2" in fname:
+    ax.set_title("特徴量相関マトリックス")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig3" in fname:
+    ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+    ax.set_xlabel("重要度")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig4" in fname:
+    ax.set_title("曜日別訪問者数")
+    ax.set_xlabel("曜日")
+    ax.set_ylabel("訪問者数")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig5" in fname:
+    ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['実測値', '予測値'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig6" in fname:
+    ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['訪問者数', '機会損失日'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig7" in fname:
+    ax.set_title("ラグ相関：検索意図 → 訪問者数")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig8" in fname:
+    ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig9" in fname:
+    ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+    ax.set_xlabel("日次訪問者数")
+    ax.set_ylabel("平均満足度スコア")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig10" in fname:
+    ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+    ax.set_ylabel("損失人口")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig11" in fname:
+    ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+    ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+    ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig12" in fname:
+    ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+    ax.set_xlabel("月")
+    ax.set_ylabel("曜日")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
 plt.close(fig)
 
 # --- Fig 5: Predicted vs Actual (RF) ---
@@ -545,6 +770,62 @@ fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_rf_prediction.png")
 fig.savefig(fname, dpi=150)
 report(f"  Saved {fname}")
+if "fig1" in fname and "timeseries" in fname:
+    ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+    ax1.set_ylabel("訪問者数")
+    ax2.set_ylabel("検索意図 (RSI)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig2" in fname:
+    ax.set_title("特徴量相関マトリックス")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig3" in fname:
+    ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+    ax.set_xlabel("重要度")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig4" in fname:
+    ax.set_title("曜日別訪問者数")
+    ax.set_xlabel("曜日")
+    ax.set_ylabel("訪問者数")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig5" in fname:
+    ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['実測値', '予測値'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig6" in fname:
+    ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['訪問者数', '機会損失日'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig7" in fname:
+    ax.set_title("ラグ相関：検索意図 → 訪問者数")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig8" in fname:
+    ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig9" in fname:
+    ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+    ax.set_xlabel("日次訪問者数")
+    ax.set_ylabel("平均満足度スコア")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig10" in fname:
+    ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+    ax.set_ylabel("損失人口")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig11" in fname:
+    ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+    ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+    ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig12" in fname:
+    ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+    ax.set_xlabel("月")
+    ax.set_ylabel("曜日")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
 plt.close(fig)
 
 # --- Fig 6: Opportunity Gap scatter ---
@@ -562,6 +843,62 @@ fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_opportunity_gap.png")
 fig.savefig(fname, dpi=150)
 report(f"  Saved {fname}")
+if "fig1" in fname and "timeseries" in fname:
+    ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+    ax1.set_ylabel("訪問者数")
+    ax2.set_ylabel("検索意図 (RSI)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig2" in fname:
+    ax.set_title("特徴量相関マトリックス")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig3" in fname:
+    ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+    ax.set_xlabel("重要度")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig4" in fname:
+    ax.set_title("曜日別訪問者数")
+    ax.set_xlabel("曜日")
+    ax.set_ylabel("訪問者数")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig5" in fname:
+    ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['実測値', '予測値'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig6" in fname:
+    ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['訪問者数', '機会損失日'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig7" in fname:
+    ax.set_title("ラグ相関：検索意図 → 訪問者数")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig8" in fname:
+    ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig9" in fname:
+    ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+    ax.set_xlabel("日次訪問者数")
+    ax.set_ylabel("平均満足度スコア")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig10" in fname:
+    ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+    ax.set_ylabel("損失人口")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig11" in fname:
+    ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+    ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+    ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig12" in fname:
+    ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+    ax.set_xlabel("月")
+    ax.set_ylabel("曜日")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
 plt.close(fig)
 
 # --- Fig 7: Lag correlation bar chart ---
@@ -585,6 +922,62 @@ fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_lag_correlations.png")
 fig.savefig(fname, dpi=150)
 report(f"  Saved {fname}")
+if "fig1" in fname and "timeseries" in fname:
+    ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+    ax1.set_ylabel("訪問者数")
+    ax2.set_ylabel("検索意図 (RSI)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig2" in fname:
+    ax.set_title("特徴量相関マトリックス")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig3" in fname:
+    ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+    ax.set_xlabel("重要度")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig4" in fname:
+    ax.set_title("曜日別訪問者数")
+    ax.set_xlabel("曜日")
+    ax.set_ylabel("訪問者数")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig5" in fname:
+    ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['実測値', '予測値'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig6" in fname:
+    ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['訪問者数', '機会損失日'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig7" in fname:
+    ax.set_title("ラグ相関：検索意図 → 訪問者数")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig8" in fname:
+    ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig9" in fname:
+    ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+    ax.set_xlabel("日次訪問者数")
+    ax.set_ylabel("平均満足度スコア")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig10" in fname:
+    ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+    ax.set_ylabel("損失人口")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig11" in fname:
+    ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+    ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+    ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig12" in fname:
+    ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+    ax.set_xlabel("月")
+    ax.set_ylabel("曜日")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
 plt.close(fig)
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -690,6 +1083,62 @@ if survey_frames:
         fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_ishikawa_ccf.png")
         fig.savefig(fname, dpi=150)
         report(f"  Saved {fname}")
+        if "fig1" in fname and "timeseries" in fname:
+            ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+            ax1.set_ylabel("訪問者数")
+            ax2.set_ylabel("検索意図 (RSI)")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig2" in fname:
+            ax.set_title("特徴量相関マトリックス")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig3" in fname:
+            ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+            ax.set_xlabel("重要度")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig4" in fname:
+            ax.set_title("曜日別訪問者数")
+            ax.set_xlabel("曜日")
+            ax.set_ylabel("訪問者数")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig5" in fname:
+            ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+            ax.set_ylabel("訪問者数")
+            ax.legend(['実測値', '予測値'])
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig6" in fname:
+            ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+            ax.set_ylabel("訪問者数")
+            ax.legend(['訪問者数', '機会損失日'])
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig7" in fname:
+            ax.set_title("ラグ相関：検索意図 → 訪問者数")
+            ax.set_xlabel("ラグ（日）")
+            ax.set_ylabel("相関係数 (r)")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig8" in fname:
+            ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+            ax.set_xlabel("ラグ（日）")
+            ax.set_ylabel("相関係数 (r)")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig9" in fname:
+            ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+            ax.set_xlabel("日次訪問者数")
+            ax.set_ylabel("平均満足度スコア")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig10" in fname:
+            ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+            ax.set_ylabel("損失人口")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig11" in fname:
+            ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+            ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+            ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig12" in fname:
+            ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+            ax.set_xlabel("月")
+            ax.set_ylabel("曜日")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
         plt.close(fig)
 else:
     report("  ⚠ No survey data available for cross-prefectural analysis.")
@@ -830,6 +1279,62 @@ if sat_frames:
         fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_kansei_overtourism.png")
         fig.savefig(fname, dpi=150)
         report(f"  Saved {fname}")
+        if "fig1" in fname and "timeseries" in fname:
+            ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+            ax1.set_ylabel("訪問者数")
+            ax2.set_ylabel("検索意図 (RSI)")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig2" in fname:
+            ax.set_title("特徴量相関マトリックス")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig3" in fname:
+            ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+            ax.set_xlabel("重要度")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig4" in fname:
+            ax.set_title("曜日別訪問者数")
+            ax.set_xlabel("曜日")
+            ax.set_ylabel("訪問者数")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig5" in fname:
+            ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+            ax.set_ylabel("訪問者数")
+            ax.legend(['実測値', '予測値'])
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig6" in fname:
+            ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+            ax.set_ylabel("訪問者数")
+            ax.legend(['訪問者数', '機会損失日'])
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig7" in fname:
+            ax.set_title("ラグ相関：検索意図 → 訪問者数")
+            ax.set_xlabel("ラグ（日）")
+            ax.set_ylabel("相関係数 (r)")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig8" in fname:
+            ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+            ax.set_xlabel("ラグ（日）")
+            ax.set_ylabel("相関係数 (r)")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig9" in fname:
+            ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+            ax.set_xlabel("日次訪問者数")
+            ax.set_ylabel("平均満足度スコア")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig10" in fname:
+            ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+            ax.set_ylabel("損失人口")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig11" in fname:
+            ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+            ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+            ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+        elif "fig12" in fname:
+            ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+            ax.set_xlabel("月")
+            ax.set_ylabel("曜日")
+            fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
         plt.close(fig)
     else:
         report("  ⚠ Insufficient overlapping data for overtourism analysis.")
@@ -913,6 +1418,62 @@ if len(gap_model) > 0:
     fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_lost_population.png")
     fig.savefig(fname, dpi=150)
     report(f"  Saved {fname}")
+    if "fig1" in fname and "timeseries" in fname:
+        ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+        ax1.set_ylabel("訪問者数")
+        ax2.set_ylabel("検索意図 (RSI)")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig2" in fname:
+        ax.set_title("特徴量相関マトリックス")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig3" in fname:
+        ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+        ax.set_xlabel("重要度")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig4" in fname:
+        ax.set_title("曜日別訪問者数")
+        ax.set_xlabel("曜日")
+        ax.set_ylabel("訪問者数")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig5" in fname:
+        ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+        ax.set_ylabel("訪問者数")
+        ax.legend(['実測値', '予測値'])
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig6" in fname:
+        ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+        ax.set_ylabel("訪問者数")
+        ax.legend(['訪問者数', '機会損失日'])
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig7" in fname:
+        ax.set_title("ラグ相関：検索意図 → 訪問者数")
+        ax.set_xlabel("ラグ（日）")
+        ax.set_ylabel("相関係数 (r)")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig8" in fname:
+        ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+        ax.set_xlabel("ラグ（日）")
+        ax.set_ylabel("相関係数 (r)")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig9" in fname:
+        ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+        ax.set_xlabel("日次訪問者数")
+        ax.set_ylabel("平均満足度スコア")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig10" in fname:
+        ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+        ax.set_ylabel("損失人口")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig11" in fname:
+        ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+        ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+        ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig12" in fname:
+        ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+        ax.set_xlabel("月")
+        ax.set_ylabel("曜日")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
     plt.close(fig)
 else:
     total_lost = 0
@@ -1468,9 +2029,65 @@ fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_fukui_resurrection.png")
 fig.savefig(fname, dpi=150)
 report(f"  Saved {fname}")
+if "fig1" in fname and "timeseries" in fname:
+    ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+    ax1.set_ylabel("訪問者数")
+    ax2.set_ylabel("検索意図 (RSI)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig2" in fname:
+    ax.set_title("特徴量相関マトリックス")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig3" in fname:
+    ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+    ax.set_xlabel("重要度")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig4" in fname:
+    ax.set_title("曜日別訪問者数")
+    ax.set_xlabel("曜日")
+    ax.set_ylabel("訪問者数")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig5" in fname:
+    ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['実測値', '予測値'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig6" in fname:
+    ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+    ax.set_ylabel("訪問者数")
+    ax.legend(['訪問者数', '機会損失日'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig7" in fname:
+    ax.set_title("ラグ相関：検索意図 → 訪問者数")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig8" in fname:
+    ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+    ax.set_xlabel("ラグ（日）")
+    ax.set_ylabel("相関係数 (r)")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig9" in fname:
+    ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+    ax.set_xlabel("日次訪問者数")
+    ax.set_ylabel("平均満足度スコア")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig10" in fname:
+    ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+    ax.set_ylabel("損失人口")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig11" in fname:
+    ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+    ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+    ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+elif "fig12" in fname:
+    ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+    ax.set_xlabel("月")
+    ax.set_ylabel("曜日")
+    fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
 plt.close(fig)
 
-report("\n★ 'Fukui Resurrection' chart ready – use as SLIDE 1 for Dr. Inoue / Satake pitch")
+report("\n★ 'Fukui Resurrection' chart ready – use as SLIDE 1 for Stakeholder pitch")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 11. HOKURIKU DEMAND HEATMAP + BOLSTERED RESULTS
@@ -1525,6 +2142,62 @@ if survey_frames:
     fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_hokuriku_heatmap.png")
     fig.savefig(fname, dpi=150)
     report(f"  Saved {fname}")
+    if "fig1" in fname and "timeseries" in fname:
+        ax1.set_title("東尋坊：訪問者数 vs 経路検索意図（日次）")
+        ax1.set_ylabel("訪問者数")
+        ax2.set_ylabel("検索意図 (RSI)")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig2" in fname:
+        ax.set_title("特徴量相関マトリックス")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig3" in fname:
+        ax.set_title("ランダムフォレスト：特徴量重要度 (MDI)")
+        ax.set_xlabel("重要度")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig4" in fname:
+        ax.set_title("曜日別訪問者数")
+        ax.set_xlabel("曜日")
+        ax.set_ylabel("訪問者数")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig5" in fname:
+        ax.set_title(f"ランダムフォレスト：実測値 vs 予測値 (R²={{rf_r2:.3f}}, CV R²={{cv_scores.mean():.3f}})")
+        ax.set_ylabel("訪問者数")
+        ax.legend(['実測値', '予測値'])
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig6" in fname:
+        ax.set_title("機会損失（赤＝高検索意図・低訪問者数）")
+        ax.set_ylabel("訪問者数")
+        ax.legend(['訪問者数', '機会損失日'])
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig7" in fname:
+        ax.set_title("ラグ相関：検索意図 → 訪問者数")
+        ax.set_xlabel("ラグ（日）")
+        ax.set_ylabel("相関係数 (r)")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig8" in fname:
+        ax.set_title("県境を越えたシグナル：石川県 → 東尋坊 (相互相関)")
+        ax.set_xlabel("ラグ（日）")
+        ax.set_ylabel("相関係数 (r)")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig9" in fname:
+        ax.set_title("感性フィードバック：訪問者数 vs 満足度 (色=NPS)")
+        ax.set_xlabel("日次訪問者数")
+        ax.set_ylabel("平均満足度スコア")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig10" in fname:
+        ax.set_title(f"機会損失日ごとの損失人口 (合計: {{total_lost:,.0f}})")
+        ax.set_ylabel("損失人口")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig11" in fname:
+        ax.set_title("福井県復活シミュレーション：冬季の順位向上")
+        ax.set_ylabel("全国順位 (1=最高, 47=最低)")
+        ax.legend(['実際の順位', '潜在的順位（機会損失回収後）'])
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
+    elif "fig12" in fname:
+        ax.set_title("北陸需要ヒートマップ（石川県 → 福井県）")
+        ax.set_xlabel("月")
+        ax.set_ylabel("曜日")
+        fig.savefig(fname.replace(".png", "_ja.png"), dpi=150)
     plt.close(fig)
 else:
     report("  ⚠ No survey data for Hokuriku heatmap.")
@@ -1580,7 +2253,7 @@ bolster(f"""
 
 bolster(f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  4. LOST POPULATION (The "Satake Number")
+  4. LOST POPULATION (The "Opportunity Gap")
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Opportunity Gap days:             {len(gap_model)}
   Total Lost Visitors:              {total_lost:,.0f}
@@ -1638,10 +2311,8 @@ bolster("=" * 80)
 bolster("END OF BOLSTERED RESULTS")
 bolster("=" * 80)
 
-bolstered_path = os.path.join(OUT_DIR, "bolstered_results.txt")
-with open(bolstered_path, "w") as f:
-    f.write("\n".join(bolstered_lines))
-report(f"\n★ Bolstered results saved to: {bolstered_path}")
+REPORT_LINES.extend(bolstered_lines)
+report("\n★ Bolstered results appended to comprehensive report.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 12.  EXECUTIVE SUMMARY
@@ -1676,7 +2347,7 @@ Key Findings:
 5. KANSEI OVERTOURISM
    Visitors vs Satisfaction: r = {spear_r:+.3f} (p = {spear_p:.4f})
 
-6. LOST POPULATION ("SATAKE NUMBER")
+6. LOST POPULATION ("OPPORTUNITY GAP")
    {len(gap_model)} gap days → {abs(total_lost):,.0f} visitors lost to planning friction
 
 7. MODEL ROBUSTNESS – AUTOCORRELATION FIX
@@ -1700,414 +2371,6 @@ Key Findings:
     {undervibrancy_hits} low-satisfaction responses mention quietness/emptiness ({pct:.1f}%)
     → Supports "Loneliness" hypothesis for Fukui 47th/47
 """)
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 17. THE ULTIMATE WEATHER MODEL & ECONOMIC WEIGHTING (THE ¥ PRICE TAG)
-# ═══════════════════════════════════════════════════════════════════════════════
-report("\n" + "=" * 80)
-report("SECTION 17 – Socio-Technical Governance: Economic Weighting & Weather Barriers")
-report("=" * 80)
-
-# 17a. Load Survey Data for Economic Weighting
-survey_path = os.path.join(_ROOT_DIR, "fukui-kanko-survey/all.csv")
-report(f"Loading survey data from {survey_path}...")
-try:
-    survey_df = pd.read_csv(survey_path, low_memory=False)
-    
-    # Map spending categories to midpoints
-    spending_map = {
-        '1,000円未満': 500,
-        '1,000円以上 3,000円未満': 2000,
-        '3,000円以上 5,000円未満': 4000,
-        '5,000円以上 10,000円未満': 7500,
-        '10,000円以上 20,000円未満': 15000,
-        '20,000円以上 30,000円未満': 25000,
-        '30,000円以上 40,000円未満': 35000,
-        '40,000円以上 50,000円未満': 45000,
-        '50,000円以上 100,000円未満': 75000,
-        '100,000円以上': 150000,
-        '使わない': 0
-    }
-    survey_df['spending_midpoint'] = survey_df['県内消費額'].map(spending_map)
-    mean_spending = survey_df['spending_midpoint'].mean()
-    report(f"Mean Spending per Visitor: ¥{mean_spending:,.0f}")
-    
-    # Calculate Total Annual Economic Revenue Loss (¥)
-    total_yen_loss = abs(total_lost) * mean_spending
-    report(f"Total Annual Economic Revenue Loss (Opportunity Gap): ¥{total_yen_loss:,.0f}")
-    
-    # Calculate Discomfort Index (DI)
-    if "temp" in weather_daily.columns and "humidity" in weather_daily.columns:
-        weather_daily["discomfort_index"] = 0.81 * weather_daily["temp"] + 0.01 * weather_daily["humidity"] * (0.99 * weather_daily["temp"] - 14.3) + 46.3
-        report(f"Calculated Discomfort Index (DI). Mean DI: {weather_daily['discomfort_index'].mean():.1f}")
-        
-    # Calculate Winter Barrier Index
-    if "snow_depth" in weather_daily.columns and "wind" in weather_daily.columns and "gap" in gap_model.columns:
-        gap_weather = gap_model.merge(weather_daily, on="date", how="inner")
-        gap_weather["winter_barrier_index"] = gap_weather["snow_depth"].fillna(0) * 10 + gap_weather["wind"].fillna(0)
-        barrier_corr = gap_weather["winter_barrier_index"].corr(gap_weather["gap"])
-        report(f"Winter Barrier Index correlation with Opportunity Gap: r = {barrier_corr:+.3f}")
-    
-    # Figure 1: Economic Revenue Gap (Monthly ¥)
-    if "lost_population" in gap_model.columns:
-        gap_model["lost_revenue"] = gap_model["lost_population"] * mean_spending
-        gap_monthly = gap_model.set_index("date").resample("ME")["lost_revenue"].sum().reset_index()
-        
-        plt.figure(figsize=(10, 6))
-        sns.barplot(data=gap_monthly, x=gap_monthly["date"].dt.strftime("%Y-%m"), y="lost_revenue", color="crimson")
-        plt.title("Economic Revenue Gap (Monthly ¥ Loss due to Planning Friction)", fontsize=14)
-        plt.ylabel("Lost Revenue (¥)", fontsize=12)
-        plt.xlabel("Month", fontsize=12)
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(os.path.join(FIG_DIR, "ultimate_fig1_economic_gap.png"), dpi=300)
-        plt.close()
-        report("Saved ultimate_fig1_economic_gap.png")
-
-    # 17b. Behavioral Segmentation (Targeting the Nudge)
-    report("\n--- Behavioral Segmentation (Social vs Search) ---")
-    survey_df['is_social'] = survey_df['Instagram'].fillna(0).astype(int) | survey_df['Twitter'].fillna(0).astype(int) | survey_df['Facebook'].fillna(0).astype(int)
-    survey_df['is_search'] = survey_df['インターネット・アプリ'].fillna(0).astype(int)
-    
-    social_segment = survey_df[survey_df['is_social'] == 1]
-    search_segment = survey_df[(survey_df['is_search'] == 1) & (survey_df['is_social'] == 0)]
-    
-    report(f"Social-Nudged Visitors: {len(social_segment)}")
-    report(f"Search-Driven Visitors: {len(search_segment)}")
-    
-    survey_df['date'] = pd.to_datetime(survey_df['回答日時'], errors='coerce').dt.normalize()
-    survey_weather = survey_df.dropna(subset=['date']).merge(weather_daily, on='date', how='inner')
-    
-    if not survey_weather.empty and 'snow_depth' in survey_weather.columns:
-        social_snow = survey_weather[survey_weather['is_social'] == 1]['snow_depth'].mean()
-        search_snow = survey_weather[(survey_weather['is_search'] == 1) & (survey_weather['is_social'] == 0)]['snow_depth'].mean()
-        report(f"Average Snow Depth on visit days - Social: {social_snow:.2f}cm vs Search: {search_snow:.2f}cm")
-        if social_snow > search_snow:
-            report("Insight: Social-Nudged visitors are MORE resilient to snow barriers.")
-        else:
-            report("Insight: Search-Driven visitors are MORE resilient to snow barriers.")
-
-    # 17c. Ambassador Optimization (Eiheiji vs. Tojinbo)
-    report("\n--- Ambassador Optimization: Vibrancy Threshold (Eiheiji vs Tojinbo) ---")
-    eiheiji_mask = survey_df['回答エリア'].str.contains('永平寺', na=False) | survey_df['市町村'].str.contains('永平寺', na=False)
-    eiheiji_df = survey_df[eiheiji_mask].copy()
-    tojinbo_mask = survey_df['回答エリア'].str.contains('東尋坊', na=False)
-    tojinbo_df = survey_df[tojinbo_mask].copy()
-    
-    sat_map = {'とても不満': 1, '不満': 2, 'どちらでもない': 3, '満足': 4, 'とても満足': 5}
-    eiheiji_df['sat_score'] = eiheiji_df['満足度'].map(sat_map)
-    tojinbo_df['sat_score'] = tojinbo_df['満足度'].map(sat_map)
-    
-    eiheiji_daily = eiheiji_df.groupby('date').agg(responses=('会員ID', 'count'), mean_sat=('sat_score', 'mean')).dropna()
-    tojinbo_daily = tojinbo_df.groupby('date').agg(responses=('会員ID', 'count'), mean_sat=('sat_score', 'mean')).dropna()
-    
-    if len(eiheiji_daily) > 10 and len(tojinbo_daily) > 10:
-        plt.figure(figsize=(10, 6))
-        sns.regplot(data=eiheiji_daily, x='responses', y='mean_sat', order=2, label='Eiheiji (Sacred)', scatter_kws={'alpha':0.5})
-        sns.regplot(data=tojinbo_daily, x='responses', y='mean_sat', order=2, label='Tojinbo (Natural)', scatter_kws={'alpha':0.5})
-        plt.title("Vibrancy Threshold: Satisfaction vs Crowd Density (Survey Proxy)", fontsize=14)
-        plt.xlabel("Daily Crowd Density (Survey Responses Proxy)", fontsize=12)
-        plt.ylabel("Mean Satisfaction Score (1-5)", fontsize=12)
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(os.path.join(FIG_DIR, "ultimate_fig2_vibrancy_threshold.png"), dpi=300)
-        plt.close()
-        report("Saved ultimate_fig2_vibrancy_threshold.png")
-        
-        e_poly = np.polyfit(eiheiji_daily['responses'], eiheiji_daily['mean_sat'], 2)
-        t_poly = np.polyfit(tojinbo_daily['responses'], tojinbo_daily['mean_sat'], 2)
-        
-        e_vertex = -e_poly[1] / (2 * e_poly[0]) if e_poly[0] < 0 else float('inf')
-        t_vertex = -t_poly[1] / (2 * t_poly[0]) if t_poly[0] < 0 else float('inf')
-        
-        report(f"Eiheiji 'Zen-Silence' Overtourism Threshold (Proxy): ~{e_vertex:.0f} relative density")
-        report(f"Tojinbo 'Fun-Crowd' Overtourism Threshold (Proxy): ~{t_vertex:.0f} relative density")
-
-except Exception as e:
-    report(f"Error processing survey data: {e}")
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 18. GLOBAL GENERALIZATION (FUKUI STATION)
-# ═══════════════════════════════════════════════════════════════════════════════
-report("\n" + "=" * 80)
-report("SECTION 18 – Global Generalization: Fukui Station Hub")
-report("=" * 80)
-
-fukui_files = sorted(glob.glob(
-    os.path.join(_ROOT_DIR, "fukui-kanko-people-flow-data/daily/fukui-station-east-entrance/Person/**/*.csv"),
-    recursive=True
-))
-fukui_rows = []
-for f in fukui_files:
-    try:
-        df = pd.read_csv(f)
-        if "aggregate from" in df.columns and "total count" in df.columns:
-            daily_total = df["total count"].sum()
-            date_str = os.path.basename(f).replace(".csv", "")
-            fukui_rows.append({"date": date_str, "count": daily_total})
-    except Exception:
-        pass
-
-if fukui_rows:
-    fukui_daily = pd.DataFrame(fukui_rows)
-    fukui_daily["date"] = pd.to_datetime(fukui_daily["date"])
-    fukui_daily = fukui_daily.groupby("date")["count"].sum().reset_index()
-    
-    fukui_model = fukui_daily.merge(weather_daily, on="date", how="inner").merge(rsi, on="date", how="inner")
-    fukui_model = fukui_model.dropna(subset=["count", route_col, "temp", "precip"])
-    
-    if len(fukui_model) > 30:
-        X_fukui = fukui_model[[route_col, "temp", "precip"]]
-        y_fukui = fukui_model["count"]
-        X_fukui = sm.add_constant(X_fukui)
-        fukui_ols = sm.OLS(y_fukui, X_fukui).fit()
-        report(f"Fukui Station OLS R²: {fukui_ols.rsquared:.3f}")
-        report("Insight: The Distributed Human Data Engine (DHDE) successfully generalizes to regional transport hubs.")
-    else:
-        report("Not enough overlapping data for Fukui Station model.")
-else:
-    report("No Fukui Station data found.")
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 19. ULTIMATE GOVERNANCE REPORT EXPORT
-# ═══════════════════════════════════════════════════════════════════════════════
-report("\n" + "=" * 80)
-report("SECTION 19 – Exporting Sovereign-Grade Governance Report")
-report("=" * 80)
-
-gov_report_path = os.path.join(OUT_DIR, "ultimate_governance_report.txt")
-try:
-    with open(gov_report_path, "w") as f:
-        f.write("=================================================================\n")
-        f.write(" SOVEREIGN-GRADE GOVERNANCE REPORT: FUKUI REGIONAL ECONOMY\n")
-        f.write("=================================================================\n\n")
-        f.write("1. ECONOMIC MANDATE (THE ¥ PRICE TAG)\n")
-        f.write(f"   - Mean Spending per Visitor: ¥{mean_spending:,.0f}\n")
-        f.write(f"   - Total Annual Economic Revenue Loss (Opportunity Gap): ¥{total_yen_loss:,.0f}\n")
-        f.write("   - Strategic Action: Implement AI-driven Nudge platform to recover lost revenue during weather-driven planning friction.\n\n")
-        
-        f.write("2. BEHAVIORAL LOAD-BALANCING (TARGETING THE NUDGE)\n")
-        f.write(f"   - Social-Nudged Segment (Instagram/Twitter/Facebook): {len(social_segment)} visitors\n")
-        f.write(f"   - Search-Driven Segment (RSI/Yahoo): {len(search_segment)} visitors\n")
-        f.write("   - Strategic Action: Target Social-Nudged segments during winter barriers, as they exhibit different resilience profiles.\n\n")
-        
-        f.write("3. AMBASSADOR OPTIMIZATION (SACRED VS NATURAL NODES)\n")
-        f.write("   - Eiheiji (Sacred Site) exhibits a distinct 'Zen-Silence' overtourism threshold compared to Tojinbo's 'Fun-Crowd' threshold.\n")
-        f.write("   - Strategic Action: Cap nudges to Eiheiji before the Vibrancy-Satisfaction correlation turns negative.\n\n")
-        
-        f.write("4. GLOBAL GENERALIZABILITY (DHDE FRAMEWORK)\n")
-        if fukui_rows and len(fukui_model) > 30:
-            f.write(f"   - Fukui Station Hub Model R²: {fukui_ols.rsquared:.3f}\n")
-        f.write("   - Conclusion: The Lagged-Correlation Inference model is exportable to global high-density heritage environments (e.g., Madinah, Dubai).\n")
-        
-    report(f"Successfully exported {gov_report_path}")
-except Exception as e:
-    report(f"Failed to export governance report: {e}")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 17. THE ULTIMATE WEATHER MODEL & ECONOMIC WEIGHTING (THE ¥ PRICE TAG)
-# ═══════════════════════════════════════════════════════════════════════════════
-report("\n" + "=" * 80)
-report("SECTION 17 – Socio-Technical Governance: Economic Weighting & Weather Barriers")
-report("=" * 80)
-
-# 17a. Load Survey Data for Economic Weighting
-survey_path = os.path.join(_ROOT_DIR, "fukui-kanko-survey/all.csv")
-report(f"Loading survey data from {survey_path}...")
-try:
-    survey_df = pd.read_csv(survey_path, low_memory=False)
-    
-    # Map spending categories to midpoints
-    spending_map = {
-        '1,000円未満': 500,
-        '1,000円以上 3,000円未満': 2000,
-        '3,000円以上 5,000円未満': 4000,
-        '5,000円以上 10,000円未満': 7500,
-        '10,000円以上 20,000円未満': 15000,
-        '20,000円以上 30,000円未満': 25000,
-        '30,000円以上 40,000円未満': 35000,
-        '40,000円以上 50,000円未満': 45000,
-        '50,000円以上 100,000円未満': 75000,
-        '100,000円以上': 150000,
-        '使わない': 0
-    }
-    survey_df['spending_midpoint'] = survey_df['県内消費額'].map(spending_map)
-    mean_spending = survey_df['spending_midpoint'].mean()
-    report(f"Mean Spending per Visitor: ¥{mean_spending:,.0f}")
-    
-    # Calculate Total Annual Economic Revenue Loss (¥)
-    total_yen_loss = abs(total_lost) * mean_spending
-    report(f"Total Annual Economic Revenue Loss (Opportunity Gap): ¥{total_yen_loss:,.0f}")
-    
-    # Calculate Discomfort Index (DI)
-    if "temp" in weather_daily.columns and "humidity" in weather_daily.columns:
-        weather_daily["discomfort_index"] = 0.81 * weather_daily["temp"] + 0.01 * weather_daily["humidity"] * (0.99 * weather_daily["temp"] - 14.3) + 46.3
-        report(f"Calculated Discomfort Index (DI). Mean DI: {weather_daily['discomfort_index'].mean():.1f}")
-        
-    # Calculate Winter Barrier Index
-    if "snow_depth" in weather_daily.columns and "wind" in weather_daily.columns and "gap" in gap_model.columns:
-        gap_weather = gap_model.merge(weather_daily, on="date", how="inner")
-        gap_weather["winter_barrier_index"] = gap_weather["snow_depth"].fillna(0) * 10 + gap_weather["wind"].fillna(0)
-        barrier_corr = gap_weather["winter_barrier_index"].corr(gap_weather["gap"])
-        report(f"Winter Barrier Index correlation with Opportunity Gap: r = {barrier_corr:+.3f}")
-    
-    # Figure 1: Economic Revenue Gap (Monthly ¥)
-    if "lost_population" in gap_model.columns:
-        gap_model["lost_revenue"] = gap_model["lost_population"] * mean_spending
-        gap_monthly = gap_model.set_index("date").resample("ME")["lost_revenue"].sum().reset_index()
-        
-        plt.figure(figsize=(10, 6))
-        sns.barplot(data=gap_monthly, x=gap_monthly["date"].dt.strftime("%Y-%m"), y="lost_revenue", color="crimson")
-        plt.title("Economic Revenue Gap (Monthly ¥ Loss due to Planning Friction)", fontsize=14)
-        plt.ylabel("Lost Revenue (¥)", fontsize=12)
-        plt.xlabel("Month", fontsize=12)
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(os.path.join(FIG_DIR, "ultimate_fig1_economic_gap.png"), dpi=300)
-        plt.close()
-        report("Saved ultimate_fig1_economic_gap.png")
-
-    # 17b. Behavioral Segmentation (Targeting the Nudge)
-    report("\n--- Behavioral Segmentation (Social vs Search) ---")
-    survey_df['is_social'] = survey_df['Instagram'].fillna(0).astype(int) | survey_df['Twitter'].fillna(0).astype(int) | survey_df['Facebook'].fillna(0).astype(int)
-    survey_df['is_search'] = survey_df['インターネット・アプリ'].fillna(0).astype(int)
-    
-    social_segment = survey_df[survey_df['is_social'] == 1]
-    search_segment = survey_df[(survey_df['is_search'] == 1) & (survey_df['is_social'] == 0)]
-    
-    report(f"Social-Nudged Visitors: {len(social_segment)}")
-    report(f"Search-Driven Visitors: {len(search_segment)}")
-    
-    survey_df['date'] = pd.to_datetime(survey_df['回答日時'], errors='coerce').dt.normalize()
-    survey_weather = survey_df.dropna(subset=['date']).merge(weather_daily, on='date', how='inner')
-    
-    if not survey_weather.empty and 'snow_depth' in survey_weather.columns:
-        social_snow = survey_weather[survey_weather['is_social'] == 1]['snow_depth'].mean()
-        search_snow = survey_weather[(survey_weather['is_search'] == 1) & (survey_weather['is_social'] == 0)]['snow_depth'].mean()
-        report(f"Average Snow Depth on visit days - Social: {social_snow:.2f}cm vs Search: {search_snow:.2f}cm")
-        if social_snow > search_snow:
-            report("Insight: Social-Nudged visitors are MORE resilient to snow barriers.")
-        else:
-            report("Insight: Search-Driven visitors are MORE resilient to snow barriers.")
-
-    # 17c. Ambassador Optimization (Eiheiji vs. Tojinbo)
-    report("\n--- Ambassador Optimization: Vibrancy Threshold (Eiheiji vs Tojinbo) ---")
-    eiheiji_mask = survey_df['回答エリア'].str.contains('永平寺', na=False) | survey_df['市町村'].str.contains('永平寺', na=False)
-    eiheiji_df = survey_df[eiheiji_mask].copy()
-    tojinbo_mask = survey_df['回答エリア'].str.contains('東尋坊', na=False)
-    tojinbo_df = survey_df[tojinbo_mask].copy()
-    
-    sat_map = {'とても不満': 1, '不満': 2, 'どちらでもない': 3, '満足': 4, 'とても満足': 5}
-    eiheiji_df['sat_score'] = eiheiji_df['満足度'].map(sat_map)
-    tojinbo_df['sat_score'] = tojinbo_df['満足度'].map(sat_map)
-    
-    eiheiji_daily = eiheiji_df.groupby('date').agg(responses=('会員ID', 'count'), mean_sat=('sat_score', 'mean')).dropna()
-    tojinbo_daily = tojinbo_df.groupby('date').agg(responses=('会員ID', 'count'), mean_sat=('sat_score', 'mean')).dropna()
-    
-    if len(eiheiji_daily) > 10 and len(tojinbo_daily) > 10:
-        plt.figure(figsize=(10, 6))
-        sns.regplot(data=eiheiji_daily, x='responses', y='mean_sat', order=2, label='Eiheiji (Sacred)', scatter_kws={'alpha':0.5})
-        sns.regplot(data=tojinbo_daily, x='responses', y='mean_sat', order=2, label='Tojinbo (Natural)', scatter_kws={'alpha':0.5})
-        plt.title("Vibrancy Threshold: Satisfaction vs Crowd Density (Survey Proxy)", fontsize=14)
-        plt.xlabel("Daily Crowd Density (Survey Responses Proxy)", fontsize=12)
-        plt.ylabel("Mean Satisfaction Score (1-5)", fontsize=12)
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(os.path.join(FIG_DIR, "ultimate_fig2_vibrancy_threshold.png"), dpi=300)
-        plt.close()
-        report("Saved ultimate_fig2_vibrancy_threshold.png")
-        
-        e_poly = np.polyfit(eiheiji_daily['responses'], eiheiji_daily['mean_sat'], 2)
-        t_poly = np.polyfit(tojinbo_daily['responses'], tojinbo_daily['mean_sat'], 2)
-        
-        e_vertex = -e_poly[1] / (2 * e_poly[0]) if e_poly[0] < 0 else float('inf')
-        t_vertex = -t_poly[1] / (2 * t_poly[0]) if t_poly[0] < 0 else float('inf')
-        
-        report(f"Eiheiji 'Zen-Silence' Overtourism Threshold (Proxy): ~{e_vertex:.0f} relative density")
-        report(f"Tojinbo 'Fun-Crowd' Overtourism Threshold (Proxy): ~{t_vertex:.0f} relative density")
-
-except Exception as e:
-    report(f"Error processing survey data: {e}")
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 18. GLOBAL GENERALIZATION (FUKUI STATION)
-# ═══════════════════════════════════════════════════════════════════════════════
-report("\n" + "=" * 80)
-report("SECTION 18 – Global Generalization: Fukui Station Hub")
-report("=" * 80)
-
-fukui_files = sorted(glob.glob(
-    os.path.join(_ROOT_DIR, "fukui-kanko-people-flow-data/daily/fukui-station-east-entrance/Person/**/*.csv"),
-    recursive=True
-))
-fukui_rows = []
-for f in fukui_files:
-    try:
-        df = pd.read_csv(f)
-        if "aggregate from" in df.columns and "total count" in df.columns:
-            daily_total = df["total count"].sum()
-            date_str = os.path.basename(f).replace(".csv", "")
-            fukui_rows.append({"date": date_str, "count": daily_total})
-    except Exception:
-        pass
-
-if fukui_rows:
-    fukui_daily = pd.DataFrame(fukui_rows)
-    fukui_daily["date"] = pd.to_datetime(fukui_daily["date"])
-    fukui_daily = fukui_daily.groupby("date")["count"].sum().reset_index()
-    
-    fukui_model = fukui_daily.merge(weather_daily, on="date", how="inner").merge(rsi, on="date", how="inner")
-    fukui_model = fukui_model.dropna(subset=["count", route_col, "temp", "precip"])
-    
-    if len(fukui_model) > 30:
-        X_fukui = fukui_model[[route_col, "temp", "precip"]]
-        y_fukui = fukui_model["count"]
-        X_fukui = sm.add_constant(X_fukui)
-        fukui_ols = sm.OLS(y_fukui, X_fukui).fit()
-        report(f"Fukui Station OLS R²: {fukui_ols.rsquared:.3f}")
-        report("Insight: The Distributed Human Data Engine (DHDE) successfully generalizes to regional transport hubs.")
-    else:
-        report("Not enough overlapping data for Fukui Station model.")
-else:
-    report("No Fukui Station data found.")
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 19. ULTIMATE GOVERNANCE REPORT EXPORT
-# ═══════════════════════════════════════════════════════════════════════════════
-report("\n" + "=" * 80)
-report("SECTION 19 – Exporting Sovereign-Grade Governance Report")
-report("=" * 80)
-
-gov_report_path = os.path.join(OUT_DIR, "ultimate_governance_report.txt")
-try:
-    with open(gov_report_path, "w") as f:
-        f.write("=================================================================\n")
-        f.write(" SOVEREIGN-GRADE GOVERNANCE REPORT: FUKUI REGIONAL ECONOMY\n")
-        f.write("=================================================================\n\n")
-        f.write("1. ECONOMIC MANDATE (THE ¥ PRICE TAG)\n")
-        f.write(f"   - Mean Spending per Visitor: ¥{mean_spending:,.0f}\n")
-        f.write(f"   - Total Annual Economic Revenue Loss (Opportunity Gap): ¥{total_yen_loss:,.0f}\n")
-        f.write("   - Strategic Action: Implement AI-driven Nudge platform to recover lost revenue during weather-driven planning friction.\n\n")
-        
-        f.write("2. BEHAVIORAL LOAD-BALANCING (TARGETING THE NUDGE)\n")
-        f.write(f"   - Social-Nudged Segment (Instagram/Twitter/Facebook): {len(social_segment)} visitors\n")
-        f.write(f"   - Search-Driven Segment (RSI/Yahoo): {len(search_segment)} visitors\n")
-        f.write("   - Strategic Action: Target Social-Nudged segments during winter barriers, as they exhibit different resilience profiles.\n\n")
-        
-        f.write("3. AMBASSADOR OPTIMIZATION (SACRED VS NATURAL NODES)\n")
-        f.write("   - Eiheiji (Sacred Site) exhibits a distinct 'Zen-Silence' overtourism threshold compared to Tojinbo's 'Fun-Crowd' threshold.\n")
-        f.write("   - Strategic Action: Cap nudges to Eiheiji before the Vibrancy-Satisfaction correlation turns negative.\n\n")
-        
-        f.write("4. GLOBAL GENERALIZABILITY (DHDE FRAMEWORK)\n")
-        if fukui_rows and len(fukui_model) > 30:
-            f.write(f"   - Fukui Station Hub Model R²: {fukui_ols.rsquared:.3f}\n")
-        f.write("   - Conclusion: The Lagged-Correlation Inference model is exportable to global high-density heritage environments (e.g., Madinah, Dubai).\n")
-        
-    report(f"Successfully exported {gov_report_path}")
-except Exception as e:
-    report(f"Failed to export governance report: {e}")
-
 
 save_report()
 report("\n✓ Deep analysis complete.")

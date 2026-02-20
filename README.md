@@ -1,10 +1,17 @@
-# hokuriku-tourism-ai-governance
+# Hokuriku Tourism AI Governance
+
+> **Executive Reports:**
+> - [English Executive Report](output/EXECUTIVE_REPORT.md)
+> - [日本語エグゼクティブレポート](output/EXECUTIVE_REPORT.ja.md)
+>
+> **Read in other languages:**
+> - [日本語 (Japanese)](README.ja.md)
 
 ## AI-Driven Visitor Demand Forecasting & Under-vibrancy Analysis for Fukui Prefecture
 
 **PhD Research & Hokuriku Regional Tourism AI Governance Grant**
 
-This repository contains the reproducible analysis pipeline for predicting daily visitor counts at Tojinbo (東尋坊), Fukui Prefecture, Japan, using AI camera data, JMA weather observations, Route Search Impressions (RSI) route-search intent, and Hokuriku-wide tourism surveys.
+This repository contains a reproducible analysis pipeline for predicting daily visitor counts at Tojinbo (東尋坊), Fukui Prefecture, Japan, using AI camera data, JMA weather observations, Route Search Impressions (RSI) route-search intent, and Hokuriku-wide tourism surveys.
 
 ### Key Findings
 
@@ -17,7 +24,7 @@ This repository contains the reproducible analysis pipeline for predicting daily
 | #1 Predictor | `directions` (RSI) (route search), r = +0.781 |
 | Ishikawa → Tojinbo cross-prefectural signal | r = +0.537 |
 | Visitors vs Satisfaction | r = +0.161 (p = 0.001) — NO overtourism |
-| Lost Visitors ("Satake Number") | 85,400 |
+| Lost Visitors (Opportunity Gap) | 85,400 |
 | Winter weather sensitivity | 6.4× worse than summer |
 | Under-vibrancy in low-satisfaction reviews | 11.4× more prevalent (6.2% vs 0.5%) |
 | Fukui national visitor ranking | 47th / 47 prefectures (winter) |
@@ -26,28 +33,19 @@ This repository contains the reproducible analysis pipeline for predicting daily
 
 ```
 hokuriku-tourism-ai-governance/
-├── deep_analysis_tojinbo.py      # Main analysis pipeline (16 sections)
+├── deep_analysis_tojinbo.py      # Main analysis pipeline
 ├── requirements.txt              # Python dependencies
-├── deep_analysis_results.txt     # Full text report output
-├── bolstered_results.txt         # Grant-ready metrics summary
-├── figures/                      # All generated charts (12 PNGs)
-│   ├── fig1  – Time series (visitors vs RSI intent)
-│   ├── fig2  – Correlation heatmap
-│   ├── fig3  – Feature importance (MDI + Permutation)
-│   ├── fig4  – Day-of-week boxplot
-│   ├── fig5  – RF predicted vs actual
-│   ├── fig6  – Opportunity gap scatter
-│   ├── fig7  – Lag correlation bar chart
-│   ├── fig8  – Ishikawa → Tojinbo CCF
-│   ├── fig9  – Kansei overtourism threshold
-│   ├── fig10 – Lost population waterfall
-│   ├── fig11 – Fukui Resurrection (ranking simulation)
-│   └── fig12 – Hokuriku demand heatmap
 ├── jma/                          # JMA weather observations (included)
+├── output/                       # Generated artifacts
+│   ├── EXECUTIVE_REPORT.md
+│   ├── EXECUTIVE_REPORT.ja.md
+│   ├── *.png                     # Generated figures (EN & JA)
+│   └── *.txt                     # Generated analysis text outputs
 ├── ../fukui-kanko-people-flow-data/  # AI camera daily counts (sibling repo)
 ├── ../fukui-kanko-trend-report/      # Route Search Impressions (RSI) data (sibling repo)
 ├── ../opendata/                      # Hokuriku tourism survey data (sibling repo)
-└── README.md
+├── README.md
+└── README.ja.md
 ```
 
 ### Data Sources
@@ -59,47 +57,29 @@ hokuriku-tourism-ai-governance/
 | **Route Search Impressions (RSI)** | Daily route searches, map views, reviews for 47 Fukui tourism locations | 2024-01 → 2026-02 |
 | **Hokuriku Tourism Survey** | 95,653 responses (satisfaction, NPS, free text) across Fukui/Ishikawa/Toyama | 2023 → 2026 |
 
-### Data Source Attribution
-
-> **JMA Weather Data**
-> This repository utilizes weather data provided by the Japan Meteorological Agency (JMA).
-> - **Source:** [JMA Past Weather Data Download](https://www.data.jma.go.jp/gmd/risk/obsdl/index.php)
-> - **License:** [Terms of Use of the Japan Meteorological Agency website](https://www.jma.go.jp/jma/kishou/info/coment.html) (Compatible with CC BY 4.0 — Government of Japan Standard Terms of Use v2.0)
-> - **Processing:** The raw hourly data has been merged, cleaned, and processed by the author into `jma/jma_mikuni_hourly_8.csv` for demand forecasting analysis. Processing script: [jma/merge_clean_jma.py](jma/merge_clean_jma.py)
-
-### Analysis Pipeline (16 Sections)
-
-1. Data loading & cleaning (zero-day exclusion, outlier flags, ADF stationarity)
-2. Feature engineering (calendar, weather severity, rolling intent, lags, interactions)
-3. Multi-variable modelling (OLS + Random Forest)
-4. Opportunity Gap analysis (high intent, low arrivals)
-5. Negative lag-2 correlation explanation
-6. Visualisations (7 core figures)
-7. Cross-prefectural signal test (Ishikawa → Fukui pipeline)
-8. Kansei (emotional) feedback loop — overtourism threshold
-9. Lost Population quantification ("Satake Number")
-10. Model robustness (Durbin-Watson, VIF, sensitivity)
-11. Hokuriku demand heatmap
-12. **Autocorrelation fix** (Newey-West HAC, First-Difference, LDV)
-13. **Ranking impact simulation** (Fukui Resurrection)
-14. **Seasonal weather sensitivity** (Winter 6.4× worse)
-15. **Qualitative under-vibrancy link** (survey text mining)
-16. **Fukui Resurrection chart**
-
 ### Reproducing
 
+To reproduce this analysis, clone this repository with its data dependencies under the same parent directory:
+
 ```bash
-# Clone this repo alongside the data repos in a shared parent directory
+# 1) Create workspace
+mkdir hokuriku-workspace && cd hokuriku-workspace
+
+# 2) Clone sibling data repositories
+git clone https://github.com/YOUR_ORG/fukui-kanko-people-flow-data.git
+git clone https://github.com/YOUR_ORG/fukui-kanko-trend-report.git
+git clone https://github.com/YOUR_ORG/opendata.git
+
+# 3) Clone this repository
 git clone https://github.com/YOUR_ORG/hokuriku-tourism-ai-governance.git
 cd hokuriku-tourism-ai-governance
-pip install -r requirements.txt
 
-# Ensure sibling data repos exist at ../fukui-kanko-people-flow-data,
-# ../fukui-kanko-trend-report, and ../opendata
+# 4) Install and run
+pip install -r requirements.txt
 python deep_analysis_tojinbo.py
 ```
 
-Outputs are written to the repo root (text reports) and `figures/` (charts).
+Outputs are written to the `output/` directory.
 
 ### Citation
 
@@ -107,13 +87,10 @@ If you use this work, please cite:
 
 ```
 @misc{hokuriku-tourism-ai-governance-2026,
-  author = {Amil},
+  author = {Amil Khanzada},
   title  = {AI-Driven Visitor Demand Forecasting and Under-vibrancy Analysis for Fukui Prefecture},
   year   = {2026},
-  url    = {https://github.com/YOUR_ORG/hokuriku-tourism-ai-governance}
+  url    = {https://github.com/YOUR_ORG/hokuriku-tourism-ai-governance},
+  note   = {Specially Appointed Professor, Regional Revitalization Lab, University of Fukui}
 }
 ```
-
-### License
-
-MIT
