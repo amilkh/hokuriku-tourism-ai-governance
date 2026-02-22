@@ -17,15 +17,15 @@ This repository contains a reproducible analysis pipeline for predicting daily v
 
 | Finding | Value |
 |---|---|
-| OLS R² | 0.811 (Adj R² = 0.803) |
-| RF 5-fold CV R² | 0.560 ± 0.127 |
-| First-Difference R² (autocorrelation-corrected) | 0.701 |
-| LDV R² / DW | 0.848 / 1.918 |
+| OLS R² | 0.810 (Adj R² = 0.802) |
+| RF 5-fold CV R² | 0.557 ± 0.131 |
+| First-Difference R² (autocorrelation-corrected) | 0.708 |
+| LDV R² / DW | 0.848 / 1.893 |
 | #1 Predictor | `directions` (RSI) (route search), r = +0.781 |
 | Ishikawa → Tojinbo cross-prefectural signal | r = +0.537 |
 | Visitors vs Satisfaction | r = +0.161 (p = 0.001) — NO overtourism |
-| Lost Visitors (Opportunity Gap) | 85,400 |
-| Winter weather sensitivity | 6.4× worse than summer |
+| Lost Visitors (Opportunity Gap) | 85,512 |
+| Winter weather sensitivity | 6.29× worse than summer |
 | Under-vibrancy in low-satisfaction reviews | 11.4× more prevalent (6.2% vs 0.5%) |
 | Fukui national visitor ranking | 47th / 47 prefectures (winter) |
 
@@ -40,7 +40,7 @@ hokuriku-tourism-ai-governance/
 │   ├── EXECUTIVE_REPORT.md
 │   ├── EXECUTIVE_REPORT.ja.md
 │   ├── *.png                     # Generated figures (EN & JA)
-│   └── *.txt                     # Generated analysis text outputs
+│   └── analysis_metrics.txt      # Machine-readable metrics summary
 ├── ../fukui-kanko-people-flow-data/  # AI camera daily counts (sibling repo)
 ├── ../fukui-kanko-trend-report/      # Route Search Impressions (RSI) data (sibling repo)
 ├── ../opendata/                      # Hokuriku tourism survey data (sibling repo)

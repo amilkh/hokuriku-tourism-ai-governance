@@ -23,15 +23,20 @@ Pipeline:
  16. Fukui Resurrection Chart
 
 Outputs (saved to output/ folder):
-  - deep_analysis_results.txt       (full text report)
-  - bolstered_results.txt           (grant-ready metrics)
-  - deep_analysis_*.png             (11+ figures)
+    - analysis_metrics.txt            (machine-readable metrics summary)
+    - deep_analysis_*.png             (11+ figures, each with _ja copy)
 """
 
 import warnings
 warnings.filterwarnings("ignore")
+warnings.filterwarnings(
+    "ignore",
+    message="`sklearn.utils.parallel.delayed` should be used with `sklearn.utils.parallel.Parallel`",
+    category=UserWarning,
+    module="sklearn.utils.parallel",
+)
 
-import os, glob, textwrap
+import os, glob, textwrap, shutil
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -61,16 +66,31 @@ OUT_DIR = os.path.join(_REPO_DIR, "output")
 os.makedirs(OUT_DIR, exist_ok=True)
 FIG_DIR = OUT_DIR
 REPORT_LINES: list[str] = []
+METRICS_LINES: list[str] = []
 
 def report(msg: str = ""):
     """Append a line to the report and print it."""
     print(msg)
     REPORT_LINES.append(msg)
 
+def metrics(msg: str = ""):
+    """Append a line to the metrics output."""
+    METRICS_LINES.append(msg)
+
 def save_report():
-    with open(os.path.join(OUT_DIR, "deep_analysis_results.txt"), "w") as f:
-        f.write("\n".join(REPORT_LINES))
-    report(f">>> Report saved to {OUT_DIR}/deep_analysis_results.txt")
+    out_path = os.path.join(OUT_DIR, "analysis_metrics.txt")
+    lines = METRICS_LINES if METRICS_LINES else REPORT_LINES
+    with open(out_path, "w") as f:
+        f.write("\n".join(lines))
+    report(f">>> Metrics saved to {out_path}")
+
+def save_fig(fig, fname: str, dpi: int = 150, ja_copy: bool = False):
+    fig.savefig(fname, dpi=dpi)
+    report(f"  Saved {fname}")
+    if ja_copy:
+        fname_ja = fname.replace(".png", "_ja.png")
+        shutil.copyfile(fname, fname_ja)
+        report(f"  Saved {fname_ja}")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1.  DATA LOADING & CLEANING
@@ -481,8 +501,7 @@ ax1.xaxis.set_major_locator(mdates.MonthLocator())
 fig.autofmt_xdate()
 fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_timeseries.png")
-fig.savefig(fname, dpi=150)
-report(f"  Saved {fname}")
+save_fig(fig, fname, dpi=150, ja_copy=True)
 plt.close(fig)
 
 # --- Fig 2: Correlation heatmap ---
@@ -492,8 +511,7 @@ sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="RdBu_r", center=0, ax=ax)
 ax.set_title("Feature Correlation Matrix")
 fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_correlation.png")
-fig.savefig(fname, dpi=150)
-report(f"  Saved {fname}")
+save_fig(fig, fname, dpi=150, ja_copy=True)
 plt.close(fig)
 
 # --- Fig 3: Feature importance comparison ---
@@ -515,8 +533,7 @@ axes[1].set_xlabel("Mean decrease in R²")
 
 fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_feature_importance.png")
-fig.savefig(fname, dpi=150)
-report(f"  Saved {fname}")
+save_fig(fig, fname, dpi=150, ja_copy=True)
 plt.close(fig)
 
 # --- Fig 4: Day-of-week boxplot ---
@@ -530,8 +547,7 @@ ax.set_xlabel("Day of Week")
 ax.set_ylabel("Visitor Count")
 fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_dow_boxplot.png")
-fig.savefig(fname, dpi=150)
-report(f"  Saved {fname}")
+save_fig(fig, fname, dpi=150, ja_copy=True)
 plt.close(fig)
 
 # --- Fig 5: Predicted vs Actual (RF) ---
@@ -547,8 +563,7 @@ ax.xaxis.set_major_locator(mdates.MonthLocator())
 fig.autofmt_xdate()
 fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_rf_prediction.png")
-fig.savefig(fname, dpi=150)
-report(f"  Saved {fname}")
+save_fig(fig, fname, dpi=150, ja_copy=True)
 plt.close(fig)
 
 # --- Fig 6: Opportunity Gap scatter ---
@@ -564,8 +579,7 @@ ax.set_title("Opportunity Gap (red = high intent, low arrivals)")
 ax.legend()
 fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_opportunity_gap.png")
-fig.savefig(fname, dpi=150)
-report(f"  Saved {fname}")
+save_fig(fig, fname, dpi=150, ja_copy=True)
 plt.close(fig)
 
 # --- Fig 7: Lag correlation bar chart ---
@@ -587,8 +601,7 @@ ax.set_title(f"Lag Correlation: {route_col} → Visitor Count")
 ax.set_xticks(lag_df["lag"])
 fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_lag_correlations.png")
-fig.savefig(fname, dpi=150)
-report(f"  Saved {fname}")
+save_fig(fig, fname, dpi=150, ja_copy=True)
 plt.close(fig)
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -692,8 +705,7 @@ if survey_frames:
         ax.legend()
         fig.tight_layout()
         fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_ishikawa_ccf.png")
-        fig.savefig(fname, dpi=150)
-        report(f"  Saved {fname}")
+        save_fig(fig, fname, dpi=150, ja_copy=True)
         plt.close(fig)
 else:
     report("  ⚠ No survey data available for cross-prefectural analysis.")
@@ -832,8 +844,7 @@ if sat_frames:
         ax.legend()
         fig.tight_layout()
         fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_kansei_overtourism.png")
-        fig.savefig(fname, dpi=150)
-        report(f"  Saved {fname}")
+        save_fig(fig, fname, dpi=150, ja_copy=True)
         plt.close(fig)
     else:
         report("  ⚠ Insufficient overlapping data for overtourism analysis.")
@@ -915,8 +926,7 @@ if len(gap_model) > 0:
     ax.set_title(f"Lost Population per Gap Day (Total: {total_lost:,.0f})")
     fig.tight_layout()
     fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_lost_population.png")
-    fig.savefig(fname, dpi=150)
-    report(f"  Saved {fname}")
+    save_fig(fig, fname, dpi=150, ja_copy=True)
     plt.close(fig)
 else:
     total_lost = 0
@@ -1492,8 +1502,7 @@ axes[1].annotate(f"Total: {total_lost:,.0f} visitors",
 
 fig.tight_layout()
 fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_fukui_resurrection.png")
-fig.savefig(fname, dpi=150)
-report(f"  Saved {fname}")
+save_fig(fig, fname, dpi=150, ja_copy=False)
 
 # Save Japanese-labeled variant
 axes[0].set_xticklabels([f"{m}月" for m in range(1, 13)])
@@ -1587,8 +1596,7 @@ if survey_frames:
 
     fig.tight_layout()
     fname = os.path.join(FIG_DIR, f"deep_analysis_fig{fig_num}_hokuriku_heatmap.png")
-    fig.savefig(fname, dpi=150)
-    report(f"  Saved {fname}")
+    save_fig(fig, fname, dpi=150, ja_copy=False)
 
     # Japanese variant
     axes[0].clear()
@@ -1730,10 +1738,8 @@ bolster("=" * 80)
 bolster("END OF BOLSTERED RESULTS")
 bolster("=" * 80)
 
-bolstered_path = os.path.join(OUT_DIR, "bolstered_results.txt")
-with open(bolstered_path, "w") as f:
-    f.write("\n".join(bolstered_lines))
-report(f"\n★ Bolstered results saved to: {bolstered_path}")
+for line in bolstered_lines:
+    metrics(line)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 12.  EXECUTIVE SUMMARY
@@ -1852,9 +1858,11 @@ try:
         plt.xlabel("Month", fontsize=12)
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig(os.path.join(FIG_DIR, "ultimate_fig1_economic_gap.png"), dpi=300)
+        out_path = os.path.join(FIG_DIR, "ultimate_fig1_economic_gap.png")
+        plt.savefig(out_path, dpi=300)
         plt.close()
         report("Saved ultimate_fig1_economic_gap.png")
+        shutil.copyfile(out_path, out_path.replace(".png", "_ja.png"))
 
     # 17b. Behavioral Segmentation (Targeting the Nudge)
     report("\n--- Behavioral Segmentation (Social vs Search) ---")
@@ -1902,9 +1910,11 @@ try:
         plt.ylabel("Mean Satisfaction Score (1-5)", fontsize=12)
         plt.legend()
         plt.tight_layout()
-        plt.savefig(os.path.join(FIG_DIR, "ultimate_fig2_vibrancy_threshold.png"), dpi=300)
+        out_path = os.path.join(FIG_DIR, "ultimate_fig2_vibrancy_threshold.png")
+        plt.savefig(out_path, dpi=300)
         plt.close()
         report("Saved ultimate_fig2_vibrancy_threshold.png")
+        shutil.copyfile(out_path, out_path.replace(".png", "_ja.png"))
         
         e_poly = np.polyfit(eiheiji_daily['responses'], eiheiji_daily['mean_sat'], 2)
         t_poly = np.polyfit(tojinbo_daily['responses'], tojinbo_daily['mean_sat'], 2)
@@ -1967,34 +1977,20 @@ report("\n" + "=" * 80)
 report("SECTION 19 – Exporting Sovereign-Grade Governance Report")
 report("=" * 80)
 
-gov_report_path = os.path.join(OUT_DIR, "ultimate_governance_report.txt")
-try:
-    with open(gov_report_path, "w") as f:
-        f.write("=================================================================\n")
-        f.write(" SOVEREIGN-GRADE GOVERNANCE REPORT: FUKUI REGIONAL ECONOMY\n")
-        f.write("=================================================================\n\n")
-        f.write("1. ECONOMIC MANDATE (THE ¥ PRICE TAG)\n")
-        f.write(f"   - Mean Spending per Visitor: ¥{mean_spending:,.0f}\n")
-        f.write(f"   - Total Annual Economic Revenue Loss (Opportunity Gap): ¥{total_yen_loss:,.0f}\n")
-        f.write("   - Strategic Action: Implement AI-driven Nudge platform to recover lost revenue during weather-driven planning friction.\n\n")
-        
-        f.write("2. BEHAVIORAL LOAD-BALANCING (TARGETING THE NUDGE)\n")
-        f.write(f"   - Social-Nudged Segment (Instagram/Twitter/Facebook): {len(social_segment)} visitors\n")
-        f.write(f"   - Search-Driven Segment (RSI/Yahoo): {len(search_segment)} visitors\n")
-        f.write("   - Strategic Action: Target Social-Nudged segments during winter barriers, as they exhibit different resilience profiles.\n\n")
-        
-        f.write("3. AMBASSADOR OPTIMIZATION (SACRED VS NATURAL NODES)\n")
-        f.write("   - Eiheiji (Sacred Site) exhibits a distinct 'Zen-Silence' overtourism threshold compared to Tojinbo's 'Fun-Crowd' threshold.\n")
-        f.write("   - Strategic Action: Cap nudges to Eiheiji before the Vibrancy-Satisfaction correlation turns negative.\n\n")
-        
-        f.write("4. GLOBAL GENERALIZABILITY (DHDE FRAMEWORK)\n")
-        if fukui_rows and len(fukui_model) > 30:
-            f.write(f"   - Fukui Station Hub Model R²: {fukui_ols.rsquared:.3f}\n")
-        f.write("   - Conclusion: The Lagged-Correlation Inference model is exportable to global high-density heritage environments (e.g., Madinah, Dubai).\n")
-        
-    report(f"Successfully exported {gov_report_path}")
-except Exception as e:
-    report(f"Failed to export governance report: {e}")
+metrics("=================================================================")
+metrics("SOVEREIGN-GRADE GOVERNANCE SUMMARY: FUKUI REGIONAL ECONOMY")
+metrics("=================================================================")
+metrics("ECONOMIC_MANDATE")
+metrics(f"  Mean_Spending_Per_Visitor_Yen={mean_spending:,.0f}")
+metrics(f"  Opportunity_Gap_Total_Loss_Yen={total_yen_loss:,.0f}")
+metrics("BEHAVIORAL_SEGMENTATION")
+metrics(f"  Social_Nudged_Visitors={len(social_segment)}")
+metrics(f"  Search_Driven_Visitors={len(search_segment)}")
+metrics("AMBASSADOR_OPTIMIZATION")
+metrics("  Eiheiji_Vibrancy_Threshold=Zen-Silence")
+metrics("GLOBAL_GENERALIZABILITY")
+if fukui_rows and len(fukui_model) > 30:
+    metrics(f"  Fukui_Station_OLS_R2={fukui_ols.rsquared:.3f}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2256,43 +2252,39 @@ if valid_nodes:
     plt.savefig(spatial_heatmap_path, dpi=300)
     plt.close()
     report(f"Saved {spatial_heatmap_path}")
+    shutil.copyfile(spatial_heatmap_path, spatial_heatmap_path.replace(".png", "_ja.png"))
 
 # 20.6 Export required metrics artifact
-spatial_metrics_path = os.path.join(OUT_DIR, "ultimate_spatial_governance_metrics.txt")
-with open(spatial_metrics_path, "w", encoding="utf-8") as f:
-    f.write("MULTI-NODE SPATIAL GOVERNANCE METRICS (DHDE)\n")
-    f.write("=" * 72 + "\n\n")
-    f.write("Nodes:\n")
-    f.write("  A = Tojinbo (Natural/Coast) + Mikuni weather\n")
-    f.write("  B = Fukui Station (Transit/City) + Fukui weather\n")
-    f.write(f"  C = Katsuyama/Dinosaur (Heritage/Indoor) + Katsuyama weather [{node_c_source}]\n\n")
+metrics("MULTI_NODE_SPATIAL_GOVERNANCE")
+metrics("  Node_A=Tojinbo_Mikuni")
+metrics("  Node_B=Fukui_Station")
+metrics(f"  Node_C=Katsuyama ({node_c_source})")
+for node_name, metrics_row in valid_nodes.items():
+    metrics(f"{node_name}")
+    metrics(f"  n={metrics_row['n']}")
+    metrics(f"  OLS_R2={metrics_row['r2']:.6f}")
+    metrics(f"  OLS_Adj_R2={metrics_row['adj_r2']:.6f}")
+    metrics(f"  Weather_Lift_R2={metrics_row['weather_lift']:+.6f}")
+    metrics(f"  Snow_Beta_Std={metrics_row['snow_beta_std']:+.6f}")
+    metrics(f"  Opportunity_Lost_Visitors={metrics_row['lost_visitors']:.2f}")
+    metrics(f"  Opportunity_Lost_Yen={metrics_row['lost_yen']:.2f}")
 
-    for node_name, metrics in valid_nodes.items():
-        f.write(f"{node_name}\n")
-        f.write(f"  n={metrics['n']}\n")
-        f.write(f"  OLS_R2={metrics['r2']:.6f}\n")
-        f.write(f"  OLS_Adj_R2={metrics['adj_r2']:.6f}\n")
-        f.write(f"  Weather_Lift_R2={metrics['weather_lift']:+.6f}\n")
-        f.write(f"  Snow_Beta_Std={metrics['snow_beta_std']:+.6f}\n")
-        f.write(f"  Opportunity_Lost_Visitors={metrics['lost_visitors']:.2f}\n")
-        f.write(f"  Opportunity_Lost_Yen={metrics['lost_yen']:.2f}\n\n")
+if wind_nudge_summary:
+    metrics("Atmospheric_Nudge_MikuniWindGT10")
+    metrics(f"  HighWindDays={wind_nudge_summary['n_high']}")
+    metrics(f"  Tojinbo_DeltaPct={wind_nudge_summary['tojinbo_delta_pct']:+.4f}")
+    metrics(f"  Fukui_DeltaPct={wind_nudge_summary['fukui_delta_pct']:+.4f}")
+    metrics(f"  Katsuyama_DeltaPct={wind_nudge_summary['katsuyama_delta_pct']:+.4f}")
 
-    if wind_nudge_summary:
-        f.write("Atmospheric_Nudge_MikuniWindGT10\n")
-        f.write(f"  HighWindDays={wind_nudge_summary['n_high']}\n")
-        f.write(f"  Tojinbo_DeltaPct={wind_nudge_summary['tojinbo_delta_pct']:+.4f}\n")
-        f.write(f"  Fukui_DeltaPct={wind_nudge_summary['fukui_delta_pct']:+.4f}\n")
-        f.write(f"  Katsuyama_DeltaPct={wind_nudge_summary['katsuyama_delta_pct']:+.4f}\n\n")
+metrics("ThreeNode_Satake_Number")
+metrics(f"  Lost_Visitors={satake_total_lost_visitors:.2f}")
+metrics(f"  Spending_Per_Visitor_Yen={SPENDING_PER_VISITOR_YEN:.2f}")
+metrics(f"  Total_Lost_Yen={satake_total_yen:.2f}")
 
-    f.write("ThreeNode_Satake_Number\n")
-    f.write(f"  Lost_Visitors={satake_total_lost_visitors:.2f}\n")
-    f.write(f"  Spending_Per_Visitor_Yen={SPENDING_PER_VISITOR_YEN:.2f}\n")
-    f.write(f"  Total_Lost_Yen={satake_total_yen:.2f}\n\n")
-
-    if ishikawa_lag_results:
-        f.write("Ishikawa_Pipeline_BestLag_ByNode\n")
-        for node_name, lag, r, n in ishikawa_lag_results:
-            f.write(f"  {node_name}: lag={lag:+d}, r={r:+.6f}, n={n}\n")
+if ishikawa_lag_results:
+    metrics("Ishikawa_Pipeline_BestLag_ByNode")
+    for node_name, lag, r, n in ishikawa_lag_results:
+        metrics(f"  {node_name}: lag={lag:+d}, r={r:+.6f}, n={n}")
 
 report(f"Saved {spatial_metrics_path}")
 
