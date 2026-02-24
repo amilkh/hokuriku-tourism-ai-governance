@@ -33,7 +33,7 @@
 
 ```
 hokuriku-tourism-ai-governance/
-├── deep_analysis_tojinbo.py      # メイン分析パイプライン
+├── run_analysis.py               # メイン分析パイプライン
 ├── requirements.txt              # Python依存関係
 ├── jma/                          # 気象庁データ（同梱）
 ├── output/                       # 生成物
@@ -76,7 +76,7 @@ cd hokuriku-tourism-ai-governance
 
 # 4) 依存関係インストールと実行
 pip install -r requirements.txt
-python deep_analysis_tojinbo.py
+python run_analysis.py
 ```
 
 出力は `output/` ディレクトリに保存されます。

@@ -33,7 +33,7 @@ This repository contains a reproducible analysis pipeline for predicting daily v
 
 ```
 hokuriku-tourism-ai-governance/
-├── deep_analysis_tojinbo.py      # Main analysis pipeline
+├── run_analysis.py               # Main analysis pipeline
 ├── requirements.txt              # Python dependencies
 ├── jma/                          # JMA weather observations (included)
 ├── output/                       # Generated artifacts
@@ -76,7 +76,7 @@ cd hokuriku-tourism-ai-governance
 
 # 4) Install and run
 pip install -r requirements.txt
-python deep_analysis_tojinbo.py
+python run_analysis.py
 ```
 
 Outputs are written to the `output/` directory.

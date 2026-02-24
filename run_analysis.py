@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """run_analysis.py – Modular pipeline entry-point (replaces monolith).
 
-Produces identical output to ``deep_analysis_tojinbo.py`` but delegates
-to ``src/`` modules.  Run from the repo root::
+Delegates analysis flow to ``src/`` modules.  Run from the repo root::
 
     python run_analysis.py                 # default config
     HTAG_CONFIG=custom.yaml python run_analysis.py  # custom config

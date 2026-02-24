@@ -6,8 +6,7 @@ Thank you for considering contributing to this project!
 
 ```
 hokuriku-tourism-ai-governance/
-├── deep_analysis_tojinbo.py   # Original monolith (preserved)
-├── run_analysis.py            # Modular pipeline entry-point
+├── run_analysis.py            # Main modular pipeline entry-point
 ├── config/
 │   └── settings.yaml          # Pipeline configuration
 ├── src/                       # Python package

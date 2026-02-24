@@ -28,7 +28,7 @@ Current demand model uses Mikuni by default (`jma_mikuni_hourly_8.csv`).
 | `weather_type` | Weather symbol code |
 | `humidity_pct` | Relative humidity (%) |
 
-`deep_analysis_tojinbo.py` maps to legacy names internally:
+`run_analysis.py` (via `src/data_loader.py`) maps to legacy names internally:
 `temp_c` → `temp`, `precip_1h_mm` → `precip`, `sun_1h_h` → `sun`, `wind_speed_ms` → `wind`
 
 ## Adding new months (scripted downloads)
