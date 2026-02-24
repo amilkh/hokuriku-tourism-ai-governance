@@ -87,4 +87,7 @@ Follow conventional commit format:
 
 ## License
 
-MIT License – Code for FUKUI
+Copyright © Amil Khanzada. All rights reserved.
+
+No license is granted at this time. Reuse, redistribution, or publication
+requires explicit written permission from the author.

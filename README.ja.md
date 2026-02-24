@@ -94,3 +94,11 @@ python deep_analysis_tojinbo.py
   note   = {福井大学 地域創生推進本部 特命助教}
 }
 ```
+
+### ライセンス
+
+Copyright © Amil Khanzada. All rights reserved.
+
+現時点ではライセンスは付与していません。再利用・再配布・公開には、
+著者による事前の書面許諾が必要です。
+

@@ -13,6 +13,7 @@ from typing import Callable
 import matplotlib.dates as mdates
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -20,14 +21,20 @@ import seaborn as sns
 from .report import Reporter
 
 
+_JP_FONT_NAME: str | None = None
+
+
 def _configure_japanese_font() -> None:
     """Configure matplotlib with a Japanese-capable font if available.
 
     This prevents tofu/missing-glyph boxes in generated ``*_ja.png`` figures.
     """
+    global _JP_FONT_NAME
+
     # Most reliable path: japanize_matplotlib (bundles IPAexGothic settings).
     try:
         import japanize_matplotlib  # type: ignore  # noqa: F401
+        _JP_FONT_NAME = plt.rcParams.get("font.family", [None])[0] if isinstance(plt.rcParams.get("font.family"), list) else None
         plt.rcParams["axes.unicode_minus"] = False
         return
     except Exception:
@@ -48,24 +55,44 @@ def _configure_japanese_font() -> None:
     # Register known system font files explicitly (helps on headless Linux).
     known_font_files = [
         "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJKJP-Regular.otf",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJKjp-Regular.otf",
     ]
     for path in known_font_files:
         if Path(path).exists():
             try:
                 fm.fontManager.addfont(path)
+                if _JP_FONT_NAME is None:
+                    _JP_FONT_NAME = fm.FontProperties(fname=path).get_name()
             except Exception:
                 pass
 
     installed = {f.name for f in fm.fontManager.ttflist}
     selected = next((name for name in candidates if name in installed), None)
     if selected:
+        _JP_FONT_NAME = selected
         plt.rcParams["font.family"] = "sans-serif"
         plt.rcParams["font.sans-serif"] = [selected, "DejaVu Sans"]
+    elif _JP_FONT_NAME:
+        plt.rcParams["font.family"] = "sans-serif"
+        plt.rcParams["font.sans-serif"] = [_JP_FONT_NAME, "DejaVu Sans"]
     else:
         # Last fallback (may still miss some CJK glyphs depending on environment).
         plt.rcParams["font.family"] = "DejaVu Sans"
 
     plt.rcParams["axes.unicode_minus"] = False
+
+
+def _apply_japanese_font(fig: plt.Figure) -> None:
+    if not _JP_FONT_NAME:
+        return
+    for text_obj in fig.findobj(lambda obj: isinstance(obj, mpl.text.Text)):
+        try:
+            text_obj.set_fontfamily(_JP_FONT_NAME)
+        except Exception:
+            pass
 
 
 _configure_japanese_font()
@@ -88,8 +115,10 @@ def _save_with_ja(
 ) -> None:
     reporter.save_fig(fig, path, dpi=dpi, ja_copy=False)
     ja_formatter(fig)
+    _apply_japanese_font(fig)
     ja_path = path.replace(".png", "_ja.png")
     fig.savefig(ja_path, dpi=dpi)
+    reporter.optimize_png(ja_path)
     reporter.log(f"  Saved {ja_path}")
     plt.close(fig)
 
@@ -516,7 +545,9 @@ def plot_resurrection(
             txt.set_text(f"合計: {total_lost:,.0f}人")
 
     ja_path = out_path.replace(".png", "_ja.png")
+    _apply_japanese_font(fig)
     fig.savefig(ja_path, dpi=dpi)
+    reporter.optimize_png(ja_path)
     reporter.log(f"  Saved {ja_path}")
     plt.close(fig)
     return fig
@@ -596,7 +627,9 @@ def plot_hokuriku_heatmap(
 
     fig.tight_layout()
     ja_path = out_path.replace(".png", "_ja.png")
+    _apply_japanese_font(fig)
     fig.savefig(ja_path, dpi=dpi)
+    reporter.optimize_png(ja_path)
     reporter.log(f"  Saved {ja_path}")
     plt.close(fig)
     return fig
@@ -623,7 +656,9 @@ def plot_spatial_friction(
     if fig.axes and len(fig.axes) > 1:
         fig.axes[1].set_ylabel("相対的摩擦強度")
     ja_path = out_path.replace(".png", "_ja.png")
+    _apply_japanese_font(fig)
     fig.savefig(ja_path, dpi=dpi)
+    reporter.optimize_png(ja_path)
     reporter.log(f"  Saved {ja_path}")
     plt.close(fig)
     return fig
@@ -759,7 +794,9 @@ def plot_weather_shield_network(
             break
     
     ja_path = out_path.replace(".png", "_ja.png")
+    _apply_japanese_font(fig)
     fig.savefig(ja_path, dpi=dpi)
+    reporter.optimize_png(ja_path)
     reporter.log(f"  Saved {ja_path}")
     plt.close(fig)
     return fig
@@ -874,7 +911,9 @@ def plot_rank_resurrection_projection(
     ax2.set_xlabel("喪失来訪者数（千人）")
     
     ja_path = out_path.replace(".png", "_ja.png")
+    _apply_japanese_font(fig)
     fig.savefig(ja_path, dpi=dpi)
+    reporter.optimize_png(ja_path)
     reporter.log(f"  Saved {ja_path}")
     plt.close(fig)
     return fig

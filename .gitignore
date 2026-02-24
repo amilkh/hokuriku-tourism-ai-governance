@@ -32,4 +32,7 @@ pnpm-lock.yaml
 # .py scripts and READMEs inside rawdata/ are still tracked
 jma/*_rawdata
 
+# Generated outputs
+output/*.png
+
 

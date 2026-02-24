@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -80,14 +81,46 @@ class Reporter:
         dpi = dpi or self._dpi
         path = Path(fname) if Path(fname).is_absolute() else self.fig_dir / fname
         fig.savefig(str(path), dpi=dpi)
+        self._optimize_png(path)
         self.log(f"  Saved {path}")
 
         if ja_copy or self._ja_copy:
             ja_path = path.with_name(path.stem + "_ja" + path.suffix)
             shutil.copyfile(str(path), str(ja_path))
+            self._optimize_png(ja_path)
             self.log(f"  Saved {ja_path}")
 
         return path
+
+    def optimize_png(self, path: str | Path) -> None:
+        """Optimize a PNG file if pngquant is available."""
+        self._optimize_png(Path(path))
+
+    def _optimize_png(self, path: Path) -> None:
+        if path.suffix.lower() != ".png":
+            return
+        if shutil.which("pngquant") is None:
+            return
+        try:
+            subprocess.run(
+                [
+                    "pngquant",
+                    "--force",
+                    "--ext",
+                    ".png",
+                    "--quality=80-100",
+                    "--speed",
+                    "1",
+                    "--strip",
+                    "--skip-if-larger",
+                    str(path),
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        except Exception:
+            pass
 
     # ── Flush to disk ─────────────────────────────────────────────────────
 

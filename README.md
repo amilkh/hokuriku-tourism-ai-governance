@@ -94,3 +94,11 @@ If you use this work, please cite:
   note   = {Specially Appointed Professor, Regional Revitalization Lab, University of Fukui}
 }
 ```
+
+### License
+
+Copyright © Amil Khanzada. All rights reserved.
+
+No license is granted at this time. Reuse, redistribution, or publication
+requires explicit written permission from the author.
+
