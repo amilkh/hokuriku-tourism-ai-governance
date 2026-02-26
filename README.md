@@ -33,7 +33,9 @@ This repository contains a reproducible analysis pipeline for predicting daily v
 
 ```
 hokuriku-tourism-ai-governance/
-├── run_analysis.py               # Main analysis pipeline
+├── src/
+│   ├── run_analysis.py           # Main analysis pipeline entry module
+│   └── generate_grant_summary.py # Grant summary JSON generator
 ├── requirements.txt              # Python dependencies
 ├── jma/                          # JMA weather observations (included)
 ├── output/                       # Generated artifacts
@@ -76,7 +78,7 @@ cd hokuriku-tourism-ai-governance
 
 # 4) Install and run
 pip install -r requirements.txt
-python run_analysis.py
+python -m src.run_analysis
 ```
 
 Outputs are written to the `output/` directory.

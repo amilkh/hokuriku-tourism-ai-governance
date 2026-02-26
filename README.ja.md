@@ -33,7 +33,9 @@
 
 ```
 hokuriku-tourism-ai-governance/
-├── run_analysis.py               # メイン分析パイプライン
+├── src/
+│   ├── run_analysis.py           # メイン分析パイプラインのエントリモジュール
+│   └── generate_grant_summary.py # 助成金向けサマリJSON生成
 ├── requirements.txt              # Python依存関係
 ├── jma/                          # 気象庁データ（同梱）
 ├── output/                       # 生成物
@@ -76,7 +78,7 @@ cd hokuriku-tourism-ai-governance
 
 # 4) 依存関係インストールと実行
 pip install -r requirements.txt
-python run_analysis.py
+python -m src.run_analysis
 ```
 
 出力は `output/` ディレクトリに保存されます。

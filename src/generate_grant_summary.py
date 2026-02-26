@@ -3,24 +3,20 @@
 
 Usage::
 
-    python tools/generate_grant_summary.py
-    python tools/generate_grant_summary.py --output grant_summary.json
+    python -m src.generate_grant_summary
+    python -m src.generate_grant_summary --output grant_summary.json
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
-import sys
 from datetime import datetime
 from pathlib import Path
 
-# Ensure the repo root is on sys.path so src/ is importable
 _REPO_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(_REPO_DIR))
 
-from src.config import load_config  # noqa: E402
+from src.config import load_config
 
 
 def generate_summary(cfg: dict) -> dict:

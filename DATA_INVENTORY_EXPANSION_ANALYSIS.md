@@ -171,7 +171,7 @@
 - **Config changes:** 30 min (add Rainbow Line paths, weather station)
 - **Code changes:** 1-2 hours (extend spatial analysis to N-node flexible design)
 - **Data loading:** 15 min (Rainbow Line CSV same schema as Tojinbo)
-- **Re-running pipeline:** 10-20 min (automated via `run_analysis.py`)
+- **Re-running pipeline:** 10-20 min (automated via `python -m src.run_analysis`)
 - **Documentation updates:** 1 hour (executive reports, README, paper draft)
 - **Total:** ~3-4 hours end-to-end
 
@@ -216,7 +216,7 @@
 1. ✅ **Verify Rainbow Line weather data source** (JMA station for Wakasa region)
 2. Update `config/settings.yaml` with Rainbow Line paths
 3. Extend `src/spatial.py` to support N-node flexible analysis
-4. Re-run `run_analysis.py` with 4-node configuration
+4. Re-run `python -m src.run_analysis` with 4-node configuration
 5. Update executive reports with new 4-node metrics
 6. Revise paper scope from "3-node estimate" to "4-node measured network"
 
@@ -401,7 +401,7 @@ Q4: Does adding Rainbow Line create material new insights?
   - [ ] Verify `src/visualizer.py` handles 4 nodes gracefully
 
 - [ ] **Phase 4: Pipeline Execution (15 min)**
-  - [ ] Run `python run_analysis.py` with updated config
+  - [ ] Run `python -m src.run_analysis` with updated config
   - [ ] Verify all figures generated correctly
   - [ ] Check for errors/warnings in output
 

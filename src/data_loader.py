@@ -444,7 +444,7 @@ def load_all_data(
 ) -> dict[str, Any]:
     """Load every data source required by the pipeline.
 
-    This is the single entry-point that ``run_analysis.py`` calls.
+    This is the single entry-point that ``src/run_analysis.py`` calls.
 
     Args:
         cfg: Loaded settings dict.

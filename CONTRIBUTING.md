@@ -6,11 +6,12 @@ Thank you for considering contributing to this project!
 
 ```
 hokuriku-tourism-ai-governance/
-├── run_analysis.py            # Main modular pipeline entry-point
 ├── config/
 │   └── settings.yaml          # Pipeline configuration
 ├── src/                       # Python package
 │   ├── __init__.py
+│   ├── run_analysis.py        # Main modular pipeline entry-point
+│   ├── generate_grant_summary.py
 │   ├── config.py              # Config loader
 │   ├── report.py              # Reporter class
 │   ├── data_loader.py         # Camera, weather, RSI, survey loading
@@ -21,8 +22,6 @@ hokuriku-tourism-ai-governance/
 │   ├── economics.py           # Opportunity gap, lost population, ranking
 │   ├── visualizer.py          # All figure generation
 │   └── latex_export.py        # LaTeX table generation
-├── tools/
-│   └── generate_grant_summary.py
 ├── jma/                       # JMA weather data (hourly CSVs)
 ├── output/                    # Generated reports, figures, metrics
 └── README.md / README.en.md   # Bilingual documentation
@@ -37,10 +36,10 @@ cd hokuriku-tourism-ai-governance
 pip install -r requirements.txt
 
 # Run the pipeline
-python run_analysis.py
+python -m src.run_analysis
 
 # Generate grant summary
-python tools/generate_grant_summary.py
+python -m src.generate_grant_summary
 ```
 
 ## Dependencies
@@ -61,7 +60,7 @@ python tools/generate_grant_summary.py
 ## Adding a New Analysis Module
 
 1. Create `src/your_module.py` with functions that accept `(data, reporter)` params
-2. Import and call from `run_analysis.py`
+2. Import and call from `src/run_analysis.py`
 3. Add config keys to `config/settings.yaml` if needed
 4. Update this file and `API_REFERENCE.md`
 

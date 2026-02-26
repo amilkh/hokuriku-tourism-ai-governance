@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""run_analysis.py – Modular pipeline entry-point (replaces monolith).
+"""src.run_analysis – Modular pipeline entry-point (replaces monolith).
 
 Delegates analysis flow to ``src/`` modules.  Run from the repo root::
 
-    python run_analysis.py                 # default config
-    HTAG_CONFIG=custom.yaml python run_analysis.py  # custom config
+    python -m src.run_analysis                 # default config
+    HTAG_CONFIG=custom.yaml python -m src.run_analysis  # custom config
 """
 
 from __future__ import annotations
