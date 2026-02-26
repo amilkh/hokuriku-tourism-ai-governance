@@ -1,0 +1,55 @@
+KANSEI ANALYSIS REPORT (EN)
+Generated: 2026-02-26
+
+1) Pearson Correlation: Discomfort Index (DI) vs Satisfaction Score for Tojinbo
+   - Season definition: Summer=Jun-Aug, Winter=Dec-Feb
+   - DI note: humidity missing values are imputed to 60% (pipeline-compatible proxy).
+   - Summer Pearson r: 0.019531863022 (n_days=77)
+   - Winter Pearson r: -0.098740836029 (n_days=113)
+
+2) Top 5 Most Frequent Adjectives in Reviews
+   - Method: Janome morphological analysis; POS-filtered to adjectives, lemma-based counts.
+   - Refinement: utility adjectives excluded (良い/無い/多い/少ない/やすい/高い).
+   - Orthographic normalization: 欲しい/ほしい merged as 欲しい.
+   1-star ("Lonely" sentiment proxy):
+   - 欲しい: 20
+   - 悪い: 19
+   - 美味しい: 16
+   - にくい: 9
+   - 寒い: 8
+   (1-star sample size: n=331)
+
+   5-star ("Vibrant" sentiment proxy):
+   - 美味しい: 2524
+   - 欲しい: 1048
+   - 楽しい: 750
+   - 嬉しい: 577
+   - 素晴らしい: 462
+   (5-star sample size: n=32629)
+
+3) Eiheiji Satisfaction Curve – Quadratic Regression
+   Model: Satisfaction = a*(relative_density)^2 + b*(relative_density) + c
+   Relative density proxy: daily Eiheiji response count / max daily count * 100
+   - a = 0.000018579862
+   - b = -0.001754080926
+   - c = 4.303837755640
+   - Peak threshold x* = -b/(2a) = 47.203819513293
+   - Peak satisfaction at x*: 4.262438095921
+
+4) LaTeX Table Code: Weather Sensitivity Across 4 Nodes
+
+\begin{table}[htbp]
+\centering
+\caption{Weather Sensitivity Across 4 DHDE Nodes}
+\label{tab:weather_sensitivity_4nodes}
+\begin{tabular}{lc}
+\hline
+Node & Weather Sensitivity ($\Delta R^2$) \\
+\hline
+Node A (Tojinbo/Mikuni) & 0.016159 \\
+Node B (Fukui Station) & 0.007666 \\
+Node C (Katsuyama/Dinosaur) & 0.009580 \\
+Node D (Rainbow Line/Wakasa) & 0.041469 \\
+\hline
+\end{tabular}
+\end{table}
