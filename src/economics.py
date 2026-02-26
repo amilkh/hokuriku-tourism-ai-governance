@@ -257,27 +257,3 @@ def seasonal_sensitivity(
     reporter.log(f"\n★ Ratio (Winter/Summer): {result['ratio']:.2f}x")
 
     return result
-
-
-# ── Three-Node Satake Number ─────────────────────────────────────────────────
-
-def compute_satake_number(
-    node_metrics: dict[str, dict[str, Any]],
-    spending_per_visitor: float,
-    reporter: Reporter,
-) -> dict[str, Any]:
-    """Compute the cumulative three-node opportunity loss.
-
-    Args:
-        node_metrics: Per-node metrics from ``spatial.build_node_metrics``.
-        spending_per_visitor: Mean spending per visitor (yen).
-        reporter: ``Reporter``.
-
-    Returns:
-        Dict with ``total_lost_visitors``, ``total_lost_yen``.
-    """
-    total_visitors = sum(v["lost_visitors"] for v in node_metrics.values())
-    total_yen = total_visitors * spending_per_visitor
-    reporter.log(f"\nThree-node Satake Number: {total_visitors:,.0f} visitors")
-    reporter.log(f"  ¥{total_yen:,.0f} ({total_yen / 1e8:.1f}億円)")
-    return {"total_lost_visitors": total_visitors, "total_lost_yen": total_yen}

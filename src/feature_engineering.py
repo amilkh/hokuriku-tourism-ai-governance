@@ -59,17 +59,11 @@ def add_weather_severity(
     """
     daily = daily.copy()
 
-    def _severity(row: pd.Series) -> int:
-        score = 0
-        if row["precip"] > precip_light:
-            score += 1
-        if row["precip"] > precip_heavy:
-            score += 1
-        if row["wind"] > wind_strong:
-            score += 1
-        return min(score, 3)
-
-    daily["weather_severity"] = daily.apply(_severity, axis=1)
+    daily["weather_severity"] = (
+        (daily["precip"] > precip_light).astype(int)
+        + (daily["precip"] > precip_heavy).astype(int)
+        + (daily["wind"] > wind_strong).astype(int)
+    ).clip(upper=3)
     return daily
 
 

@@ -60,7 +60,7 @@ def _load_node_weather_daily(path: str) -> pd.DataFrame:
     """
     if not os.path.exists(path):
         return pd.DataFrame(columns=["date", "temp", "precip", "wind", "snow_depth"])
-    w = pd.read_csv(path, parse_dates=["timestamp"])
+    w = pd.read_csv(path, parse_dates=["timestamp"], encoding="utf-8")
     renames = {
         "temp_c": "temp",
         "precip_1h_mm": "precip",

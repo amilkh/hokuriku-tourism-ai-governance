@@ -7,7 +7,7 @@ lagged-dependent-variable, VIF, and weather-removal sensitivity).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
