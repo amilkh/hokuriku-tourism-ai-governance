@@ -34,7 +34,7 @@ paths:
 
   # Output directories (relative to repo root)
   output: "output"
-  figures: "figures"
+  figures: "output"
 
 # ─── Model Hyperparameters ────────────────────────────────────────────────────
 model:

@@ -25,7 +25,6 @@ hokuriku-tourism-ai-governance/
 │   └── generate_grant_summary.py
 ├── jma/                       # JMA weather data (hourly CSVs)
 ├── output/                    # Generated reports, figures, metrics
-├── figures/                   # Publication-ready figures
 └── README.md / README.en.md   # Bilingual documentation
 ```
 

@@ -12,6 +12,7 @@ build/
 .venv/
 venv/
 env/
+.venv_kansei/
 
 # IDE
 .vscode/
@@ -33,6 +34,9 @@ pnpm-lock.yaml
 jma/*_rawdata
 
 # Generated outputs
-output/*.png
+output/KANSEI_SUMMARY.txt
+
+# Kansei working artifacts (local only for now)
+kansei/
 
 
