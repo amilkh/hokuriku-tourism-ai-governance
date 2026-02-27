@@ -1,0 +1,69 @@
+========================================================================
+1. PATH EXISTENCE CHECKS
+========================================================================
+  ✅ EXISTS  config/settings.yaml  (referenced by src/config.py)
+  ✅ EXISTS  jma/jma_mikuni_hourly_8.csv  (referenced by config/settings.yaml (weather.mikuni))
+  ✅ EXISTS  jma/jma_fukui_hourly_8.csv  (referenced by config/settings.yaml (weather.fukui))
+  ✅ EXISTS  jma/jma_katsuyama_hourly_8.csv  (referenced by config/settings.yaml (weather.katsuyama))
+  ⚠ MISSING (legacy fallback, non-fatal)  jma/jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv
+  ⚠ jma/rawdata/ MISSING – merge_clean_jma.py has no input; raw files are in *_rawdata/ dirs instead
+
+  External workspace paths (require sibling repos):
+    ✅ EXISTS  ../fukui-kanko-people-flow-data/daily/tojinbo-shotaro/Person/**/*.csv
+    ✅ EXISTS  ../fukui-kanko-people-flow-data/daily/fukui-station-east-entrance/Person/**/*.csv
+    ✅ EXISTS  ../fukui-kanko-people-flow-data/daily/katsuyama*/Person/**/*.csv
+    ✅ EXISTS  ../fukui-kanko-people-flow-data/daily/rainbow-line-parking-lot-1-gate/Face/**/*.csv
+    ✅ EXISTS  ../fukui-kanko-trend-report/public/data
+    ✅ EXISTS  ../opendata/output_merge/merged_survey_*.csv
+    ✅ EXISTS  ../fukui-kanko-survey/all.csv
+
+========================================================================
+2. COLUMN NAME CROSS-VALIDATION
+========================================================================
+
+  jma/jma_mikuni_hourly_8.csv (actual cols=['timestamp', 'snow_depth_cm', 'snowfall_1h_cm', 'temp_c', 'precip_1h_mm', 'sun_1h_h', 'wind_speed_ms', 'weather_type', 'humidity_pct']):
+    ✅ required: 'timestamp'
+    ✅ rename-source: 'temp_c'
+    ✅ rename-source: 'precip_1h_mm'
+    ✅ rename-source: 'sun_1h_h'
+    ✅ rename-source: 'wind_speed_ms'
+    ✅ rename-source: 'snow_depth_cm'
+    ✅ rename-source: 'humidity_pct'
+    Referenced by: src/data_loader.py, src/spatial.py
+
+  jma/jma_fukui_hourly_8.csv (actual cols=['timestamp', 'snow_depth_cm', 'snowfall_1h_cm', 'temp_c', 'precip_1h_mm', 'sun_1h_h', 'wind_speed_ms', 'weather_type', 'humidity_pct']):
+    ✅ required: 'timestamp'
+    ✅ rename-source: 'temp_c'
+    ✅ rename-source: 'precip_1h_mm'
+    ✅ rename-source: 'sun_1h_h'
+    ✅ rename-source: 'wind_speed_ms'
+    ✅ rename-source: 'snow_depth_cm'
+    Referenced by: src/spatial.py
+
+  jma/jma_katsuyama_hourly_8.csv (actual cols=['timestamp', 'snow_depth_cm', 'snowfall_1h_cm', 'temp_c', 'precip_1h_mm', 'sun_1h_h', 'wind_speed_ms', 'weather_type', 'humidity_pct']):
+    ✅ required: 'timestamp'
+    ✅ rename-source: 'temp_c'
+    ✅ rename-source: 'precip_1h_mm'
+    ✅ rename-source: 'sun_1h_h'
+    ✅ rename-source: 'wind_speed_ms'
+    ✅ rename-source: 'snow_depth_cm'
+    Referenced by: src/spatial.py
+
+========================================================================
+3. ENCODING CROSS-VALIDATION
+========================================================================
+
+  merge_clean_jma.py uses encoding='cp932' for raw input files.
+  However, files in jma/*_rawdata/ were written by fetch_jma_monthly.py in UTF-8.
+  ⚠ If merge_clean_jma.py ever processes these files, cp932 read would still work
+    (ASCII-compatible subset), but this is a fragile assumption.
+
+  ✅ jma/jma_mikuni_hourly_8.csv is valid UTF-8
+  ✅ jma/jma_fukui_hourly_8.csv is valid UTF-8
+  ✅ jma/jma_katsuyama_hourly_8.csv is valid UTF-8
+  ✅ data_loader.py reads surveys with encoding='utf-8'
+  ✅ Canonical weather CSVs are read with default encoding (UTF-8)
+
+========================================================================
+CROSS-VALIDATION COMPLETE
+========================================================================
