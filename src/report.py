@@ -7,6 +7,7 @@ module; at the end of the pipeline, call ``save()`` to flush to disk.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path

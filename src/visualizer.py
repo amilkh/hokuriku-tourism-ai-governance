@@ -100,6 +100,12 @@ _configure_japanese_font()
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
+def _save(fig: plt.Figure, path: str, reporter: Reporter,
+          dpi: int = 150, ja_copy: bool = True) -> None:
+    reporter.save_fig(fig, path, dpi=dpi, ja_copy=ja_copy)
+    plt.close(fig)
+
+
 def _save_with_ja(
     fig: plt.Figure,
     path: str,

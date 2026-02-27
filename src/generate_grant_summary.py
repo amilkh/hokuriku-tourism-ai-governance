@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from datetime import datetime
 from pathlib import Path
 
@@ -39,7 +38,8 @@ def generate_summary(cfg: dict) -> dict:
     best_r = None
 
     if metrics_path.exists():
-        text = metrics_path.read_text(encoding="utf-8")
+        text = metrics_path.read_text()
+        import re
         m = re.search(r"OLS R²\s*=\s*([\d.]+)", text)
         if m:
             ols_r2 = float(m.group(1))

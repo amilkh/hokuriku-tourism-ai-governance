@@ -103,7 +103,7 @@ def load_weather_daily(
             + (f" or {legacy_path}" if legacy_path else "")
         )
 
-    weather = pd.read_csv(str(path), parse_dates=["timestamp"], encoding="utf-8")
+    weather = pd.read_csv(str(path), parse_dates=["timestamp"])
     rpt(f"Using JMA weather file: {path}")
 
     # Normalise 8-field schema to pipeline names
@@ -162,7 +162,7 @@ def load_rsi_intent(
         for year_dir in sorted(os.listdir(trend_root)):
             total_path = trend_root / year_dir / "total_daily_metrics.csv"
             if total_path.exists():
-                frames.append(pd.read_csv(str(total_path), encoding="utf-8"))
+                frames.append(pd.read_csv(str(total_path)))
 
     if not frames:
         raise FileNotFoundError(f"No RSI data CSV found in {trend_root}.")
@@ -358,7 +358,7 @@ def load_raw_fukui_survey(
         rpt(f"WARNING: Raw survey not found at {path}")
         return pd.DataFrame()
 
-    df = pd.read_csv(str(path), low_memory=False, encoding="utf-8")
+    df = pd.read_csv(str(path), low_memory=False)
     if spending_map and "県内消費額" in df.columns:
         df["spending_midpoint"] = df["県内消費額"].map(spending_map)
     df["date"] = pd.to_datetime(df.get("回答日時"), errors="coerce").dt.normalize()

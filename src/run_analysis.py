@@ -13,12 +13,12 @@ import os
 import shutil
 import warnings
 
-warnings.filterwarnings("ignore", category=FutureWarning)
-warnings.filterwarnings("ignore", message=".*FixedFormatter.*")
+warnings.filterwarnings("ignore")
 
 import matplotlib
 matplotlib.use("Agg")
 
+import numpy as np
 import pandas as pd
 
 from src.config import load_config
@@ -186,10 +186,10 @@ def main() -> None:
     # 8. KANSEI (EMOTIONAL) FEEDBACK LOOP
     # ══════════════════════════════════════════════════════════════════════
     kansei_data = overtourism_threshold(daily, sat_all, rpt)
-    spear_r = kansei_data.get("spearman_r", 0.0)
-    spear_p = kansei_data.get("spearman_p", 1.0)
-    spear_r_nps = kansei_data.get("spearman_r_nps", 0.0)
-    spear_p_nps = kansei_data.get("spearman_p_nps", 1.0)
+    spear_r = kansei_data.get("spear_r", 0.0)
+    spear_p = kansei_data.get("spear_p", 1.0)
+    spear_r_nps = kansei_data.get("spear_r_nps", 0.0)
+    spear_p_nps = kansei_data.get("spear_p_nps", 1.0)
 
     fig_num += 1
     if "sat_merged" in kansei_data and not kansei_data["sat_merged"].empty:
