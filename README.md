@@ -213,8 +213,6 @@ hokuriku-tourism-ai-governance/
 │   ├── test_validator.py         # Schema, outlier, drift detection tests
 │   ├── test_features.py          # Feature engineering pipeline tests
 │   └── test_math.py              # Core statistical function checks
-├── scripts/
-│   └── generate_pdfs.py          # Build 2-page PDFs via Pandoc + XeLaTeX
 ├── jma/                          # JMA weather observations (committed)
 │   ├── fetch_jma_monthly.py      # Scraper for JMA hourly CSVs
 │   ├── merge_clean_jma.py        # Merge rawdata into per-station CSVs
@@ -269,11 +267,14 @@ pip install ".[dev]"
 | Command | What it does |
 |---------|-------------|
 | `python -m src.run_analysis` | Run full pipeline → figures, metrics, LaTeX tables |
-| `python scripts/generate_pdfs.py` | Compile 2-page executive PDFs (requires pandoc + xelatex) |
+| `pandoc output/pdf/executive_report_pdf_en.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.pdf` | Build English executive PDF |
+| `pandoc output/pdf/executive_report_pdf.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf` | Build Japanese executive PDF |
 | `pytest` | Run test suite |
 | `pytest --cov=src --cov-report=html` | Tests with coverage report |
 | `ruff check src/ tests/` | Lint check |
 
+> **PDF prerequisites:** `sudo apt-get install -y pandoc texlive-xetex texlive-lang-japanese fonts-noto-cjk`
+>
 > **Note:** Set `HTAG_CONFIG=/path/to/settings.yaml` to use a custom config (default: `config/settings.yaml`).
 
 All artifacts are written to `output/`: figures (EN & JA), LaTeX tables, executive reports, and compiled PDFs.

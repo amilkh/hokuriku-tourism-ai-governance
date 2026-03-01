@@ -204,8 +204,6 @@ hokuriku-tourism-ai-governance/
 │   ├── test_validator.py         # スキーマ・外れ値・ドリフト検知テスト
 │   ├── test_features.py          # 特徴量エンジニアリングパイプラインテスト
 │   └── test_math.py              # 統計関数の数値正確性チェック
-├── scripts/
-│   └── generate_pdfs.py          # Pandoc + XeLaTeXによるPDF生成スクリプト
 ├── jma/                          # 気象庁観測データ（コミット済み）
 │   ├── fetch_jma_monthly.py      # JMA時間別CSVスクレイパー
 │   ├── merge_clean_jma.py        # ステーション別CSVへのマージ
@@ -260,11 +258,14 @@ pip install ".[dev]"
 | コマンド | 内容 |
 |---------|------|
 | `python -m src.run_analysis` | フルパイプライン実行 → 図表・メトリクス・LaTeXテーブル生成 |
-| `python scripts/generate_pdfs.py` | 2ページエグゼクティブPDF生成（pandoc + xelatex 必須） |
+| `pandoc output/pdf/executive_report_pdf_en.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.pdf` | 英語PDF生成 |
+| `pandoc output/pdf/executive_report_pdf.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf` | 日本語PDF生成 |
 | `pytest` | テスト実行 |
 | `pytest --cov=src --cov-report=html` | カバレッジレポート付きテスト |
 | `ruff check src/ tests/` | リントチェック |
 
+> **PDF前提:** `sudo apt-get install -y pandoc texlive-xetex texlive-lang-japanese fonts-noto-cjk`
+>
 > **設定:** `HTAG_CONFIG=/path/to/settings.yaml` でカスタム設定を指定（デフォルト: `config/settings.yaml`）。
 
 すべての生成物は `output/` に書き出されます：図表（EN & JA）、LaTeXテーブル、エグゼクティブレポート、コンパイル済みPDF。
