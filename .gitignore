@@ -34,6 +34,7 @@ pnpm-lock.yaml
 jma/*_rawdata
 
 # Generated outputs
+output/grant_summary.json
 output/KANSEI_SUMMARY.txt
 
 # Kansei working artifacts (local only for now)

@@ -339,7 +339,7 @@ Automatically audits every data source for:
 - **Date gaps** — Missing days in time-series continuity
 - **Domain violations** — Negative precipitation, extreme temperatures
 
-Output: `output/validation_report.json`
+Results are included in `output/analysis_metrics.txt`.
 
 ---
 
