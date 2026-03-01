@@ -65,9 +65,8 @@ The DHDE integrates four sensor modalities into a single analytical pipeline:
 │  │ Population   │  │ Text Mining (NLP)        │  │ Multi-Node  ││
 │  └──────────────┘  └─────────────────────────┘  └─────────────┘│
 │                                                                 │
-│                   ──► validation_report.json                    │
+│                   ──► analysis_metrics.txt                      │
 │                   ──► LaTeX tables for paper                    │
-│                   ──► Grant summary JSON                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -190,12 +189,12 @@ Each node is modelled independently with local JMA weather, enabling:
 
 ```
 hokuriku-tourism-ai-governance/
-├── pyproject.toml                # PEP 621 package definition → pip install .
-├── requirements.txt              # Pinned dependencies
+├── pyproject.toml                # PEP 517/621 package definition → pip install .
+├── requirements.txt              # Pinned runtime dependencies
 ├── config/
 │   └── settings.yaml             # Pipeline configuration (all paths & params)
 ├── src/
-│   ├── __init__.py               # Package metadata (v2.0.0)
+│   ├── __init__.py               # Package metadata
 │   ├── config.py                 # YAML config loader & path resolver
 │   ├── data_loader.py            # Camera, JMA, RSI, Survey loaders
 │   ├── feature_engineering.py    # Calendar, severity, lags, interactions
@@ -204,25 +203,29 @@ hokuriku-tourism-ai-governance/
 │   ├── economics.py              # Opportunity Gap, lost population, ranking
 │   ├── spatial.py                # Cross-prefectural CCF, multi-node governance
 │   ├── validator.py              # Data integrity auditing (schema, drift, outliers)
-│   ├── visualizer.py             # All figure generation (12+ figures)
+│   ├── visualizer.py             # All figure generation (12+ figures, EN & JA)
 │   ├── latex_export.py           # LaTeX table generator for paper
 │   ├── report.py                 # Centralized Reporter for logging & metrics
-│   ├── run_analysis.py           # Main pipeline entry-point
-│   └── generate_grant_summary.py # Grant summary JSON generator
+│   └── run_analysis.py           # Main pipeline entry-point
 ├── tests/
 │   ├── test_models.py            # OLS, RF, robustness tests
 │   ├── test_kansei.py            # DI & Wind Chill formula verification
 │   ├── test_validator.py         # Schema, outlier, drift detection tests
-│   └── test_features.py          # Feature engineering pipeline tests
-├── jma/                          # JMA weather observations (included)
-├── output/                       # Generated artifacts
+│   ├── test_features.py          # Feature engineering pipeline tests
+│   └── test_math.py              # Core statistical function checks
+├── jma/                          # JMA weather observations (committed)
+│   ├── fetch_jma_monthly.py      # Scraper for JMA hourly CSVs
+│   ├── merge_clean_jma.py        # Merge rawdata into per-station CSVs
+│   └── jma_*.csv                 # Merged per-station 8-field datasets
+├── output/                       # Generated artifacts (committed for reference)
 │   ├── EXECUTIVE_REPORT.md       # English executive report
 │   ├── EXECUTIVE_REPORT.ja.md    # Japanese executive report
-│   ├── validation_report.json    # Data integrity audit report
-│   ├── *.png                     # Generated figures (EN & JA)
-│   ├── *.tex                     # LaTeX tables
-│   └── analysis_metrics.txt      # Machine-readable metrics
-├── audit/                        # Audit logs and inventory
+│   ├── analysis_metrics.txt      # Machine-readable key metrics
+│   ├── *.png                     # 12+ publication figures (EN & JA variants)
+│   ├── *.tex                     # LaTeX tables for paper submission
+│   ├── kansei/                   # Kansei analysis outputs & research briefs
+│   └── pdf/                      # Compiled PDF reports (EN & JA)
+├── audit/                        # Reproducibility audit logs and tools
 ├── README.md
 └── README.ja.md
 ```
@@ -258,7 +261,7 @@ git clone https://github.com/code4fukui/opendata.git
 git clone https://github.com/code4fukui/fukui-kanko-survey.git
 
 # 3. Clone this repository
-git clone https://github.com/code4fukui/hokuriku-tourism-ai-governance.git
+git clone https://github.com/amilkh/hokuriku-tourism-ai-governance.git
 cd hokuriku-tourism-ai-governance
 
 # 4. Install as a package
@@ -283,10 +286,10 @@ pytest --cov=src --cov-report=html  # with coverage
 
 All artifacts are written to `output/`:
 - `analysis_metrics.txt` — Machine-readable key metrics
-- `validation_report.json` — Data integrity audit (schema, drift, outliers)
-- `grant_summary.json` — Structured grant application data
 - `*.png` — 12+ publication-quality figures (English & Japanese)
 - `*.tex` — LaTeX tables for paper submission
+- `kansei/` — Kansei analysis figures and bilingual research briefs
+- `pdf/` — Compiled 2-page PDF reports (EN & JA)
 
 ---
 
@@ -320,10 +323,11 @@ Every module accepts a `Reporter` instance for deterministic logging. No module 
 
 ```
 tests/
-├── test_models.py     # 15 tests: OLS R², RF importance, DW, edge cases
-├── test_kansei.py     # 20 tests: DI hand-calculations, wind chill, golden values
-├── test_validator.py  # 14 tests: schema, outliers, date gaps, drift detection
-└── test_features.py   # 12 tests: calendar, severity, lags, encodings
+├── test_models.py     # OLS R², RF importance, DW, edge cases
+├── test_kansei.py     # DI hand-calculations, wind chill, golden values
+├── test_validator.py  # Schema, outliers, date gaps, drift detection
+├── test_features.py   # Calendar, severity, lags, encodings
+└── test_math.py       # Core statistical function correctness
 ```
 
 ### Data Validation (`src/validator.py`)
@@ -349,7 +353,7 @@ Output: `output/validation_report.json`
                   Forecasting and Spatial Under-vibrancy Analysis},
   year         = {2026},
   institution  = {University of Fukui, Regional Revitalization Lab},
-  url          = {https://github.com/code4fukui/hokuriku-tourism-ai-governance},
+  url          = {https://github.com/amilkh/hokuriku-tourism-ai-governance},
   note         = {PhD Research -- Kanazawa University \&
                   University of Fukui Joint Program.
                   Supported by the Hokuriku Regional Tourism
