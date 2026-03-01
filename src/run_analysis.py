@@ -9,6 +9,7 @@ Delegates analysis flow to ``src/`` modules.  Run from the repo root::
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import warnings
@@ -23,6 +24,7 @@ import pandas as pd
 
 from src.config import load_config
 from src.report import Reporter
+from src.validator import validate_pipeline
 from src.data_loader import load_all_data
 from src.feature_engineering import build_features
 from src.models import fit_ols, fit_random_forest, robustness_suite
@@ -41,14 +43,35 @@ from src.kansei import (
 from src import visualizer as viz
 from src.latex_export import export_all_tables
 
+logger = logging.getLogger(__name__)
+
 
 def main() -> None:
+    # ── Logging ──────────────────────────────────────────────────────────
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    logger.info("Pipeline starting")
+
     # ── Configuration & Reporter ─────────────────────────────────────────
     cfg = load_config()
     rpt = Reporter(cfg)
     fig_dir = str(rpt.fig_dir)
     dpi = cfg.get("visualization", {}).get("dpi", 150)
     fig_num = 0
+
+    # ══════════════════════════════════════════════════════════════════════
+    # 0. DATA INTEGRITY VALIDATION
+    # ══════════════════════════════════════════════════════════════════════
+    validation = validate_pipeline(cfg, rpt)
+    logger.info(
+        "Validation complete: %d sources, %d rows, passed=%s",
+        len(validation.sources),
+        validation.total_rows_audited,
+        validation.overall_passed,
+    )
 
     # ══════════════════════════════════════════════════════════════════════
     # 1. DATA LOADING

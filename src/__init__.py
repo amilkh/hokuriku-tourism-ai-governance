@@ -1,4 +1,4 @@
-"""hokuriku-tourism-ai-governance analysis framework.
+"""Hokuriku Tourism AI Governance Framework.
 
 Production-grade research pipeline for AI-driven demand forecasting
 and spatial optimization of Fukui Prefecture tourism.
@@ -6,6 +6,7 @@ and spatial optimization of Fukui Prefecture tourism.
 Modules:
     config:               Configuration loader (settings.yaml)
     report:               Report / metrics writer
+    validator:            Data integrity auditing (schema, drift, outliers)
     data_loader:          Camera, weather, RSI, survey data loading
     feature_engineering:  Calendar, weather severity, lags, interactions
     models:               OLS, Random Forest, robustness checks
@@ -16,5 +17,5 @@ Modules:
     latex_export:         LaTeX table generator for paper submission
 """
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __author__ = "Amil Khanzada"

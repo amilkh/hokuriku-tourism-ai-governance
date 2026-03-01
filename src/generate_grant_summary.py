@@ -11,8 +11,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 _REPO_DIR = Path(__file__).resolve().parent.parent
 
@@ -115,7 +118,7 @@ def main() -> None:
 
     with open(out_path, "w") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
-    print(f"Grant summary saved to {out_path}")
+    logger.info("Grant summary saved to %s", out_path)
 
 
 if __name__ == "__main__":
