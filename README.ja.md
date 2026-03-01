@@ -216,9 +216,7 @@ hokuriku-tourism-ai-governance/
 │   ├── analysis_metrics.txt      # 機械可読なキーメトリクス
 │   ├── *.png                     # 12種以上の論文品質図表（EN & JA）
 │   ├── *.tex                     # 論文投稿用LaTeXテーブル
-│   ├── kansei/                   # 感性分析アウトプット & 研究ブリーフ
 │   └── pdf/                      # コンパイル済みPDFレポート（EN & JA）
-├── audit/                        # 再現性監査ログ & ツール
 ├── README.md
 └── README.ja.md
 ```
@@ -241,46 +239,35 @@ hokuriku-tourism-ai-governance/
 
 ## 9. 再現手順
 
-```bash
-# 1. 作業ディレクトリを作成
-mkdir hokuriku-workspace && cd hokuriku-workspace
+### セットアップ
 
-# 2. 依存データリポジトリをクローン
+```bash
+# 作業ディレクトリとデータリポジトリを準備
+mkdir hokuriku-workspace && cd hokuriku-workspace
 git clone https://github.com/code4fukui/fukui-kanko-people-flow-data.git
 git clone https://github.com/code4fukui/fukui-kanko-trend-report.git
 git clone https://github.com/code4fukui/opendata.git
 git clone https://github.com/code4fukui/fukui-kanko-survey.git
 
-# 3. 本リポジトリをクローン
+# 本リポジトリをクローンしてインストール
 git clone https://github.com/amilkh/hokuriku-tourism-ai-governance.git
 cd hokuriku-tourism-ai-governance
-
-# 4. パッケージとしてインストール
-pip install .           # 本番用
-pip install ".[dev]"    # pytest + ruff を含む
-
-# 5. 分析を実行
-python -m src.run_analysis   # または: htag-run
-
-# 6. テストを実行
-pytest
-pytest --cov=src --cov-report=html  # カバレッジ付き
+pip install ".[dev]"
 ```
 
-### 環境変数
+### コマンド
 
-| 変数 | 説明 | デフォルト |
-|------|------|---------|
-| `HTAG_CONFIG` | カスタム `settings.yaml` のパス | `config/settings.yaml` |
+| コマンド | 内容 |
+|---------|------|
+| `python -m src.run_analysis` | フルパイプライン実行 → 図表・メトリクス・LaTeXテーブル生成 |
+| `python scripts/generate_pdfs.py` | 2ページエグゼクティブPDF生成（pandoc + xelatex 必須） |
+| `pytest` | テスト実行 |
+| `pytest --cov=src --cov-report=html` | カバレッジレポート付きテスト |
+| `ruff check src/ tests/` | リントチェック |
 
-### 出力物
+> **設定:** `HTAG_CONFIG=/path/to/settings.yaml` でカスタム設定を指定（デフォルト: `config/settings.yaml`）。
 
-すべての生成物は `output/` に書き出されます：
-- `analysis_metrics.txt` — 機械可読なキーメトリクス
-- `*.png` — 12種以上の論文品質図表（英語版・日本語版）
-- `*.tex` — 論文投稿用LaTeXテーブル
-- `kansei/` — 感性分析図表と二言語研究ブリーフ
-- `pdf/` — コンパイル済み2ページPDFレポート（EN & JA）
+すべての生成物は `output/` に書き出されます：図表（EN & JA）、LaTeXテーブル、エグゼクティブレポート、コンパイル済みPDF。
 
 ---
 

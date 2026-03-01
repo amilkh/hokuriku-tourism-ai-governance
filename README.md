@@ -225,9 +225,7 @@ hokuriku-tourism-ai-governance/
 │   ├── analysis_metrics.txt      # Machine-readable key metrics
 │   ├── *.png                     # 12+ publication figures (EN & JA variants)
 │   ├── *.tex                     # LaTeX tables for paper submission
-│   ├── kansei/                   # Kansei analysis outputs & research briefs
 │   └── pdf/                      # Compiled PDF reports (EN & JA)
-├── audit/                        # Reproducibility audit logs and tools
 ├── README.md
 └── README.ja.md
 ```
@@ -250,48 +248,35 @@ hokuriku-tourism-ai-governance/
 
 ## 9. Reproduction Steps
 
-### Quick Start (pip install)
+### Setup
 
 ```bash
-# 1. Create workspace directory
+# Create workspace with sibling data repos
 mkdir hokuriku-workspace && cd hokuriku-workspace
-
-# 2. Clone sibling data repositories
 git clone https://github.com/code4fukui/fukui-kanko-people-flow-data.git
 git clone https://github.com/code4fukui/fukui-kanko-trend-report.git
 git clone https://github.com/code4fukui/opendata.git
 git clone https://github.com/code4fukui/fukui-kanko-survey.git
 
-# 3. Clone this repository
+# Clone and install this repository
 git clone https://github.com/amilkh/hokuriku-tourism-ai-governance.git
 cd hokuriku-tourism-ai-governance
-
-# 4. Install as a package
-pip install .                    # production
-pip install ".[dev]"             # with pytest + ruff
-
-# 5. Run the analysis
-python -m src.run_analysis       # or: htag-run
-
-# 6. Run tests
-pytest                           # unit tests
-pytest --cov=src --cov-report=html  # with coverage
+pip install ".[dev]"
 ```
 
-### Environment Variables
+### Commands
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `HTAG_CONFIG` | Path to custom `settings.yaml` | `config/settings.yaml` |
+| Command | What it does |
+|---------|-------------|
+| `python -m src.run_analysis` | Run full pipeline → figures, metrics, LaTeX tables |
+| `python scripts/generate_pdfs.py` | Compile 2-page executive PDFs (requires pandoc + xelatex) |
+| `pytest` | Run test suite |
+| `pytest --cov=src --cov-report=html` | Tests with coverage report |
+| `ruff check src/ tests/` | Lint check |
 
-### Outputs
+> **Note:** Set `HTAG_CONFIG=/path/to/settings.yaml` to use a custom config (default: `config/settings.yaml`).
 
-All artifacts are written to `output/`:
-- `analysis_metrics.txt` — Machine-readable key metrics
-- `*.png` — 12+ publication-quality figures (English & Japanese)
-- `*.tex` — LaTeX tables for paper submission
-- `kansei/` — Kansei analysis figures and bilingual research briefs
-- `pdf/` — Compiled 2-page PDF reports (EN & JA)
+All artifacts are written to `output/`: figures (EN & JA), LaTeX tables, executive reports, and compiled PDFs.
 
 ---
 
@@ -303,7 +288,7 @@ The pipeline follows a strict **separation of concerns**:
 # Entrypoint: src/run_analysis.py
 cfg = load_config()                           # config.py
 rpt = Reporter(cfg)                           # report.py
-validation = validate_pipeline(cfg, rpt)      # validator.py  ← NEW
+validation = validate_pipeline(cfg, rpt)      # validator.py
 data = load_all_data(cfg, rpt)                # data_loader.py
 daily, features = build_features(daily, ..)   # feature_engineering.py
 ols = fit_ols(model_df, features, rpt)        # models.py
