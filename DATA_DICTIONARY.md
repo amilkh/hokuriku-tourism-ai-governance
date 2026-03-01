@@ -97,11 +97,30 @@ Daily aggregation: `mean` for temp/wind/sun/humidity/snow_depth, `sum` for preci
 
 | File | Description |
 |------|-------------|
-| `output/analysis_metrics.txt` | Machine-readable metrics (bolstered results) |
-| `output/deep_analysis_fig*.png` | Figures (EN labels) |
-| `output/deep_analysis_fig*_ja.png` | Figures (JP labels) |
-| `output/spatial_friction_heatmap.png` | Multi-node weather sensitivity |
-| `output/table_ols.tex` | OLS results LaTeX table |
-| `output/table_model_comparison.tex` | Model comparison LaTeX |
-| `output/table_key_metrics.tex` | Key metrics LaTeX |
-| `output/grant_summary.json` | Grant summary JSON |
+| `output/analysis_metrics.txt` | Machine-readable key metrics (all headline numbers) |
+| `output/EXECUTIVE_REPORT.md` | English executive summary report |
+| `output/EXECUTIVE_REPORT.ja.md` | Japanese executive summary report |
+| `output/deep_analysis_fig1_timeseries.png` | Visitor time-series with weather overlay (EN) |
+| `output/deep_analysis_fig2_correlation.png` | Feature correlation heatmap (EN) |
+| `output/deep_analysis_fig3_feature_importance.png` | RF feature importance (EN) |
+| `output/deep_analysis_fig4_dow_boxplot.png` | Day-of-week visitor distribution (EN) |
+| `output/deep_analysis_fig5_rf_prediction.png` | RF vs actual prediction plot (EN) |
+| `output/deep_analysis_fig6_opportunity_gap.png` | Opportunity gap visualisation (EN) |
+| `output/deep_analysis_fig7_lag_correlations.png` | RSI intent lag correlations (EN) |
+| `output/deep_analysis_fig8_ishikawa_ccf.png` | Ishikawa → Tojinbo cross-correlation (EN) |
+| `output/deep_analysis_fig9_kansei_scatter.png` | Discomfort index scatter (EN) |
+| `output/deep_analysis_fig10_lost_population.png` | Lost visitors bar chart (EN) |
+| `output/deep_analysis_fig11_fukui_resurrection.png` | Rank improvement projection (EN) |
+| `output/deep_analysis_fig12_hokuriku_heatmap.png` | Hokuriku-wide weather-sensitivity heatmap (EN) |
+| `output/deep_analysis_fig*_ja.png` | Japanese-label variants of all figures above |
+| `output/spatial_friction_heatmap.png` | Multi-node spatial friction heatmap (EN) |
+| `output/weather_shield_network.png` | Weather Shield Network diagram (EN) |
+| `output/rank_resurrection_projection.png` | Prefecture ranking resurrection chart (EN) |
+| `output/ultimate_fig2_vibrancy_threshold.png` | Vibrancy threshold scatter (EN) |
+| `output/table_ols.tex` | OLS regression results LaTeX table |
+| `output/table_model_comparison.tex` | Model comparison LaTeX table |
+| `output/table_key_metrics.tex` | Key headline metrics LaTeX table |
+| `output/pdf/executive_report_pdf_en.md` | Pandoc-ready Markdown source for English PDF |
+| `output/pdf/executive_report_pdf.md` | Pandoc-ready Markdown source for Japanese PDF |
+| `output/pdf/EXECUTIVE_REPORT.pdf` | Compiled 2-page English executive PDF |
+| `output/pdf/EXECUTIVE_REPORT.ja.pdf` | Compiled 2-page Japanese executive PDF |

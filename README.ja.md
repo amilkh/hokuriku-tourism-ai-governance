@@ -204,6 +204,8 @@ hokuriku-tourism-ai-governance/
 │   ├── test_validator.py         # スキーマ・外れ値・ドリフト検知テスト
 │   ├── test_features.py          # 特徴量エンジニアリングパイプラインテスト
 │   └── test_math.py              # 統計関数の数値正確性チェック
+├── scripts/
+│   └── generate_pdfs.py          # Pandoc + XeLaTeXによるPDF生成スクリプト
 ├── jma/                          # 気象庁観測データ（コミット済み）
 │   ├── fetch_jma_monthly.py      # JMA時間別CSVスクレイパー
 │   ├── merge_clean_jma.py        # ステーション別CSVへのマージ

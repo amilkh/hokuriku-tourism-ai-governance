@@ -213,6 +213,8 @@ hokuriku-tourism-ai-governance/
 │   ├── test_validator.py         # Schema, outlier, drift detection tests
 │   ├── test_features.py          # Feature engineering pipeline tests
 │   └── test_math.py              # Core statistical function checks
+├── scripts/
+│   └── generate_pdfs.py          # Build 2-page PDFs via Pandoc + XeLaTeX
 ├── jma/                          # JMA weather observations (committed)
 │   ├── fetch_jma_monthly.py      # Scraper for JMA hourly CSVs
 │   ├── merge_clean_jma.py        # Merge rawdata into per-station CSVs
