@@ -271,9 +271,9 @@ def plot_rf_prediction(
     fig.suptitle(
         f"Random Forest: Actual vs Predicted (R²={rf_r2:.3f}, CV R²={cv_r2:.3f})",
         fontsize=13,
-        y=0.985,
+        y=0.998,
     )
-    fig.tight_layout(rect=[0, 0, 1, 0.84])
+    fig.tight_layout(rect=[0, 0, 1, 0.965])
     def _ja(fig_ja: plt.Figure) -> None:
         ax_ja = fig_ja.axes[0]
         handles, _ = ax_ja.get_legend_handles_labels()
@@ -283,10 +283,10 @@ def plot_rf_prediction(
             f"需要予測（赤）とAIカメラ実測（青）の一致\n"
             f"（R²={rf_r2:.3f}, CV R²={cv_r2:.3f}）",
             fontsize=14,
-            y=0.99,
+            y=0.998,
         )
         ax_ja.set_ylabel("来訪者数")
-        fig_ja.tight_layout(rect=[0, 0, 1, 0.82])
+        fig_ja.tight_layout(rect=[0, 0, 1, 0.955])
 
     _save_with_ja(fig, out_path, reporter, _ja, dpi=dpi)
     return fig
@@ -386,19 +386,48 @@ def plot_ccf(
     fig, ax = plt.subplots(figsize=(10, 5))
     colors = ["tab:red" if r < 0 else "steelblue" for r in ccf_df["r"]]
     ax.bar(ccf_df["lag"], ccf_df["r"], color=colors)
+
+    best_idx = ccf_df["r"].idxmax()
+    best_lag = int(ccf_df.loc[best_idx, "lag"])
+    best_r = float(ccf_df.loc[best_idx, "r"])
+
     ax.axhline(0, color="black", linewidth=0.5)
     ax.axhline(0.2, color="gray", linestyle="--", alpha=0.5, label="r=0.2 threshold")
-    ax.axhline(-0.2, color="gray", linestyle="--", alpha=0.5)
-    ax.set_xlabel("Lag (days): Ishikawa survey → Tojinbo arrivals")
+
+    y_min_data = float(ccf_df["r"].min())
+    y_max_data = float(ccf_df["r"].max())
+    if y_min_data > -0.05:
+        y_min = 0.0
+    else:
+        y_min = min(-0.05, y_min_data - 0.03)
+    y_max = min(1.0, y_max_data + 0.08)
+    ax.set_ylim(y_min, y_max)
+
+    if y_min <= -0.15:
+        ax.axhline(-0.2, color="gray", linestyle="--", alpha=0.5)
+
+    ax.set_xlabel("Lag (days, + means Ishikawa leads): Ishikawa survey → Tojinbo arrivals")
     ax.set_ylabel("Pearson r")
     ax.set_title("Cross-Prefectural Signal: Ishikawa → Tojinbo (CCF)")
+    ax.annotate(
+        f"Peak lead signal: lag {best_lag}d, r={best_r:.3f}",
+        xy=(best_lag, best_r),
+        xytext=(best_lag + 1, min(y_max - 0.03, best_r + 0.06)),
+        arrowprops=dict(arrowstyle="->", color="#2C3E50", lw=1.2),
+        fontsize=9,
+        color="#2C3E50",
+        bbox=dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.85, edgecolor="#2C3E50"),
+    )
     ax.legend()
     fig.tight_layout()
     def _ja(fig_ja: plt.Figure) -> None:
         ax_ja = fig_ja.axes[0]
-        ax_ja.set_xlabel("ラグ（日）：石川アンケート活動 → 東尋坊来訪")
+        ax_ja.set_xlabel("ラグ（日、+は石川先行）：石川アンケート活動 → 東尋坊来訪")
         ax_ja.set_ylabel("相関係数（Pearson r）")
         ax_ja.set_title("越境需要シグナル：石川 → 東尋坊（CCF）")
+        for txt in ax_ja.texts:
+            if "Peak lead signal:" in txt.get_text():
+                txt.set_text(f"先行ピーク：ラグ {best_lag}日、r={best_r:.3f}")
         leg = ax_ja.get_legend()
         if leg is not None and leg.get_texts():
             leg.get_texts()[0].set_text("しきい値 r=0.2")
@@ -673,126 +702,160 @@ def plot_weather_shield_network(
     dpi: int = 300,
 ) -> plt.Figure | None:
     """Network diagram showing weather buffering effects across 4 nodes.
-    
-    When coastal Node A (Tojinbo) has high winds, inland nodes D (Rainbow)
-    and C (Katsuyama) act as economic buffers.
+
+    When coastal Node A (Tojinbo) has high winds, inland nodes C (Katsuyama)
+    and D (Rainbow Line) act as economic buffers via demand rerouting.
     """
     import matplotlib.patches as mpatches
-    
+    from matplotlib.lines import Line2D
+
     if len(valid_nodes) < 3:
         reporter.log("Weather Shield: needs at least 3 nodes")
         return None
-    
+
     fig, ax = plt.subplots(figsize=(12, 8))
-    
+
     # Node positions (geographic layout of Fukui)
     positions = {
         "Node A (Tojinbo/Mikuni)": (0.2, 0.7),      # Northwest coast
-        "Node B (Fukui Station)": (0.5, 0.5),       # Central
+        "Node B (Fukui Station)": (0.5, 0.5),       # Central hub
         "Node C (Katsuyama/Dinosaur)": (0.8, 0.6),  # East mountains
-        "Node D (Rainbow Line/Wakasa)": (0.3, 0.2), # South coast
+        "Node D (Rainbow Line/Wakasa)": (0.3, 0.2), # South scenic
     }
-    
-    # Node colors by type
+
     colors = {
-        "Node A (Tojinbo/Mikuni)": "#E74C3C",       # Red - weather exposed
-        "Node B (Fukui Station)": "#3498DB",        # Blue - hub
-        "Node C (Katsuyama/Dinosaur)": "#2ECC71",   # Green - buffer
-        "Node D (Rainbow Line/Wakasa)": "#9B59B6",  # Purple - scenic buffer
+        "Node A (Tojinbo/Mikuni)": "#E74C3C",
+        "Node B (Fukui Station)": "#3498DB",
+        "Node C (Katsuyama/Dinosaur)": "#2ECC71",
+        "Node D (Rainbow Line/Wakasa)": "#9B59B6",
     }
-    
+
     labels_short = {
-        "Node A (Tojinbo/Mikuni)": "A: Tojinbo\n(Coastal)",
-        "Node B (Fukui Station)": "B: Fukui Station\n(Hub)",
-        "Node C (Katsuyama/Dinosaur)": "C: Katsuyama\n(Mountain)",
-        "Node D (Rainbow Line/Wakasa)": "D: Rainbow Line\n(Scenic Drive)",
+        "Node A (Tojinbo/Mikuni)": "Tojinbo\n(Coastal)",
+        "Node B (Fukui Station)": "Fukui Station\n(Hub)",
+        "Node C (Katsuyama/Dinosaur)": "Katsuyama\n(Mountain)",
+        "Node D (Rainbow Line/Wakasa)": "Rainbow Line\n(Scenic)",
     }
-    
-    # Draw connections (weather shield flows)
+
+    # Scale radius proportionally to per-node lost visitors
+    all_lost = [v["lost_visitors"] / 1000 for v in valid_nodes.values()]
+    max_lost_k = max(all_lost) if all_lost else 1.0
+
+    # 1. Hub-and-spoke backbone: thin gray lines from each node to Fukui Station hub
+    hub_pos = positions.get("Node B (Fukui Station)")
+    if hub_pos:
+        for name, (x, y) in positions.items():
+            if name in valid_nodes and "Fukui Station" not in name:
+                ax.plot([x, hub_pos[0]], [y, hub_pos[1]],
+                        color="#D5D8DC", lw=1.5, alpha=0.7, zorder=1)
+
+    # 2. Weather rerouting arrows: Tojinbo → inland buffer nodes
+    routing_targets = [
+        ("Node C (Katsuyama/Dinosaur)", 0.25),
+        ("Node D (Rainbow Line/Wakasa)", -0.25),
+    ]
+    tojinbo_pos = positions.get("Node A (Tojinbo/Mikuni)")
+    if tojinbo_pos and "Node A (Tojinbo/Mikuni)" in valid_nodes:
+        ax_x, ax_y = tojinbo_pos
+        for target, rad in routing_targets:
+            if target in positions and target in valid_nodes:
+                tx, ty = positions[target]
+                ax.annotate(
+                    "", xy=(tx, ty), xytext=(ax_x, ax_y),
+                    arrowprops=dict(
+                        arrowstyle="-|>", color="#2471A3",
+                        connectionstyle=f"arc3,rad={rad}",
+                        lw=2.2, alpha=0.85,
+                    ),
+                    zorder=2,
+                )
+                # Midpoint label
+                mid_x = (ax_x + tx) / 2 + (0.08 if rad > 0 else -0.08)
+                mid_y = (ax_y + ty) / 2 + (0.06 if rad > 0 else -0.06)
+                ax.text(mid_x, mid_y, "weather\nreroute",
+                        ha="center", va="center", fontsize=7,
+                        color="#1A5276", style="italic", zorder=3)
+
+    # 3. Draw nodes (radius ∝ lost visitors)
     for name, (x, y) in positions.items():
         if name not in valid_nodes:
             continue
-        # Draw arrows from coastal to buffers
-        if "Tojinbo" in name:
-            # Weather exposure indicator
-            for target in ["Node C (Katsuyama/Dinosaur)", "Node D (Rainbow Line/Wakasa)"]:
-                if target in positions and target in valid_nodes:
-                    tx, ty = positions[target]
-                    ax.annotate("", xy=(tx, ty), xytext=(x, y),
-                               arrowprops=dict(arrowstyle="->", color="#95A5A6",
-                                             connectionstyle="arc3,rad=0.2",
-                                             lw=2, alpha=0.6))
-    
-    # Draw nodes
-    for name, (x, y) in positions.items():
-        if name not in valid_nodes:
-            continue
-        
         metrics = valid_nodes[name]
         lost_k = metrics["lost_visitors"] / 1000
-        r2 = metrics["r2"]
-        weather_lift = metrics["weather_lift"]
-        
-        # Node size based on lost visitors
-        size = min(3000, max(800, lost_k * 3))
-        
-        circle = plt.Circle((x, y), 0.08, color=colors.get(name, "#999"),
-                            alpha=0.8, zorder=5)
+
+        radius = 0.05 + (lost_k / max_lost_k) * 0.06  # 0.05–0.11
+
+        circle = plt.Circle((x, y), radius, color=colors.get(name, "#999"),
+                            alpha=0.85, zorder=5)
         ax.add_patch(circle)
-        
-        # Label
-        ax.text(x, y + 0.12, labels_short.get(name, name.split("(")[0]),
-               ha="center", va="bottom", fontsize=10, fontweight="bold")
-        
-        # Metrics
-        ax.text(x, y - 0.11, f"Lost: {lost_k:.0f}K visitors\nR²={r2:.3f}",
-               ha="center", va="top", fontsize=8, color="#666")
-    
-    # Title and annotations
+
+        ax.text(x, y + radius + 0.025, labels_short.get(name, name.split("(")[0]),
+               ha="center", va="bottom", fontsize=10, fontweight="bold", zorder=6)
+
+        ax.text(x, y - radius - 0.025, f"{lost_k:.0f}K lost/yr",
+               ha="center", va="top", fontsize=8, color="#444", zorder=6)
+
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_aspect("equal")
     ax.axis("off")
-    
+
     ax.set_title("Hokuriku Weather Shield Network\n4-Node Spatial Governance Architecture",
                 fontsize=14, fontweight="bold", pad=20)
-    
-    # Legend
+
     legend_elements = [
-        mpatches.Patch(color="#E74C3C", label="Coastal (Weather-Exposed)"),
-        mpatches.Patch(color="#3498DB", label="Hub (Transit)"),
-        mpatches.Patch(color="#2ECC71", label="Mountain (Buffer)"),
-        mpatches.Patch(color="#9B59B6", label="Scenic (Buffer)"),
+        mpatches.Patch(color="#E74C3C", label="Coastal (weather-exposed)"),
+        mpatches.Patch(color="#3498DB", label="Hub (transit)"),
+        mpatches.Patch(color="#2ECC71", label="Mountain (buffer)"),
+        mpatches.Patch(color="#9B59B6", label="Scenic (buffer)"),
+        Line2D([0], [0], color="#2471A3", lw=2, label="Bad-weather reroute"),
+        Line2D([0], [0], color="#D5D8DC", lw=1.5, label="Hub connection"),
     ]
-    ax.legend(handles=legend_elements, loc="lower right", fontsize=9)
-    
-    # Summary box
+    ax.legend(handles=legend_elements, loc="lower right", fontsize=9,
+              framealpha=0.9)
+
+    # Bubble size note
     total_lost = sum(m["lost_visitors"] for m in valid_nodes.values()) / 1000
-    satake_b = total_lost * 13.811 / 1000  # Convert to billions yen
-    summary = f"4-Node Satake Number: ¥{satake_b:.2f}B\nTotal Lost: {total_lost:.0f}K visitors"
-    ax.text(0.02, 0.02, summary, transform=ax.transAxes, fontsize=11,
-           verticalalignment="bottom", bbox=dict(boxstyle="round", facecolor="#F7DC6F", alpha=0.9))
-    
+    ax.text(0.02, 0.97, "Bubble area ∝ lost visitors per node",
+            transform=ax.transAxes, fontsize=8, color="#777",
+            va="top", style="italic")
+
     fig.tight_layout()
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
-    
+
     # JA version
     ax.set_title("北陸天候シールドネットワーク\n4拠点空間ガバナンスアーキテクチャ",
                 fontsize=14, fontweight="bold", pad=20)
+    labels_short_ja = {
+        "Node A (Tojinbo/Mikuni)": "東尋坊\n（沿岸）",
+        "Node B (Fukui Station)": "福井駅\n（拠点）",
+        "Node C (Katsuyama/Dinosaur)": "勝山\n（山間）",
+        "Node D (Rainbow Line/Wakasa)": "レインボーライン\n（景観）",
+    }
+    # Update node labels
+    for txt in ax.texts:
+        for eng, ja in labels_short_ja.items():
+            if txt.get_text() == labels_short.get(eng, ""):
+                txt.set_text(ja)
+    # Update routing arrow labels
+    for txt in ax.texts:
+        if txt.get_text() == "weather\nreroute":
+            txt.set_text("悪天候\n誘導")
+    # Update bubble note
+    for txt in ax.texts:
+        if "Bubble area" in txt.get_text():
+            txt.set_text("バブル面積 ∝ 拠点別損失来訪者数")
     legend_elements_ja = [
         mpatches.Patch(color="#E74C3C", label="沿岸（悪天候影響大）"),
         mpatches.Patch(color="#3498DB", label="拠点（交通ハブ）"),
         mpatches.Patch(color="#2ECC71", label="山間（緩衝地帯）"),
         mpatches.Patch(color="#9B59B6", label="景観（緩衝地帯）"),
+        Line2D([0], [0], color="#2471A3", lw=2, label="悪天候時誘導経路"),
+        Line2D([0], [0], color="#D5D8DC", lw=1.5, label="拠点接続"),
     ]
-    ax.legend(handles=legend_elements_ja, loc="lower right", fontsize=9)
-    summary_ja = f"4拠点佐竹ナンバー: ¥{satake_b:.2f}B\n喪失人口: {total_lost:.0f}K人"
-    # Clear old text box and add new
-    for txt in ax.texts:
-        if "Satake" in txt.get_text() or "佐竹" in txt.get_text():
-            txt.set_text(summary_ja)
-            break
-    
+    ax.legend(handles=legend_elements_ja, loc="lower right", fontsize=9,
+              framealpha=0.9)
+
     ja_path = out_path.replace(".png", "_ja.png")
     _apply_japanese_font(fig)
     fig.savefig(ja_path, dpi=dpi)
@@ -864,6 +927,10 @@ def plot_rank_resurrection_projection(
     ax1.invert_yaxis()  # Lower rank is better
     ax1.axhline(y=35, color="#666", linestyle="--", alpha=0.5, label="Target: 35th")
     ax1.axhline(y=41, color="#999", linestyle=":", alpha=0.5, label="Threshold: 41st")
+    ax1.text(0.98, 0.97, "1st = best", transform=ax1.transAxes,
+             ha="right", va="top", fontsize=9, color="#2C3E50")
+    ax1.text(0.98, 0.03, "47th = worst", transform=ax1.transAxes,
+             ha="right", va="bottom", fontsize=9, color="#7F8C8D")
     
     # Annotate best improvement
     best_idx = np.argmax(np.array(current_ranks) - np.array(projected_ranks))
@@ -904,7 +971,16 @@ def plot_rank_resurrection_projection(
     ax1.set_title("福井県観光ランキング：47位→35位圏への復活パス",
                  fontsize=12, fontweight="bold")
     ax1.set_ylabel("全国ランキング（低い=良い）")
-    ax1.legend(["現在の順位 (47位)", "回復後予測順位"])
+    ax1.text(0.98, 0.97, "1位＝最良", transform=ax1.transAxes,
+             ha="right", va="top", fontsize=9, color="#2C3E50")
+    ax1.text(0.98, 0.03, "47位＝最下位", transform=ax1.transAxes,
+             ha="right", va="bottom", fontsize=9, color="#7F8C8D")
+    ax1.legend([
+        "現在の順位 (47位)",
+        "回復後予測順位",
+        "目標：35位",
+        "閾値：41位",
+    ])
     
     ax2.set_title("4拠点喪失人口（回復可能な経済ポテンシャル）",
                  fontsize=12, fontweight="bold")
