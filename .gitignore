@@ -36,6 +36,7 @@ jma/*_rawdata
 # Generated outputs
 output/grant_summary.json
 output/KANSEI_SUMMARY.txt
+output/validation_report.json
 
 # Kansei working artifacts (local only for now)
 
