@@ -1,5 +1,5 @@
-# hokuriku-tourism-ai-governance
-# Python 3.10+
+# hokuriku-tourism-ai-governance runtime dependencies (minimum versions)
+# Python 3.10+  |  See pyproject.toml for the authoritative dependency list
 numpy>=1.24
 pandas>=2.0
 matplotlib>=3.7

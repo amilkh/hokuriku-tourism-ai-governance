@@ -121,6 +121,6 @@ Daily aggregation: `mean` for temp/wind/sun/humidity/snow_depth, `sum` for preci
 | `output/table_model_comparison.tex` | Model comparison LaTeX table |
 | `output/table_key_metrics.tex` | Key headline metrics LaTeX table |
 | `output/pdf/executive_report_pdf_en.md` | Pandoc-ready Markdown source for English PDF |
-| `output/pdf/executive_report_pdf.md` | Pandoc-ready Markdown source for Japanese PDF |
+| `output/pdf/executive_report_pdf_ja.md` | Pandoc-ready Markdown source for Japanese PDF |
 | `output/pdf/EXECUTIVE_REPORT.pdf` | Compiled 2-page English executive PDF |
 | `output/pdf/EXECUTIVE_REPORT.ja.pdf` | Compiled 2-page Japanese executive PDF |

@@ -8,7 +8,6 @@ Implements the Distributed Human Data Engine (DHDE) concept:
 
 from __future__ import annotations
 
-import glob
 import os
 from typing import Any
 
@@ -24,23 +23,21 @@ from .report import Reporter
 def _load_peopleflow_daily(person_glob: str) -> pd.DataFrame:
     """Load people-flow camera CSVs → daily DataFrame.
 
+    Delegates CSV parsing to :func:`data_loader._parse_camera_rows` so the
+    file-scanning logic lives in one place.  Unlike
+    :func:`data_loader.load_camera_daily`, zero-count days are **kept**
+    (they may represent legitimate low-traffic days at secondary nodes)
+    and rows are grouped by date to handle multiple files per day.
+
     Args:
         person_glob: Glob pattern for Person ``*.csv`` files.
 
     Returns:
         DataFrame with ``date`` and ``count``.
     """
-    rows: list[dict[str, Any]] = []
-    for f in sorted(glob.glob(person_glob, recursive=True)):
-        try:
-            df = pd.read_csv(f)
-            if "aggregate from" in df.columns and "total count" in df.columns:
-                rows.append({
-                    "date": os.path.basename(f).replace(".csv", ""),
-                    "count": df["total count"].sum(),
-                })
-        except Exception:
-            pass
+    from .data_loader import _parse_camera_rows
+
+    rows = _parse_camera_rows(person_glob)
     if not rows:
         return pd.DataFrame(columns=["date", "count"])
     out = pd.DataFrame(rows)

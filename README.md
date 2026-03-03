@@ -13,8 +13,7 @@
 
 > **Executive Reports:**
 > [English](output/EXECUTIVE_REPORT.md) ·
-> [日本語](output/EXECUTIVE_REPORT.ja.md) ·
-> [Governance Strategy](output/HOKURIKU_TOURISM_AI_GOVERNANCE_STRATEGY.md)
+> [日本語](output/EXECUTIVE_REPORT.ja.md)
 >
 > **他の言語で読む:** [日本語 (Japanese)](README.ja.md)
 
@@ -77,7 +76,7 @@ The DHDE integrates four sensor modalities into a single analytical pipeline:
 | A | Tojinbo (東尋坊) | tojinbo-shotaro | Mikuni (JMA) |
 | B | Fukui Station East | fukui-station-east | Fukui (JMA) |
 | C | Katsuyama (勝山) | katsuyama | Katsuyama (JMA) |
-| D | Rainbow Line (レインボーライン) | rainbow-line-parking | Fukui (proxy) |
+| D | Rainbow Line (レインボーライン) | rainbow-line-parking-lot-1-gate | Fukui (proxy) |
 
 ---
 
@@ -190,7 +189,7 @@ Each node is modelled independently with local JMA weather, enabling:
 ```
 hokuriku-tourism-ai-governance/
 ├── pyproject.toml                # PEP 517/621 package definition → pip install .
-├── requirements.txt              # Pinned runtime dependencies
+├── requirements.txt              # Runtime dependencies (minimum versions)
 ├── config/
 │   └── settings.yaml             # Pipeline configuration (all paths & params)
 ├── src/
@@ -268,7 +267,7 @@ pip install ".[dev]"
 |---------|-------------|
 | `python -m src.run_analysis` | Run full pipeline → figures, metrics, LaTeX tables |
 | `pandoc output/pdf/executive_report_pdf_en.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.pdf` | Build English executive PDF |
-| `pandoc output/pdf/executive_report_pdf.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf` | Build Japanese executive PDF |
+| `pandoc output/pdf/executive_report_pdf_ja.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf` | Build Japanese executive PDF |
 | `pytest` | Run test suite |
 | `pytest --cov=src --cov-report=html` | Tests with coverage report |
 | `ruff check src/ tests/` | Lint check |

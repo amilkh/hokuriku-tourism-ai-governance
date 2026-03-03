@@ -55,14 +55,10 @@ dev = [
     "pytest-cov>=4.1",
     "ruff>=0.3",
 ]
-nlp = [
-    "janome>=0.5",
-]
 
 [project.urls]
-Homepage = "https://github.com/code4fukui/hokuriku-tourism-ai-governance"
-Documentation = "https://github.com/code4fukui/hokuriku-tourism-ai-governance/blob/main/API_REFERENCE.md"
-Issues = "https://github.com/code4fukui/hokuriku-tourism-ai-governance/issues"
+Homepage = "https://github.com/amilkh/hokuriku-tourism-ai-governance"
+Issues = "https://github.com/amilkh/hokuriku-tourism-ai-governance/issues"
 
 [project.scripts]
 htag-run = "src.run_analysis:main"

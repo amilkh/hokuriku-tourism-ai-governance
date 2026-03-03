@@ -66,13 +66,10 @@ pip install -e ".[dev]"
 
 # Or minimal install (no pytest/ruff)
 pip install .
-
-# For Japanese text mining (kansei module)
-pip install ".[nlp]"
 ```
 
 All runtime dependencies are declared in `pyproject.toml`. The `requirements.txt`
-file contains pinned versions for fully reproducible environments.
+file mirrors those minimum-version bounds and can be used with `pip install -r requirements.txt`.
 
 ---
 
@@ -134,7 +131,6 @@ config.py → data_loader.py → feature_engineering.py
 2. Import and call from `src/run_analysis.py` in the appropriate pipeline stage.
 3. Add any new configuration keys to `config/settings.yaml` with comments.
 4. Write tests in `tests/test_your_module.py` covering at least the core calculations.
-5. Update `API_REFERENCE.md` with the new function signatures.
 
 ---
 
@@ -166,12 +162,11 @@ pandoc + XeLaTeX. Requires Noto Sans CJK JP for Japanese typesetting.
 # Install dependencies (Debian/Ubuntu/WSL)
 sudo apt-get install -y pandoc texlive-xetex texlive-lang-japanese fonts-noto-cjk
 
-# Build all PDF reports
-python scripts/generate_pdfs.py
+# Build English PDF
+pandoc output/pdf/executive_report_pdf_en.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.pdf
 
-# Build specific reports
-python scripts/generate_pdfs.py --executive     # Japanese executive report
-python scripts/generate_pdfs.py --executive-en  # English executive report
+# Build Japanese PDF
+pandoc output/pdf/executive_report_pdf_ja.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf
 ```
 
 Output: `output/pdf/EXECUTIVE_REPORT.pdf`, `output/pdf/EXECUTIVE_REPORT.ja.pdf`

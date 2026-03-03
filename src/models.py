@@ -272,11 +272,12 @@ def robustness_suite(
     # First-Difference
     reporter.log("\n--- 12b. First-Difference Model ---")
     diff_df = model_df[["date", "count"] + feature_cols].sort_values("date").reset_index(drop=True)
-    diff_y = diff_df["count"].diff().dropna()
-    diff_X = diff_df[feature_cols].diff().dropna()
-    idx = diff_y.index.intersection(diff_X.dropna().index)
-    diff_y = diff_y.loc[idx].values
-    diff_X = diff_X.loc[idx].values
+    diff_df = diff_df.copy()
+    diff_df["count"] = diff_df["count"].diff()
+    diff_df[feature_cols] = diff_df[feature_cols].diff()
+    diff_clean = diff_df.dropna(subset=["count"] + feature_cols)
+    diff_y = diff_clean["count"].values
+    diff_X = diff_clean[feature_cols].values
 
     ols_fd = sm.OLS(diff_y, sm.add_constant(diff_X)).fit()
     fd_r2 = ols_fd.rsquared
