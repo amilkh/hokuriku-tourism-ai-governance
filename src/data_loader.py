@@ -21,6 +21,37 @@ from .report import Reporter
 
 # ── Camera (AI people-flow) ──────────────────────────────────────────────────
 
+def _parse_camera_rows(glob_pattern: str) -> list[dict[str, Any]]:
+    """Scan camera CSV files matching *glob_pattern* and return raw row dicts.
+
+    Each returned dict has keys ``date`` (filename stem) and ``count``
+    (sum of the ``total count`` column).  Files that cannot be read or
+    that lack the expected columns are silently skipped.
+
+    This helper is shared by :func:`load_camera_daily` and by
+    ``spatial._load_peopleflow_daily`` so the CSV-scanning logic lives in
+    one place.
+
+    Args:
+        glob_pattern: Recursive glob pattern for per-5-min camera CSVs.
+
+    Returns:
+        List of ``{"date": str, "count": int}`` dicts.
+    """
+    rows: list[dict[str, Any]] = []
+    for f in sorted(glob.glob(glob_pattern, recursive=True)):
+        try:
+            df = pd.read_csv(f)
+            if "aggregate from" in df.columns and "total count" in df.columns:
+                rows.append({
+                    "date": os.path.basename(f).replace(".csv", ""),
+                    "count": df["total count"].sum(),
+                })
+        except Exception:
+            pass
+    return rows
+
+
 def load_camera_daily(
     glob_pattern: str,
     *,
@@ -38,18 +69,7 @@ def load_camera_daily(
     """
     rpt = reporter.log if reporter else print
 
-    files = sorted(glob.glob(glob_pattern, recursive=True))
-    rows: list[dict[str, Any]] = []
-    for f in files:
-        try:
-            df = pd.read_csv(f)
-            if "aggregate from" in df.columns and "total count" in df.columns:
-                rows.append({
-                    "date": os.path.basename(f).replace(".csv", ""),
-                    "count": df["total count"].sum(),
-                })
-        except Exception:
-            pass
+    rows = _parse_camera_rows(glob_pattern)
 
     camera = pd.DataFrame(rows)
     if camera.empty:

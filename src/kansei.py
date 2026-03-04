@@ -227,35 +227,65 @@ def overtourism_threshold(
         n_responses=("satisfaction", "count"),
     ).reset_index()
 
+    # Try exact-day merge first; fall back to year-month aggregate if too sparse.
     sat_merged = daily[["date", "count"]].merge(sat_daily, on="date", how="inner")
-    reporter.log(f"Days with both camera + satisfaction: {len(sat_merged)}")
+    reporter.log(f"Days with both camera + satisfaction (exact): {len(sat_merged)}")
+
+    if len(sat_merged) <= 20:
+        reporter.log("  ⚠ Insufficient exact-day overlap — merging by year-month instead.")
+        cam_monthly = daily[["date", "count"]].copy()
+        cam_monthly["ym"] = cam_monthly["date"].dt.to_period("M")
+        cam_monthly = cam_monthly.groupby("ym")["count"].mean().reset_index()
+        cam_monthly.rename(columns={"count": "mean_count"}, inplace=True)
+
+        sat_daily["ym"] = pd.to_datetime(sat_daily["date"]).dt.to_period("M")
+        sat_monthly = sat_daily.groupby("ym").agg(
+            mean_satisfaction=("mean_satisfaction", "mean"),
+            mean_nps=("mean_nps", "mean"),
+            n_responses=("n_responses", "sum"),
+        ).reset_index()
+
+        sat_merged = cam_monthly.merge(sat_monthly, on="ym", how="inner")
+        sat_merged["count"] = sat_merged["mean_count"]
+        sat_merged["date"] = sat_merged["ym"].dt.to_timestamp()
+        reporter.log(f"  Year-month overlap: {len(sat_merged)} months")
+
     result["sat_merged"] = sat_merged
     result["sat_daily"] = sat_daily
 
-    if len(sat_merged) <= 20:
-        reporter.log("  ⚠ Insufficient overlap.")
+    if len(sat_merged) <= 3:
+        reporter.log("  ⚠ Insufficient overlap even after monthly aggregation.")
         return result
 
-    # Visitor bins
+    # Visitor bins (use mean_count for monthly, count for daily)
+    count_col = "count"
     bins = [0, 5000, 8000, 12000, 15000, 20000, 50000]
     labels = ["<5K", "5-8K", "8-12K", "12-15K", "15-20K", ">20K"]
-    sat_merged["visitor_bin"] = pd.cut(sat_merged["count"], bins=bins, labels=labels)
+    sat_merged["visitor_bin"] = pd.cut(sat_merged[count_col], bins=bins, labels=labels)
 
-    reporter.log("\nOvertourism Threshold Analysis:")
-    reporter.log(f"  {'Bin':12s} {'Sat':>10s} {'NPS':>8s} {'Days':>6s}")
+    reporter.log("\nOvertourism Threshold Analysis (monthly averages):")
+    reporter.log(f"  {'Bin':12s} {'Sat':>10s} {'NPS':>8s} {'Months':>7s}")
     for label in labels:
         sub = sat_merged[sat_merged["visitor_bin"] == label]
         if len(sub) > 0:
             reporter.log(f"  {label:12s} {sub['mean_satisfaction'].mean():10.2f} "
-                         f"{sub['mean_nps'].mean():8.2f} {len(sub):6d}")
+                         f"{sub['mean_nps'].mean():8.2f} {len(sub):7d}")
 
     # Spearman
-    valid = sat_merged.dropna(subset=["mean_satisfaction", "count"])
-    if len(valid) > 10:
-        r, p = stats.spearmanr(valid["count"], valid["mean_satisfaction"])
+    valid = sat_merged.dropna(subset=["mean_satisfaction", count_col])
+    if len(valid) > 3:
+        r, p = stats.spearmanr(valid[count_col], valid["mean_satisfaction"])
         result["spearman_r"] = r
         result["spearman_p"] = p
-        reporter.log(f"\nSpearman (visitors vs satisfaction): r = {r:+.3f}, p = {p:.4f}")
+        reporter.log(f"\nSpearman (monthly visitors vs satisfaction): r = {r:+.3f}, p = {p:.4f}")
+
+        r_nps, p_nps = stats.spearmanr(
+            valid[count_col],
+            valid["mean_nps"].fillna(valid["mean_satisfaction"]),
+        )
+        result["spear_r_nps"] = r_nps
+        result["spear_p_nps"] = p_nps
+        reporter.log(f"Spearman (monthly visitors vs NPS):          r = {r_nps:+.3f}, p = {p_nps:.4f}")
 
     return result
 

@@ -280,6 +280,7 @@ def main() -> None:
     )
     undervibrancy_hits = text_result.get("undervibrancy_hits", 0)
     pct = text_result.get("pct", 0)
+    ratio_vs_high = text_result.get("ratio_vs_high", 0.0)
 
     # ══════════════════════════════════════════════════════════════════════
     # 16. FUKUI RESURRECTION CHART
@@ -483,6 +484,7 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Under-vibrancy mentions in 1-2 star reviews: {ctx['undervibrancy_hits']}
   Percentage of low-sat responses:             {ctx['pct']:.1f}%
+  Ratio vs high-satisfaction visitors:         {ctx['ratio_vs_high']:.1f}x
 """)
 
     rigor = ctx.get("rigor")
