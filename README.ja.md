@@ -259,7 +259,7 @@ pip install ".[dev]"
 |---------|------|
 | `python -m src.run_analysis` | フルパイプライン実行 → 図表・メトリクス・LaTeXテーブル生成 |
 | `pandoc output/pdf/executive_report_pdf_en.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.pdf` | 英語PDF生成 |
-| `pandoc output/pdf/executive_report_pdf_ja.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf` | 日本語PDF生成 |
+| `pandoc output/pdf/executive_report_pdf.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf` | 日本語PDF生成 |
 | `pytest` | テスト実行 |
 | `pytest --cov=src --cov-report=html` | カバレッジレポート付きテスト |
 | `ruff check src/ tests/` | リントチェック |

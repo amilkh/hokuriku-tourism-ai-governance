@@ -21,33 +21,6 @@ from .report import Reporter
 
 # ── Camera (AI people-flow) ──────────────────────────────────────────────────
 
-def _parse_camera_rows(glob_pattern: str) -> list[dict[str, Any]]:
-    """Parse camera CSV files and return raw ``(date, count)`` rows.
-
-    Shared by :func:`load_camera_daily` and ``spatial._load_peopleflow_daily``
-    to avoid duplicating the CSV-scanning loop.  Malformed or unrecognised
-    files are silently skipped.
-
-    Args:
-        glob_pattern: Recursive glob for per-5-min camera CSVs.
-
-    Returns:
-        List of ``{"date": str, "count": numeric}`` dicts.
-    """
-    rows: list[dict[str, Any]] = []
-    for f in sorted(glob.glob(glob_pattern, recursive=True)):
-        try:
-            df = pd.read_csv(f)
-            if "aggregate from" in df.columns and "total count" in df.columns:
-                rows.append({
-                    "date": os.path.basename(f).replace(".csv", ""),
-                    "count": df["total count"].sum(),
-                })
-        except Exception:
-            pass
-    return rows
-
-
 def load_camera_daily(
     glob_pattern: str,
     *,
@@ -65,7 +38,18 @@ def load_camera_daily(
     """
     rpt = reporter.log if reporter else print
 
-    rows = _parse_camera_rows(glob_pattern)
+    files = sorted(glob.glob(glob_pattern, recursive=True))
+    rows: list[dict[str, Any]] = []
+    for f in files:
+        try:
+            df = pd.read_csv(f)
+            if "aggregate from" in df.columns and "total count" in df.columns:
+                rows.append({
+                    "date": os.path.basename(f).replace(".csv", ""),
+                    "count": df["total count"].sum(),
+                })
+        except Exception:
+            pass
 
     camera = pd.DataFrame(rows)
     if camera.empty:
