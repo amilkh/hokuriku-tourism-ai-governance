@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.inspection import permutation_importance
 from statsmodels.stats.outliers_influence import variance_inflation_factor
@@ -46,6 +46,18 @@ class RFResult:
     y_pred: np.ndarray
     mdi_importance: pd.DataFrame
     perm_importance: pd.DataFrame
+
+
+@dataclass
+class StatisticalRigorResult:
+    """Container for statistical rigor metrics (Prof. Takemoto 効果量 review)."""
+    beta_coefficients: pd.Series   # standardised OLS betas (feature_cols only)
+    cohens_f2: float               # global Cohen's f² for the full OLS model
+    train_n: int
+    holdout_n: int
+    holdout_mae: float
+    holdout_rmse: float
+    holdout_r2: float
 
 
 @dataclass
@@ -314,4 +326,109 @@ def robustness_suite(
         weather_value=weather_value,
         r2_no_weather=r2_no_weather,
         vif=vif_df,
+    )
+
+
+# ── Statistical Rigor (効果量 / Effect Size) ──────────────────────────────────
+
+def statistical_rigor(
+    model_df: pd.DataFrame,
+    ols_result: OLSResult,
+    feature_cols: list[str],
+    reporter: Reporter,
+    *,
+    train_pct: float = 0.80,
+) -> StatisticalRigorResult:
+    """Compute effect sizes and out-of-sample predictive validity.
+
+    Produces:
+    - Standardised beta coefficients (β_std = coef × σ_x / σ_y)
+    - Cohen's f² for the full OLS model
+    - Time-series 80/20 train-test split MAE, RMSE, and R²
+
+    Args:
+        model_df: Modelling DataFrame sorted by ``date``.
+        ols_result: Fitted ``OLSResult`` on the full training set.
+        feature_cols: Feature column names.
+        reporter: ``Reporter`` instance.
+        train_pct: Fraction of rows (chronological) used for training.
+
+    Returns:
+        ``StatisticalRigorResult``.
+    """
+    reporter.section("SR", "Statistical Rigor – Effect Size & Predictive Validity")
+
+    # ── 1. Standardised beta coefficients ────────────────────────────────────
+    reporter.log("\n--- Standardised Coefficients (β) ---")
+    X = model_df[feature_cols]
+    y = model_df["count"]
+
+    std_x = X.std()
+    std_y = y.std()
+
+    # Raw OLS coefficients (features only – skip constant at index 0)
+    raw_coefs = ols_result.model.params[1:]  # excludes const
+    if not isinstance(raw_coefs, pd.Series):
+        raw_coefs = pd.Series(raw_coefs, index=feature_cols)
+
+    beta = raw_coefs * (std_x / std_y)
+    beta.name = "beta_std"
+
+    reporter.log(f"  {'Feature':35s}  {'β (std)':>10}  {'|β|':>8}")
+    reporter.log(f"  {'-'*35}  {'-'*10}  {'-'*8}")
+    for feat, b in beta.sort_values(key=abs, ascending=False).items():
+        reporter.log(f"  {feat:35s}  {b:+10.4f}  {abs(b):8.4f}")
+
+    # ── 2. Cohen's f² ────────────────────────────────────────────────────────
+    r2 = ols_result.r2
+    cohens_f2 = r2 / (1.0 - r2) if r2 < 1.0 else float("inf")
+    magnitude = (
+        "large (≥0.35)" if cohens_f2 >= 0.35 else
+        "medium (≥0.15)" if cohens_f2 >= 0.15 else
+        "small (≥0.02)" if cohens_f2 >= 0.02 else
+        "negligible (<0.02)"
+    )
+    reporter.log(f"\n--- Cohen's f² ---")
+    reporter.log(f"  f² = R² / (1 − R²) = {r2:.4f} / {1 - r2:.4f} = {cohens_f2:.4f}")
+    reporter.log(f"  Effect magnitude: {magnitude}")
+
+    # ── 3. Time-series train-test split ──────────────────────────────────────
+    reporter.log(f"\n--- Out-of-Sample Validation (train={train_pct:.0%} / test={1-train_pct:.0%}) ---")
+
+    sorted_df = model_df.sort_values("date").reset_index(drop=True)
+    split_idx = int(len(sorted_df) * train_pct)
+    train_df = sorted_df.iloc[:split_idx]
+    holdout_df = sorted_df.iloc[split_idx:]
+
+    train_n = len(train_df)
+    holdout_n = len(holdout_df)
+
+    reporter.log(f"  Train period:   {train_df['date'].min().date()} → {train_df['date'].max().date()} (n={train_n})")
+    reporter.log(f"  Holdout period: {holdout_df['date'].min().date()} → {holdout_df['date'].max().date()} (n={holdout_n})")
+
+    X_train = sm.add_constant(train_df[feature_cols].values, has_constant="add")
+    y_train = train_df["count"].values
+    train_model = sm.OLS(y_train, X_train).fit()
+
+    X_hold = sm.add_constant(holdout_df[feature_cols].values, has_constant="add")
+    y_hold = holdout_df["count"].values
+    y_pred_hold = train_model.predict(X_hold)
+
+    mae = mean_absolute_error(y_hold, y_pred_hold)
+    rmse = float(np.sqrt(mean_squared_error(y_hold, y_pred_hold)))
+    holdout_r2 = r2_score(y_hold, y_pred_hold)
+
+    reporter.log(f"\n  Holdout MAE:   {mae:.1f} visitors/day")
+    reporter.log(f"  Holdout RMSE:  {rmse:.1f} visitors/day")
+    reporter.log(f"  Holdout R²:    {holdout_r2:.4f}")
+    reporter.log(f"\n  Interpretation: The model predicts unseen dates within ±{mae:.0f} visitors/day on average.")
+
+    return StatisticalRigorResult(
+        beta_coefficients=beta,
+        cohens_f2=cohens_f2,
+        train_n=train_n,
+        holdout_n=holdout_n,
+        holdout_mae=mae,
+        holdout_rmse=rmse,
+        holdout_r2=holdout_r2,
     )

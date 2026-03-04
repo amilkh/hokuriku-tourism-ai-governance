@@ -141,6 +141,70 @@ def key_metrics_to_latex(
     return "\n".join(lines)
 
 
+def statistical_rigor_to_latex(
+    rigor: Any,
+    *,
+    caption: str = "Statistical Rigor: Effect Size and Predictive Validity",
+    label: str = "tab:statistical_rigor",
+) -> str:
+    """Generate table_statistical_rigor.tex from a StatisticalRigorResult.
+
+    Args:
+        rigor: ``StatisticalRigorResult`` instance.
+        caption: Table caption.
+        label: LaTeX label.
+
+    Returns:
+        LaTeX source string.
+    """
+    beta: pd.Series = rigor.beta_coefficients
+    f2: float = rigor.cohens_f2
+
+    magnitude = (
+        r"large ($\geq 0.35$)" if f2 >= 0.35 else
+        r"medium ($\geq 0.15$)" if f2 >= 0.15 else
+        r"small ($\geq 0.02$)" if f2 >= 0.02 else
+        r"negligible ($< 0.02$)"
+    )
+
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        f"\\caption{{{caption}}}",
+        f"\\label{{{label}}}",
+        r"\begin{tabular}{lrl}",
+        r"\toprule",
+        r"\multicolumn{3}{l}{\textbf{Panel A: Standardised Coefficients ($\beta$)}} \\",
+        r"\midrule",
+        r"Feature & $\beta$ & $|\beta|$ rank \\",
+        r"\midrule",
+    ]
+
+    sorted_beta = beta.sort_values(key=abs, ascending=False)
+    for rank, (feat, b) in enumerate(sorted_beta.items(), start=1):
+        feat_esc = str(feat).replace("_", r"\_")
+        lines.append(f"  {feat_esc} & ${b:+.4f}$ & {rank} \\\\")
+
+    lines += [
+        r"\midrule",
+        r"\multicolumn{3}{l}{\textbf{Panel B: Global Effect Size}} \\",
+        r"\midrule",
+        f"  Cohen's $f^2$ & ${f2:.4f}$ & {magnitude} \\\\",
+        r"\midrule",
+        r"\multicolumn{3}{l}{\textbf{Panel C: Out-of-Sample Predictive Validity}} \\",
+        r"\midrule",
+        f"  Training $N$ & {rigor.train_n} & \\\\",
+        f"  Hold-out $N$ & {rigor.holdout_n} & \\\\",
+        f"  Hold-out MAE & ${rigor.holdout_mae:.1f}$ visitors/day & \\\\",
+        f"  Hold-out RMSE & ${rigor.holdout_rmse:.1f}$ visitors/day & \\\\",
+        f"  Hold-out $R^2$ & ${rigor.holdout_r2:.4f}$ & \\\\",
+        r"\bottomrule",
+        r"\end{tabular}",
+        r"\end{table}",
+    ]
+    return "\n".join(lines)
+
+
 def export_all_tables(
     results: dict[str, Any],
     output_dir: str,
@@ -218,6 +282,15 @@ def export_all_tables(
     if kv:
         tex = key_metrics_to_latex(kv)
         p = os.path.join(output_dir, "table_key_metrics.tex")
+        with open(p, "w") as f:
+            f.write(tex)
+        paths.append(p)
+
+    # Statistical rigor table (effect size + predictive validity)
+    rigor = results.get("rigor")
+    if rigor is not None:
+        tex = statistical_rigor_to_latex(rigor)
+        p = os.path.join(output_dir, "table_statistical_rigor.tex")
         with open(p, "w") as f:
             f.write(tex)
         paths.append(p)

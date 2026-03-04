@@ -27,7 +27,7 @@ from src.report import Reporter
 from src.validator import validate_pipeline
 from src.data_loader import load_all_data
 from src.feature_engineering import build_features
-from src.models import fit_ols, fit_random_forest, robustness_suite
+from src.models import fit_ols, fit_random_forest, robustness_suite, statistical_rigor
 from src.economics import (
     compute_opportunity_gap,
     compute_lost_population,
@@ -250,6 +250,11 @@ def main() -> None:
     robust = robustness_suite(model_df, ols_result, feature_cols, rpt)
 
     # ══════════════════════════════════════════════════════════════════════
+    # 10b. STATISTICAL RIGOR (効果量 – for Prof. Takemoto review)
+    # ══════════════════════════════════════════════════════════════════════
+    rigor = statistical_rigor(model_df, ols_result, feature_cols, rpt)
+
+    # ══════════════════════════════════════════════════════════════════════
     # 13. RANKING SIMULATION (FUKUI RESURRECTION)
     # ══════════════════════════════════════════════════════════════════════
     ranking_data = ranking_simulation(
@@ -324,7 +329,11 @@ def main() -> None:
     # ══════════════════════════════════════════════════════════════════════
     # 20. MULTI-NODE SPATIAL GOVERNANCE
     # ══════════════════════════════════════════════════════════════════════
-    spatial = multi_node_analysis(cfg, rsi, route_col, survey_all, rpt)
+    try:
+        spatial = multi_node_analysis(cfg, rsi, route_col, survey_all, rpt)
+    except Exception as exc:
+        logger.warning("multi_node_analysis failed (%s); continuing with empty spatial data.", exc)
+        spatial = {"valid_nodes": {}, "node_count": 0}
 
     fig_num += 1
     viz.plot_spatial_friction(
@@ -358,6 +367,7 @@ def main() -> None:
         "ols": ols_result,
         "rf": rf_result,
         "robust": robust,
+        "rigor": rigor,
         "economics": {"total_lost": total_lost},
         "spatial": spatial,
         "ccf": ccf_data,
@@ -473,6 +483,22 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Under-vibrancy mentions in 1-2 star reviews: {ctx['undervibrancy_hits']}
   Percentage of low-sat responses:             {ctx['pct']:.1f}%
+""")
+
+    rigor = ctx.get("rigor")
+    if rigor is not None:
+        top_beta = rigor.beta_coefficients.sort_values(key=abs, ascending=False)
+        top_str = ", ".join(f"{f}={v:+.3f}" for f, v in top_beta.head(3).items())
+        rpt.metrics(f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  9. STATISTICAL RIGOR (効果量 / Prof. Takemoto Review)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Top-3 Standardised β: {top_str}
+  Cohen's f²:           {rigor.cohens_f2:.4f}
+  Train N:              {rigor.train_n}  |  Hold-out N: {rigor.holdout_n}
+  Hold-out MAE:         {rigor.holdout_mae:.1f} visitors/day
+  Hold-out RMSE:        {rigor.holdout_rmse:.1f} visitors/day
+  Hold-out R²:          {rigor.holdout_r2:.4f}
 """)
 
     rpt.metrics("=" * 80)
