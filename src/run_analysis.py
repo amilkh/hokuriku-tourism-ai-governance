@@ -354,6 +354,11 @@ def main() -> None:
         os.path.join(fig_dir, f"fig{fig_num:02d}_rank_projection.png"),
         rpt, dpi=300)
 
+    fig_num += 1
+    viz.plot_dhde_architecture(
+        os.path.join(fig_dir, f"fig{fig_num:02d}_dhde_architecture.png"),
+        rpt, dpi=300)
+
     # ══════════════════════════════════════════════════════════════════════
     # METRICS EXPORT
     # ══════════════════════════════════════════════════════════════════════

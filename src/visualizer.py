@@ -993,3 +993,196 @@ def plot_rank_resurrection_projection(
     reporter.log(f"  Saved {ja_path}")
     plt.close(fig)
     return fig
+
+
+# ── Fig 16: DHDE Architecture diagram ────────────────────────────────────────
+
+def plot_dhde_architecture(
+    out_path: str,
+    reporter: Reporter,
+    dpi: int = 300,
+) -> plt.Figure:
+    """Conceptual architecture diagram for the Distributed Human Data Engine."""
+    from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+
+    # Journal-appropriate palette: muted, desaturated, print-safe
+    C_BG       = "#FFFFFF"
+    C_COL_S    = "#EEF3F9"   # cool grey-blue tint
+    C_COL_C    = "#EEF6F0"   # cool grey-green tint
+    C_COL_O    = "#F5F0EC"   # warm grey tint
+    C_BORDER_S = "#2B5C8A"   # steel blue
+    C_BORDER_C = "#2A6B45"   # forest green
+    C_BORDER_O = "#7B4B1A"   # warm sienna
+    C_CARD_S   = "#DAE8F5"
+    C_CARD_C   = "#D3EDDF"
+    C_CARD_O   = "#F0DFD0"
+    C_TEXT     = "#1A1A2E"
+    C_MUTED    = "#4A5568"
+    C_ARROW    = "#4A5568"
+    C_ACCENT   = "#5A3E85"   # muted violet for feedback arc
+
+    fig, ax = plt.subplots(figsize=(20, 10))
+    ax.set_xlim(0, 20)
+    ax.set_ylim(0, 10)
+    ax.axis("off")
+    fig.patch.set_facecolor(C_BG)
+    ax.set_facecolor(C_BG)
+
+    def rbox(x, y, w, h, fc, ec, radius=0.3, lw=1.4, alpha=1.0):
+        ax.add_patch(FancyBboxPatch(
+            (x, y), w, h,
+            boxstyle=f"round,pad=0,rounding_size={radius}",
+            facecolor=fc, edgecolor=ec, linewidth=lw, alpha=alpha, zorder=3,
+        ))
+
+    def txt(x, y, s, size=9, color=C_TEXT, weight="normal", ha="center", va="center", style="normal"):
+        ax.text(x, y, s, fontsize=size, color=color, fontweight=weight,
+                ha=ha, va=va, zorder=5, style=style)
+
+    def arr(x1, y1, x2, y2, color=C_ARROW, lw=1.6):
+        ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                    arrowprops=dict(
+                        arrowstyle="->,head_width=0.24,head_length=0.20",
+                        color=color, lw=lw, connectionstyle="arc3,rad=0.0",
+                    ), zorder=4)
+
+    # Title
+    txt(10, 9.62, "Distributed Human Data Engine (DHDE) — AI Governance Architecture",
+        size=15, weight="bold")
+    txt(10, 9.18, "Hokuriku Tourism Demand Forecasting  |  Fukui Prefecture, Japan  |  2024-2026",
+        size=9.5, color=C_MUTED)
+    ax.plot([0.3, 19.7], [8.88, 8.88], color="#CCCCCC", lw=1.0)
+
+    # Column panels — tighter gaps, lower to clear title separator
+    # Col1: x=0.2..4.45  gap=0.35  Col2: x=4.8..12.55  gap=0.35  Col3: x=12.9..19.8
+    for px, py, pw, ph, pc, pbc, plabel in [
+        (0.20, 0.40, 4.25, 8.30, C_COL_S, C_BORDER_S, "INPUT SENSORS"),
+        (4.80, 0.40, 7.75, 8.30, C_COL_C, C_BORDER_C, "DHDE PROCESSING CORE"),
+        (12.9, 0.40, 6.90, 8.30, C_COL_O, C_BORDER_O, "OUTPUT GOVERNANCE"),
+    ]:
+        rbox(px, py, pw, ph, pc, pbc, radius=0.5, lw=1.8, alpha=0.6)
+        cx = px + pw / 2
+        txt(cx, py + ph - 0.30, plabel, size=10, color=pbc, weight="bold")
+        ax.plot([px + 0.35, px + pw - 0.35], [py + ph - 0.55, py + ph - 0.55],
+                color=pbc, lw=1.0, alpha=0.40, zorder=4)
+
+    # Column bodies start below the underline at y ≈ 8.15
+    # 4 cards h=1.58, gap=0.27 → sy[0]=6.30, bottom card bottom=0.97
+    CH = 1.58
+    sy_starts = [6.30, 4.45, 2.60, 0.97]
+
+    # ── Input sensor cards ─────────────────────────────────────────────────
+    sensors = [
+        ("RSI Business Intent",
+         "47-site direction & search queries",
+         "Direction counts  ->  lag / roll features"),
+        ("JMA Weather Stations",
+         "Temp  |  Precip  |  Snow  |  Wind  |  Humidity",
+         "Winter sensitivity  6.27x  higher than summer"),
+        ("Edge-AI Cameras",
+         "Human-shape detection, 5-min intervals",
+         "397 usable days across 4 spatial nodes"),
+        ("Visitor Surveys",
+         "95,653 Hokuriku responses (NPS + satisfaction)",
+         "71,288 Fukui free-text  ->  Kansei NLP"),
+    ]
+    for (title, line1, line2), sy in zip(sensors, sy_starts):
+        rbox(0.40, sy, 3.85, CH, C_CARD_S, C_BORDER_S, radius=0.25, lw=1.2)
+        txt(2.325, sy + 1.25, title, size=11, color=C_BORDER_S, weight="bold")
+        txt(2.325, sy + 0.82, line1, size=9.5, color=C_MUTED)
+        txt(2.325, sy + 0.38, line2, size=9.5, color=C_MUTED)
+
+    # ── Core: Feature Engineering ──────────────────────────────────────────
+    rbox(5.0, 6.25, 7.35, 1.85, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(8.675, 7.78, "Feature Engineering", size=11.5, color=C_BORDER_C, weight="bold")
+    for i, ln in enumerate([
+        "Calendar (dow_mean, month, is_holiday)   Lag(1,2,3)   Roll(7d)",
+        "Weekend x Intent   Weekend x Severity   interaction terms",
+        "Discomfort Index   Wind Chill   Kansei under-vibrancy flags",
+    ]):
+        txt(8.675, 7.37 - i * 0.36, ln, size=9.0, color=C_MUTED)
+
+    # ── Core: OLS ─────────────────────────────────────────────────────────
+    rbox(5.0, 3.90, 3.55, 2.10, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(6.775, 5.70, "OLS Regression", size=11, color=C_BORDER_C, weight="bold")
+    for i, ln in enumerate([
+        "R2 = 0.810  (Adj 0.802)",
+        "16 predictors   N = 397",
+        "Newey-West HAC   sig = 8",
+        "DW (LDV) = 1.898",
+        "Weather lift  +0.056 R2",
+    ]):
+        txt(6.775, 5.31 - i * 0.33, ln, size=9.0, color=C_MUTED)
+
+    # ── Core: Random Forest ───────────────────────────────────────────────
+    rbox(8.80, 3.90, 3.55, 2.10, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(10.575, 5.70, "Random Forest", size=11, color=C_BORDER_C, weight="bold")
+    for i, ln in enumerate([
+        "Train R2 = 0.909",
+        "CV R2 = 0.557  (+/- 0.131)",
+        "Hold-out R2 = 0.683",
+        "MAE = 1,793 visitors/day",
+        "Top: directions, month",
+    ]):
+        txt(10.575, 5.31 - i * 0.33, ln, size=9.0, color=C_MUTED)
+
+    # ── Core: Robustness ──────────────────────────────────────────────────
+    rbox(5.0, 2.10, 7.35, 1.58, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(8.675, 3.40, "Robustness Suite", size=11, color=C_BORDER_C, weight="bold")
+    for i, ln in enumerate([
+        "First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8",
+        "4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552",
+        "Eiheiji quietude threshold x*=42.4%   Kansei Spearman r=+0.148 (p=0.002)",
+    ]):
+        txt(8.675, 3.02 - i * 0.35, ln, size=8.5, color=C_MUTED)
+
+    # ── Output governance cards ────────────────────────────────────────────
+    outputs = [
+        ("Supply-side Nudges",
+         "865,917 lost visitors/yr recovered",
+         "Rank lift: 47th  ->  ~35th nationally"),
+        ("Weather-Resilient Routing",
+         "Winter 6.27x more weather-sensitive",
+         "Snow / wind alerts  ->  alternate nodes"),
+        ("Kansei Comfort Governance",
+         "Discomfort Index  +  Wind Chill alerts",
+         "Quietude  <=42.4%  prevents sat. drop"),
+        ("Economic Impact Dashboard",
+         "Annual economic loss: 11.96B JPY",
+         "4-node geographic saturation achieved"),
+    ]
+    for (title, line1, line2), oy in zip(outputs, sy_starts):
+        rbox(13.1, oy, 6.50, CH, C_CARD_O, C_BORDER_O, radius=0.25, lw=1.2)
+        txt(16.35, oy + 1.25, title, size=11, color=C_BORDER_O, weight="bold")
+        txt(16.35, oy + 0.82, line1, size=9.5, color=C_MUTED)
+        txt(16.35, oy + 0.38, line2, size=9.5, color=C_MUTED)
+
+    # ── Arrows: sensors -> feature eng ────────────────────────────────────
+    for sy in sy_starts:
+        arr(4.25, sy + 0.79, 4.95, 7.17, color=C_BORDER_S, lw=1.4)
+
+    # ── Arrows: feature eng -> models ─────────────────────────────────────
+    arr(7.8,  6.25, 6.775, 6.00, color=C_BORDER_C, lw=1.4)
+    arr(9.55, 6.25, 10.575, 6.00, color=C_BORDER_C, lw=1.4)
+
+    # ── Arrows: models -> robustness ──────────────────────────────────────
+    arr(6.775, 3.90, 7.2,  3.68, color=C_BORDER_C, lw=1.4)
+    arr(10.575, 3.90, 10.15, 3.68, color=C_BORDER_C, lw=1.4)
+
+    # ── Arrows: robustness -> outputs ─────────────────────────────────────
+    for oy in sy_starts:
+        arr(12.35, 2.89, 13.05, oy + 0.79, color=C_BORDER_O, lw=1.4)
+
+    # ── Footer ────────────────────────────────────────────────────────────
+    ax.plot([0.3, 19.7], [0.55, 0.55], color="#CCCCCC", lw=0.8, zorder=3)
+    txt(0.4, 0.3,
+        "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026",
+        size=8.0, color=C_MUTED, ha="left")
+    txt(19.6, 0.3, "DHDE v1.0  |  Amil Khanzada  PhD Research",
+        size=8.0, color=C_MUTED, ha="right")
+
+    fig.tight_layout(pad=0.3)
+    reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
+    plt.close(fig)
+    reporter.log(f"  Saved {out_path}")
+    return fig
