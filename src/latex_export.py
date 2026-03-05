@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# ── PNG styling ───────────────────────────────────────────────────────────────
-_HDR_BG  = "#2B5C8A"
-_SEC_BG  = "#D8E5F0"
-_ALT_BG  = "#F5F7FA"
+# ── PNG styling (academic, no colour) ────────────────────────────────────────
+_HDR_BG  = "white"
+_SEC_BG  = "#F0F0F0"
+_ALT_BG  = "white"
 
 
 def _render_table_png(
@@ -56,12 +56,11 @@ def _render_table_png(
 
     nrows = len(cell_text)
     row_h = 0.30
-    fig_h = max(3.0, nrows * row_h + 1.0)
+    fig_h = max(1.5, nrows * row_h + 0.2)
     fig_w = max(6.0, ncols * 2.4)
 
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     ax.axis("off")
-    ax.set_title(caption, fontsize=9, style="italic", pad=8)
 
     tbl = ax.table(
         cellText=cell_text,
@@ -75,14 +74,13 @@ def _render_table_png(
     tbl.set_fontsize(8.0)
 
     for j in range(ncols):
-        tbl[0, j].set_text_props(color="white", fontweight="bold")
+        tbl[0, j].set_text_props(color="black", fontweight="bold")
 
     for i, sec in enumerate(is_section):
         if sec:
-            tbl[i + 1, 0].set_text_props(fontweight="bold", color="#1A3A5C")
+            tbl[i + 1, 0].set_text_props(fontweight="bold", color="black")
 
-    plt.tight_layout()
-    fig.savefig(out_path, dpi=dpi, bbox_inches="tight", facecolor="white")
+    fig.savefig(out_path, dpi=dpi, bbox_inches="tight", pad_inches=0.02, facecolor="white")
     plt.close(fig)
 
 
