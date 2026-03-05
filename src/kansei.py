@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from scipy import stats
 
@@ -334,7 +335,9 @@ def text_mine_undervibrancy(
         return result
 
     text_fukui = text_all[text_all["prefecture"].str.contains("福井", na=False)].copy()
-    reporter.log(f"Fukui survey responses with text: {len(text_fukui)}")
+    n_text_fukui = len(text_fukui)
+    reporter.log(f"Fukui survey responses with text: {n_text_fukui}")
+    result["n_text_fukui"] = n_text_fukui
 
     low_sat = text_fukui[text_fukui["satisfaction"].isin([1, 2])].copy()
     low_sat["all_text"] = (
@@ -382,5 +385,98 @@ def text_mine_undervibrancy(
     result["ratio_vs_high"] = ratio
     reporter.log(f"\n  High-sat vibrancy mentions: {high_hits} ({pct_high:.1f}%)")
     reporter.log(f"  ★ Ratio: {ratio:.1f}x more prevalent in dissatisfied visitors")
+
+    return result
+
+
+# ── Eiheiji Quietude Threshold ────────────────────────────────────────────────
+
+def eiheiji_quietude_threshold(
+    sat_all: pd.DataFrame,
+    reporter: Reporter,
+    *,
+    min_responses_per_day: int = 3,
+) -> dict[str, Any]:
+    """Compute the Zen-Silence quietude threshold for Eiheiji via quadratic regression.
+
+    Uses the daily survey response count at Eiheiji as a proxy for relative
+    crowd density (more responses on a given day ≈ more visitors, assuming
+    consistent survey administration).  A quadratic is fitted to
+    mean_satisfaction ~ relative_density; the vertex x* = -b/(2a) gives the
+    density at which satisfaction is maximised.
+
+    Args:
+        sat_all: Survey satisfaction DataFrame, must include ``location``,
+            ``date``, and ``satisfaction`` columns (produced by
+            :func:`data_loader.load_survey_satisfaction`).
+        reporter: ``Reporter`` instance.
+        min_responses_per_day: Days with fewer responses than this are excluded
+            to reduce noise from near-empty sample days.
+
+    Returns:
+        Dict with keys:
+        ``threshold_pct`` (vertex as % of max daily count, or None if unfit),
+        ``peak_sat``, ``coeffs`` [a, b, c], ``n_responses``, ``n_days``,
+        ``spearman_r``, ``spearman_p``.
+    """
+    reporter.section("E", "Eiheiji Quietude Threshold (Quadratic Kansei Regression)")
+    result: dict[str, Any] = {"threshold_pct": None}
+
+    if "location" not in sat_all.columns or sat_all.empty:
+        reporter.log("  ⚠ No location column in sat_all — Eiheiji analysis skipped.")
+        return result
+
+    ei = sat_all[sat_all["location"].str.contains("永平寺", na=False)].copy()
+    n_ei = len(ei)
+    reporter.log(f"Eiheiji survey responses: {n_ei}")
+    result["n_responses"] = n_ei
+
+    if n_ei < 20:
+        reporter.log("  ⚠ Insufficient responses for quadratic fit.")
+        return result
+
+    ei["date"] = pd.to_datetime(ei["date"]).dt.normalize()
+    daily = (
+        ei.groupby("date")
+        .agg(n=("satisfaction", "count"), mean_sat=("satisfaction", "mean"))
+        .reset_index()
+    )
+    daily = daily[daily["n"] >= min_responses_per_day].dropna(subset=["mean_sat"])
+    n_days = len(daily)
+    reporter.log(f"Analysis days (≥{min_responses_per_day} responses/day): {n_days}")
+    result["n_days"] = n_days
+
+    if n_days < 10:
+        reporter.log("  ⚠ Too few qualifying days for quadratic fit.")
+        return result
+
+    max_n = daily["n"].max()
+    daily["rel_density"] = daily["n"] / max_n * 100
+
+    # Spearman first (linear strength check)
+    spear_r, spear_p = stats.spearmanr(daily["rel_density"], daily["mean_sat"])
+    result["spearman_r"] = spear_r
+    result["spearman_p"] = spear_p
+    reporter.log(f"Spearman (density vs satisfaction): r = {spear_r:+.3f}, p = {spear_p:.4f}")
+
+    # Quadratic fit via numpy polyfit (degree 2)
+    coeffs = np.polyfit(daily["rel_density"], daily["mean_sat"], 2)
+    a, b, c = coeffs
+    result["coeffs"] = coeffs.tolist()
+    reporter.log(f"Quadratic fit: y = {a:.6f}·x² + {b:.6f}·x + {c:.4f}")
+
+    if a >= 0:
+        reporter.log("  ⚠ Parabola opens upward — no finite satisfaction maximum.")
+        return result
+
+    x_star = -b / (2 * a)
+    sat_star = float(np.polyval(coeffs, x_star))
+    result["threshold_pct"] = round(x_star, 1)
+    result["peak_sat"] = round(sat_star, 3)
+
+    reporter.log(f"\n★ ZEN-SILENCE THRESHOLD:")
+    reporter.log(f"  Optimal relative density: {x_star:.1f}% of max observed daily crowd")
+    reporter.log(f"  Peak satisfaction at threshold: {sat_star:.3f}")
+    reporter.log(f"  Max daily survey responses (= 100% density): {max_n}")
 
     return result

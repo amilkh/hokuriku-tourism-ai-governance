@@ -292,6 +292,9 @@ def load_survey_satisfaction(
             else:
                 sub["nps_raw"] = np.nan
 
+            loc_col = "回答場所"
+            sub["location"] = sdf[loc_col].astype(str) if loc_col in sdf.columns else ""
+
             sub = sub.dropna(subset=["date"])
             frames.append(sub)
         except Exception as exc:

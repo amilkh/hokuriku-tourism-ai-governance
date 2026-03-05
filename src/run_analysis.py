@@ -39,6 +39,7 @@ from src.kansei import (
     discomfort_index_analysis,
     overtourism_threshold,
     text_mine_undervibrancy,
+    eiheiji_quietude_threshold,
 )
 from src import visualizer as viz
 from src.latex_export import export_all_tables
@@ -281,6 +282,12 @@ def main() -> None:
     undervibrancy_hits = text_result.get("undervibrancy_hits", 0)
     pct = text_result.get("pct", 0)
     ratio_vs_high = text_result.get("ratio_vs_high", 0.0)
+    n_text_fukui = text_result.get("n_text_fukui", 0)
+
+    # ══════════════════════════════════════════════════════════════════════
+    # 15b. EIHEIJI QUIETUDE THRESHOLD
+    # ══════════════════════════════════════════════════════════════════════
+    eiheiji_result = eiheiji_quietude_threshold(sat_all, rpt)
 
     # ══════════════════════════════════════════════════════════════════════
     # 16. FUKUI RESURRECTION CHART
@@ -485,6 +492,21 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
   Under-vibrancy mentions in 1-2 star reviews: {ctx['undervibrancy_hits']}
   Percentage of low-sat responses:             {ctx['pct']:.1f}%
   Ratio vs high-satisfaction visitors:         {ctx['ratio_vs_high']:.1f}x
+  Fukui free-text responses analysed:          {ctx['n_text_fukui']:,}
+""")
+
+    ei = ctx.get("eiheiji_result", {})
+    ei_threshold = ei.get("threshold_pct")
+    rpt.metrics(f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  8b. EIHEIJI ZEN-SILENCE THRESHOLD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Eiheiji survey responses:          {ei.get('n_responses', 'N/A')}
+  Qualifying days (≥3 resp/day):     {ei.get('n_days', 'N/A')}
+  Spearman r (density vs sat):       {ei.get('spearman_r', float('nan')):+.3f} (p = {ei.get('spearman_p', float('nan')):.4f})
+  Quietude threshold (vertex x*):    {f"{ei_threshold:.1f}%" if ei_threshold is not None else "N/A"}
+  Peak satisfaction at threshold:    {ei.get('peak_sat', 'N/A')}
+  Raw survey entries (all.csv):      574,137
 """)
 
     rigor = ctx.get("rigor")
