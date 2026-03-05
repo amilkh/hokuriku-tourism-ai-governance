@@ -209,8 +209,8 @@ def main() -> None:
     # 8. KANSEI (EMOTIONAL) FEEDBACK LOOP
     # ══════════════════════════════════════════════════════════════════════
     kansei_data = overtourism_threshold(daily, sat_all, rpt)
-    spear_r = kansei_data.get("spear_r", 0.0)
-    spear_p = kansei_data.get("spear_p", 1.0)
+    spear_r = kansei_data.get("spearman_r", 0.0)
+    spear_p = kansei_data.get("spearman_p", 1.0)
     spear_r_nps = kansei_data.get("spear_r_nps", 0.0)
     spear_p_nps = kansei_data.get("spear_p_nps", 1.0)
 

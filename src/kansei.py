@@ -220,12 +220,18 @@ def overtourism_threshold(
     sat_fukui = sat_all[sat_all["prefecture"].str.contains("福井", na=False)].copy()
     reporter.log(f"Fukui satisfaction responses: {len(sat_fukui)}")
 
-    sat_daily = sat_fukui.groupby("date").agg(
-        mean_satisfaction=("satisfaction", "mean"),
-        mean_nps=("nps_raw", "mean"),
-        mean_service=("satisfaction_service", "mean"),
-        n_responses=("satisfaction", "count"),
-    ).reset_index()
+    agg_dict: dict = {
+        "mean_satisfaction": ("satisfaction", "mean"),
+        "n_responses": ("satisfaction", "count"),
+    }
+    if "nps_raw" in sat_fukui.columns:
+        agg_dict["mean_nps"] = ("nps_raw", "mean")
+    if "satisfaction_service" in sat_fukui.columns:
+        agg_dict["mean_service"] = ("satisfaction_service", "mean")
+
+    sat_daily = sat_fukui.groupby("date").agg(**agg_dict).reset_index()
+    if "mean_nps" not in sat_daily.columns:
+        sat_daily["mean_nps"] = float("nan")
 
     # Try exact-day merge first; fall back to year-month aggregate if too sparse.
     sat_merged = daily[["date", "count"]].merge(sat_daily, on="date", how="inner")
@@ -239,11 +245,15 @@ def overtourism_threshold(
         cam_monthly.rename(columns={"count": "mean_count"}, inplace=True)
 
         sat_daily["ym"] = pd.to_datetime(sat_daily["date"]).dt.to_period("M")
-        sat_monthly = sat_daily.groupby("ym").agg(
-            mean_satisfaction=("mean_satisfaction", "mean"),
-            mean_nps=("mean_nps", "mean"),
-            n_responses=("n_responses", "sum"),
-        ).reset_index()
+        monthly_agg: dict = {
+            "mean_satisfaction": ("mean_satisfaction", "mean"),
+            "n_responses": ("n_responses", "sum"),
+        }
+        if "mean_nps" in sat_daily.columns:
+            monthly_agg["mean_nps"] = ("mean_nps", "mean")
+        sat_monthly = sat_daily.groupby("ym").agg(**monthly_agg).reset_index()
+        if "mean_nps" not in sat_monthly.columns:
+            sat_monthly["mean_nps"] = float("nan")
 
         sat_merged = cam_monthly.merge(sat_monthly, on="ym", how="inner")
         sat_merged["count"] = sat_merged["mean_count"]
