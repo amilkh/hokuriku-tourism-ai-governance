@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """generate_paper_figures.py
 Standalone script producing two publication-ready figures for the paper:
-  - paper_fig3_vibrancy_threshold.png  (Kansei scatter + regression curves)
-  - paper_fig4_rank_resurrection.png   (Rank improvement: 47th -> ~35th)
+  - paper_fig2_vibrancy_threshold.png  (Kansei scatter + regression curves)
+  - paper_fig3_rank_resurrection.png   (Rank improvement: 47th -> ~35th)
 
 Run from the repo root:
     python generate_paper_figures.py
@@ -164,7 +164,7 @@ def plot_vibrancy_threshold(df: pd.DataFrame) -> None:
             bbox=dict(boxstyle="round,pad=0.3", facecolor="#F8F8F8",
                       edgecolor="#CCCCCC"))
 
-    out = OUT_DIR / "paper_fig3_vibrancy_threshold.png"
+    out = OUT_DIR / "paper_fig2_vibrancy_threshold.png"
     fig.savefig(out, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"  Saved: {out}")
@@ -281,7 +281,7 @@ def plot_rank_resurrection() -> None:
              bbox=dict(boxstyle="round,pad=0.35", facecolor="#EEF3F9",
                        edgecolor="#2B5C8A", alpha=0.9))
 
-    out = OUT_DIR / "paper_fig4_rank_resurrection.png"
+    out = OUT_DIR / "paper_fig3_rank_resurrection.png"
     fig.savefig(out, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"  Saved: {out}")
