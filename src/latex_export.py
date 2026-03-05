@@ -24,64 +24,89 @@ _ALT_BG  = "white"
 def _render_table_png(
     col_labels: list[str],
     body: list,          # list[str] = section header row; list[list[str]] = data row
-    caption: str,
+    caption: str,        # kept for .tex only; not shown in PNG
     out_path: str,
     dpi: int = 150,
 ) -> None:
-    """Render a table to PNG via matplotlib.
+    """Render a booktabs-style academic table to PNG (no title, autocropped)."""
+    from PIL import Image, ImageChops
 
-    Body rows are either:
-    - ``list[str]``: normal data row
-    - ``str``: section header spanning all columns
-    """
-    ncols = len(col_labels)
+    FONT     = "Ubuntu Sans"
+    FONTSIZE = 11
+    ROW_H    = 0.28   # inches per row
+    ncols    = len(col_labels)
 
-    cell_text: list[list[str]] = []
+    cell_text:   list[list[str]] = []
     cell_colors: list[list[str]] = []
-    is_section: list[bool] = []
+    is_section:  list[bool]      = []
 
-    data_row_idx = 0
     for row in body:
         if isinstance(row, str):
             cell_text.append([row] + [""] * (ncols - 1))
-            cell_colors.append([_SEC_BG] * ncols)
+            cell_colors.append(["white"] * ncols)
             is_section.append(True)
         else:
             padded = list(row) + [""] * (ncols - len(row))
             cell_text.append(padded[:ncols])
-            bg = _ALT_BG if data_row_idx % 2 == 0 else "white"
-            cell_colors.append([bg] * ncols)
+            cell_colors.append(["white"] * ncols)
             is_section.append(False)
-            data_row_idx += 1
 
-    nrows = len(cell_text)
-    row_h = 0.30
-    fig_h = max(1.5, nrows * row_h + 0.2)
-    fig_w = max(6.0, ncols * 2.4)
+    nrows  = len(cell_text)
+    fig_h  = (nrows + 1) * ROW_H
+    fig_w  = max(5.0, ncols * 2.2)
 
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    ax.set_position([0, 0, 1, 1])
     ax.axis("off")
 
     tbl = ax.table(
         cellText=cell_text,
         colLabels=col_labels,
         cellColours=cell_colors,
-        colColours=[_HDR_BG] * ncols,
+        colColours=["white"] * ncols,
         loc="center",
         cellLoc="left",
+        bbox=[0, 0, 1, 1],
     )
     tbl.auto_set_font_size(False)
-    tbl.set_fontsize(8.0)
+    tbl.set_fontsize(FONTSIZE)
 
+    # Booktabs-style: horizontal rules only, no vertical lines
+    for (row, col), cell in tbl.get_celld().items():
+        cell.set_edgecolor("black")
+        cell.set_linewidth(0.8)
+        if row == 0:                           # header: toprule + midrule
+            cell.visible_edges = "TB"
+        elif row == nrows:                     # last row: bottomrule
+            cell.visible_edges = "B"
+        elif row > 0 and is_section[row - 1]:  # section header: midrule above
+            cell.visible_edges = "T"
+        else:
+            cell.visible_edges = ""
+
+    # Typography
     for j in range(ncols):
-        tbl[0, j].set_text_props(color="black", fontweight="bold")
-
+        tbl[0, j].set_text_props(fontfamily=FONT, fontweight="bold", fontsize=FONTSIZE)
     for i, sec in enumerate(is_section):
+        for j in range(ncols):
+            tbl[i + 1, j].set_text_props(fontfamily=FONT, fontsize=FONTSIZE)
         if sec:
-            tbl[i + 1, 0].set_text_props(fontweight="bold", color="black")
+            tbl[i + 1, 0].set_text_props(fontfamily=FONT, fontweight="bold", fontsize=FONTSIZE)
 
-    fig.savefig(out_path, dpi=dpi, bbox_inches="tight", pad_inches=0.02, facecolor="white")
+    fig.savefig(out_path, dpi=dpi, bbox_inches="tight", pad_inches=0.04, facecolor="white")
     plt.close(fig)
+
+    # Autocrop remaining whitespace
+    img = Image.open(out_path).convert("RGB")
+    diff = ImageChops.difference(img, Image.new("RGB", img.size, (255, 255, 255)))
+    bbox = diff.getbbox()
+    if bbox:
+        pad = int(dpi * 0.04)
+        w, h = img.size
+        bbox = (max(0, bbox[0] - pad), max(0, bbox[1] - pad),
+                min(w, bbox[2] + pad), min(h, bbox[3] + pad))
+        img = img.crop(bbox)
+    img.save(out_path, dpi=(dpi, dpi))
 
 
 # ── LaTeX generators ──────────────────────────────────────────────────────────
