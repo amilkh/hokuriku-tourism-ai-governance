@@ -153,44 +153,44 @@ def main() -> None:
     fig_num += 1
     viz.plot_timeseries(
         daily, route_col,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_timeseries.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_timeseries.png"),
         rpt, dpi=dpi)
 
     fig_num += 1
     viz.plot_correlation_heatmap(
         corr_matrix,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_correlation.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_correlation.png"),
         rpt, dpi=dpi)
 
     fig_num += 1
     viz.plot_feature_importance(
         rf_result.mdi_importance, rf_result.perm_importance,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_feature_importance.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_feature_importance.png"),
         rpt, dpi=dpi)
 
     fig_num += 1
     viz.plot_dow_boxplot(
         daily,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_dow_boxplot.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_dow_boxplot.png"),
         rpt, dpi=dpi)
 
     fig_num += 1
     viz.plot_rf_prediction(
         model_df["date"], y, rf_result.y_pred,
         rf_result.r2_train, rf_result.cv_r2_mean,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_rf_prediction.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_rf_prediction.png"),
         rpt, dpi=dpi)
 
     fig_num += 1
     viz.plot_opportunity_gap(
         daily, route_col, intent_median, count_median,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_opportunity_gap.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_opportunity_gap.png"),
         rpt, dpi=dpi)
 
     fig_num += 1
     viz.plot_lag_correlations(
         daily, route_col,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_lag_correlations.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_lag_correlations.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -203,7 +203,7 @@ def main() -> None:
     fig_num += 1
     viz.plot_ccf(
         ccf_data["ccf_results"],
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_ishikawa_ccf.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_ishikawa_ccf.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -217,19 +217,10 @@ def main() -> None:
 
     fig_num += 1
     if "sat_merged" in kansei_data and not kansei_data["sat_merged"].empty:
-        fig9_path = os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_kansei_scatter.png")
         viz.plot_kansei_scatter(
             kansei_data["sat_merged"],
-            fig9_path,
+            os.path.join(fig_dir, f"fig{fig_num:02d}_vibrancy_threshold.png"),
             rpt, dpi=dpi)
-
-        # Backward compatibility: preserve legacy figure names used by reports.
-        legacy_en = os.path.join(fig_dir, "ultimate_fig2_vibrancy_threshold.png")
-        legacy_ja = os.path.join(fig_dir, "ultimate_fig2_vibrancy_threshold_ja.png")
-        shutil.copyfile(fig9_path, legacy_en)
-        shutil.copyfile(fig9_path.replace(".png", "_ja.png"), legacy_ja)
-        rpt.log(f"  Saved {legacy_en} (compat)")
-        rpt.log(f"  Saved {legacy_ja} (compat)")
 
     # ══════════════════════════════════════════════════════════════════════
     # 9. LOST POPULATION
@@ -242,7 +233,7 @@ def main() -> None:
     if not gap_model.empty:
         viz.plot_lost_population(
             gap_model, total_lost,
-            os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_lost_population.png"),
+            os.path.join(fig_dir, f"fig{fig_num:02d}_lost_population.png"),
             rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -295,7 +286,7 @@ def main() -> None:
     fig_num += 1
     viz.plot_resurrection(
         sim_df, total_lost, mean_actual_rank, mean_hypo_rank,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_fukui_resurrection.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_fukui_resurrection.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -304,7 +295,7 @@ def main() -> None:
     fig_num += 1
     viz.plot_hokuriku_heatmap(
         survey_all,
-        os.path.join(fig_dir, f"deep_analysis_fig{fig_num}_hokuriku_heatmap.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_hokuriku_heatmap.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -346,21 +337,21 @@ def main() -> None:
     fig_num += 1
     viz.plot_spatial_friction(
         spatial.get("spatial_heat_df"),
-        os.path.join(fig_dir, "spatial_friction_heatmap.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_spatial_friction.png"),
         rpt, dpi=300)
 
     # ★ NEW: High-impact governance visualizations for grant applications
     fig_num += 1
     viz.plot_weather_shield_network(
         spatial.get("valid_nodes", {}),
-        os.path.join(fig_dir, "weather_shield_network.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_weather_shield_network.png"),
         rpt, dpi=300)
 
     fig_num += 1
     viz.plot_rank_resurrection_projection(
         spatial.get("valid_nodes", {}),
         cfg.get("ranking", {}),
-        os.path.join(fig_dir, "rank_resurrection_projection.png"),
+        os.path.join(fig_dir, f"fig{fig_num:02d}_rank_projection.png"),
         rpt, dpi=300)
 
     # ══════════════════════════════════════════════════════════════════════
