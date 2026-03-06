@@ -639,29 +639,37 @@ def plot_hokuriku_heatmap(
 
     fig.tight_layout()
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
+    plt.close(fig)
 
-    # JA variant
-    axes[0].clear()
-    axes[1].clear()
-    sns.heatmap(hm_pivot, annot=True, fmt=".0f", cmap="YlOrRd",
-                ax=axes[0], cbar_kws={"label": "回答件数"})
-    axes[0].set_title("北陸月次観光需要ヒートマップ（アンケート回答数）")
-    axes[0].set_ylabel("都道府県")
-    axes[0].set_xlabel("月")
-    axes[0].tick_params(axis="x", labelrotation=90)
+    # JA variant — fresh figure to avoid orphaned colorbar axes from the EN pass.
+    fig_ja, axes_ja = plt.subplots(2, 1, figsize=(16, 10),
+                                   gridspec_kw={"height_ratios": [3, 1]})
 
-    sns.heatmap(pref_corr, annot=True, fmt=".2f", cmap="RdBu_r", center=0,
-                ax=axes[1], square=True, cbar_kws={"label": "相関係数 (Pearson r)"})
-    axes[1].set_title("都道府県間の日次需要相関")
+    hm_ja = hm_pivot.copy()
+    hm_ja.index.name = "都道府県"
+    corr_ja = pref_corr.copy()
+    corr_ja.index.name = "都道府県"
+    corr_ja.columns.name = "都道府県"
 
-    fig.tight_layout()
+    sns.heatmap(hm_ja, annot=True, fmt=".0f", cmap="YlOrRd",
+                ax=axes_ja[0], cbar_kws={"label": "回答件数"})
+    axes_ja[0].set_title("北陸月次観光需要ヒートマップ（アンケート回答数）")
+    axes_ja[0].set_ylabel("都道府県")
+    axes_ja[0].set_xlabel("月")
+    axes_ja[0].tick_params(axis="x", labelrotation=90)
+
+    sns.heatmap(corr_ja, annot=True, fmt=".2f", cmap="RdBu_r", center=0,
+                ax=axes_ja[1], square=True, cbar_kws={"label": "相関係数 (Pearson r)"})
+    axes_ja[1].set_title("都道府県間の日次需要相関")
+
+    fig_ja.tight_layout()
     ja_path = out_path.replace(".png", "_ja.png")
-    _apply_japanese_font(fig)
-    fig.savefig(ja_path, dpi=dpi)
+    _apply_japanese_font(fig_ja)
+    fig_ja.savefig(ja_path, dpi=dpi)
     reporter.optimize_png(ja_path)
     reporter.log(f"  Saved {ja_path}")
-    plt.close(fig)
-    return fig
+    plt.close(fig_ja)
+    return None
 
 
 # ── Fig 13: Spatial friction heatmap ─────────────────────────────────────────
@@ -672,18 +680,51 @@ def plot_spatial_friction(
     reporter: Reporter,
     dpi: int = 300,
 ) -> plt.Figure | None:
-    """Heatmap of weather sensitivity per node."""
+    """Heatmap of weather sensitivity per node.
+
+    Colors are column-normalized (0–1 within each metric) so that metrics on
+    vastly different scales (e.g. ΔR² ≈ 0.01 vs lost_visitors_k ≈ 500) each
+    show meaningful within-column variation.  Raw values are shown as text.
+    """
     if heat_df is None or heat_df.empty:
         return None
+
+    # Column-wise min-max normalisation for colour scale; keep raw for labels.
+    col_max = heat_df.max()
+    col_max[col_max == 0] = 1  # avoid div-by-zero for all-zero columns
+    heat_norm = heat_df.div(col_max)
+
+    # Build annotation array: use ints for large values, 3dp for small ones.
+    annot = heat_df.copy().astype(object)
+    for col in heat_df.columns:
+        for idx in heat_df.index:
+            v = heat_df.loc[idx, col]
+            annot.loc[idx, col] = f"{v:.0f}" if abs(v) >= 10 else f"{v:.3f}"
+
+    _NODE_LABELS_JA = {
+        "Node A (Tojinbo/Mikuni)": "A拠点（東尋坊/三国）",
+        "Node B (Fukui Station)": "B拠点（福井駅）",
+        "Node C (Katsuyama/Dinosaur)": "C拠点（勝山/恐竜）",
+        "Node D (Rainbow Line/Wakasa)": "D拠点（レインボーライン/若狭）",
+    }
+
     fig, ax = plt.subplots(figsize=(10, 4))
-    sns.heatmap(heat_df, annot=True, fmt=".3f", cmap="YlOrRd",
-                cbar_kws={"label": "Relative Friction Intensity"}, ax=ax)
+    sns.heatmap(heat_norm, annot=annot, fmt="", cmap="YlOrRd",
+                vmin=0, vmax=1,
+                cbar_kws={"label": "Relative Friction Intensity (column-normalised)"},
+                ax=ax)
     ax.set_title("Spatial Friction Heatmap (Weather Sensitivity per Node)")
+    ax.set_ylabel("")
     fig.tight_layout()
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
+
+    # JA variant: translate title, colorbar label, and y-axis tick labels.
     ax.set_title("空間摩擦ヒートマップ（拠点別の気象感応度）")
     if fig.axes and len(fig.axes) > 1:
-        fig.axes[1].set_ylabel("相対的摩擦強度")
+        fig.axes[1].set_ylabel("相対的摩擦強度（列内正規化）")
+    ja_labels = [_NODE_LABELS_JA.get(t.get_text(), t.get_text())
+                 for t in ax.get_yticklabels()]
+    ax.set_yticklabels(ja_labels, rotation=0)
     ja_path = out_path.replace(".png", "_ja.png")
     _apply_japanese_font(fig)
     fig.savefig(ja_path, dpi=dpi)

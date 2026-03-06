@@ -10,9 +10,12 @@ This script fetches one page per day, extracts the data table,
 and writes one CSV per month matching the merge_clean_jma.py schema.
 
 Builtin station presets (--station shorthand):
-  mikuni      prec_no=57, block_no=47616, page=hourly_s1  (main station)
-  fukui       prec_no=57, block_no=47631, page=hourly_s1  (main station)
+  mikuni      prec_no=57, block_no=1071,  page=hourly_a1  (AMeDAS)
+  fukui       prec_no=57, block_no=47631, page=hourly_s1  (Tsuruga main station – misnamed)
+  tsuruga     prec_no=57, block_no=47631, page=hourly_s1  (Tsuruga main station)
+  fukuicity   prec_no=57, block_no=47616, page=hourly_s1  (Fukui City main station)
   katsuyama   prec_no=57, block_no=1226,  page=hourly_a1  (AMeDAS)
+  mihama      prec_no=57, block_no=1010,  page=hourly_a1  (AMeDAS – Node D proxy)
 
 Usage:
     # Fetch Katsuyama Dec 2025
@@ -53,14 +56,40 @@ PRESETS = {
         "block_no": "1071",
         "page": "hourly_a1",
     },
+    # NOTE: block_no=47631 is the Tsuruga (敦賀) main station, NOT Fukui City.
+    # The preset is kept as "fukui" for backwards compatibility with existing CSV
+    # filenames (jma_fukui_hourly_8.csv) and config references, but the station
+    # is Tsuruga. Use "fukuicity" for the actual Fukui City main station.
     "fukui": {
         "prec_no": "57",
         "block_no": "47631",
         "page": "hourly_s1",
     },
+    # Tsuruga (敦賀) main station – same as "fukui" preset above.
+    # Use this name when clarity matters (e.g. fetching Node D weather).
+    "tsuruga": {
+        "prec_no": "57",
+        "block_no": "47631",
+        "page": "hourly_s1",
+    },
+    # Fukui City (福井) main station – distinct from Tsuruga.
+    # Verified: block_no=47616, prec_no=57. Use for Node B (Fukui Station area).
+    "fukuicity": {
+        "prec_no": "57",
+        "block_no": "47616",
+        "page": "hourly_s1",
+    },
     "katsuyama": {
         "prec_no": "57",
         "block_no": "1226",
+        "page": "hourly_a1",
+    },
+    # Mihama (美浜) AMeDAS – located ~5 km from Rainbow Line/Node D.
+    # Confirmed block_no=1010 from JMA ETRN prefecture station list (prec_no=57).
+    # Closer to Rainbow Line than Tsuruga (~15 km); preferred for Node D.
+    "mihama": {
+        "prec_no": "57",
+        "block_no": "1010",
         "page": "hourly_a1",
     },
 }
