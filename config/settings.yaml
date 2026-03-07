@@ -16,12 +16,11 @@ paths:
     rainbow_line: "fukui-kanko-people-flow-data/daily/rainbow-line-parking-lot-1-gate/Face/**/*.csv"
 
   # JMA hourly weather (relative to repo root)
-  # Station files: mikuni=Node A, tsuruga=Node B proxy, katsuyama=Node C, mihama=Node D
-  # To fetch Fukui City data: fetch_jma_monthly.py --station fukuicity
+  # Station files: mikuni=Node A, fukuicity=Node B, katsuyama=Node C, mihama=Node D
   weather:
     mikuni: "jma/jma_mikuni_hourly_8.csv"
     mikuni_legacy: "jma/jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv"
-    fukui: "jma/jma_tsuruga_hourly_8.csv"     # Tsuruga (敦賀) main station, Node B proxy
+    fukui: "jma/jma_fukuicity_hourly_8.csv"    # Fukui City (福井) main stn, co-located Node B
     katsuyama: "jma/jma_katsuyama_hourly_8.csv"
     rainbow_line: "jma/jma_mihama_hourly_8.csv" # Mihama (美浜) AMeDAS ~5km from Rainbow Line
 

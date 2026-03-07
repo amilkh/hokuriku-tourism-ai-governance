@@ -382,6 +382,23 @@ def main() -> None:
         rpt.log(f"  Saved LaTeX table: {p}")
 
     # ══════════════════════════════════════════════════════════════════════
+    # PAPER FIGURE ALIASES  (pipeline internal # → paper Fig N)
+    # ══════════════════════════════════════════════════════════════════════
+    _PAPER_FIGS = [
+        ("fig16_dhde_architecture",      "paper_fig1_dhde_architecture"),
+        ("fig05_rf_prediction",          "paper_fig2_rf_prediction"),
+        ("fig09_vibrancy_threshold",     "paper_fig3_vibrancy_threshold"),
+        ("fig11_fukui_resurrection",     "paper_fig4_ranking_recovery"),
+        ("fig08_ishikawa_ccf",           "paper_fig5_ishikawa_ccf"),
+        ("fig14_weather_shield_network", "paper_fig6_weather_shield"),
+    ]
+    for src_stem, dst_stem in _PAPER_FIGS:
+        src = os.path.join(fig_dir, src_stem + ".png")
+        dst = os.path.join(fig_dir, dst_stem + ".png")
+        if os.path.exists(src):
+            shutil.copyfile(src, dst)
+
+    # ══════════════════════════════════════════════════════════════════════
     # SAVE
     # ══════════════════════════════════════════════════════════════════════
     rpt.save()

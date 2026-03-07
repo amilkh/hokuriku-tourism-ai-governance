@@ -397,40 +397,4 @@ def export_all_tables(
                           "Key governance metrics", png_path)
         paths.append(png_path)
 
-    # ── Table 4: Model comparison ─────────────────────────────────────────────
-    rf = results.get("rf")
-    robust = results.get("robust")
-    if ols and rf:
-        comp: dict[str, dict[str, float]] = {
-            "OLS":           {"R2": ols.r2, "Adj_R2": ols.adj_r2},
-            "Random Forest": {"R2": rf.r2_train, "CV_R2": rf.cv_r2_mean},
-        }
-        if robust:
-            comp["First-Difference"] = {"R2": robust.fd_r2, "DW": robust.fd_dw}
-            comp["LDV"]              = {"R2": robust.ldv_r2, "DW": robust.ldv_dw}
-
-        tex = model_comparison_to_latex(comp)
-        tex_path = os.path.join(output_dir, "table4_model_comparison.tex")
-        with open(tex_path, "w") as f:
-            f.write(tex)
-        paths.append(tex_path)
-
-        # PNG
-        all_metric_names: list[str] = []
-        for m in comp.values():
-            for k in m:
-                if k not in all_metric_names:
-                    all_metric_names.append(k)
-        body = []
-        for model_name, vals in comp.items():
-            row = [model_name]
-            for mn in all_metric_names:
-                v = vals.get(mn)
-                row.append(f"{v:.4f}" if v is not None and not np.isnan(v) else "\u2014")
-            body.append(row)
-        png_path = os.path.join(output_dir, "table4_model_comparison.png")
-        _render_table_png(["Model"] + all_metric_names, body,
-                          "Forecasting model comparison", png_path)
-        paths.append(png_path)
-
     return paths
