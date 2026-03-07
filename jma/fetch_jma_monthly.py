@@ -56,10 +56,8 @@ PRESETS = {
         "block_no": "1071",
         "page": "hourly_a1",
     },
-    # NOTE: block_no=47631 is the Tsuruga (敦賀) main station, NOT Fukui City.
-    # The preset is kept as "fukui" for backwards compatibility with existing CSV
-    # filenames (jma_fukui_hourly_8.csv) and config references, but the station
-    # is Tsuruga. Use "fukuicity" for the actual Fukui City main station.
+    # Tsuruga (敦賀) main station. Kept as "fukui" preset name for CLI compatibility.
+    # Output file is now jma_tsuruga_hourly_8.csv. Use "fukuicity" for Fukui City.
     "fukui": {
         "prec_no": "57",
         "block_no": "47631",
