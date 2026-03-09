@@ -393,10 +393,11 @@ def main() -> None:
         ("fig14_weather_shield_network", "paper_fig6_weather_shield"),
     ]
     for src_stem, dst_stem in _PAPER_FIGS:
-        src = os.path.join(fig_dir, src_stem + ".png")
-        dst = os.path.join(fig_dir, dst_stem + ".png")
-        if os.path.exists(src):
-            shutil.copyfile(src, dst)
+        for suffix in (".png", "_ja.png"):
+            src = os.path.join(fig_dir, src_stem + suffix)
+            dst = os.path.join(fig_dir, dst_stem + suffix)
+            if os.path.exists(src):
+                shutil.move(src, dst)
 
     # ══════════════════════════════════════════════════════════════════════
     # SAVE

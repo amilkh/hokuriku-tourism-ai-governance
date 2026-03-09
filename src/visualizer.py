@@ -1224,6 +1224,88 @@ def plot_dhde_architecture(
 
     fig.tight_layout(pad=0.3)
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
-    plt.close(fig)
     reporter.log(f"  Saved {out_path}")
+
+    # ── Japanese variant ──────────────────────────────────────────────────
+    _DHDE_JA = {
+        "Distributed Human Data Engine (DHDE) — AI Governance Architecture":
+            "分散型人間データエンジン（DHDE）— AIガバナンスアーキテクチャ",
+        "Hokuriku Tourism Demand Forecasting  |  Fukui Prefecture, Japan  |  2024-2026":
+            "北陸観光需要予測 ｜ 福井県、日本 ｜ 2024-2026",
+        "INPUT SENSORS":        "入力センサー",
+        "DHDE PROCESSING CORE": "DHDE処理コア",
+        "OUTPUT GOVERNANCE":    "出力ガバナンス",
+        # sensor card titles
+        "RSI Business Intent":  "RSIビジネスインテント",
+        "JMA Weather Stations":    "気象庁観測所",
+        "Edge-AI Cameras":         "エッジAIカメラ",
+        "Visitor Surveys":         "来訪者調査",
+        # sensor card lines
+        "47-site direction & search queries":            "47サイトの経路・検索クエリ",
+        "Direction counts  ->  lag / roll features":     "方向カウント → ラグ/ローリング特徴量",
+        "Temp  |  Precip  |  Snow  |  Wind  |  Humidity": "気温｜降水｜積雪｜風速｜湿度",
+        "Winter sensitivity  6.27x  higher than summer": "冬季感応度：夏季比6.27倍",
+        "Human-shape detection, 5-min intervals":        "人型検知、5分間隔",
+        "397 usable days across 4 spatial nodes":        "4拠点で397日分の有効データ",
+        "95,653 Hokuriku responses (NPS + satisfaction)": "北陸回答数95,653件（NPS＋満足度）",
+        "71,288 Fukui free-text  ->  Kansei NLP":        "福井自由記述71,288件 → 感性NLP",
+        # core card titles
+        "Feature Engineering": "特徴量エンジニアリング",
+        "OLS Regression":      "OLS回帰",
+        "Random Forest":       "ランダムフォレスト",
+        "Robustness Suite":    "頑健性検証スイート",
+        # core card lines
+        "Calendar (dow_mean, month, is_holiday)   Lag(1,2,3)   Roll(7d)":
+            "カレンダー（曜日均・月・祝日）  ラグ(1,2,3)  ローリング(7日)",
+        "Weekend x Intent   Weekend x Severity   interaction terms":
+            "週末×インテント  週末×深刻度  交互作用項",
+        "Discomfort Index   Wind Chill   Kansei under-vibrancy flags":
+            "不快指数  体感気温  感性活気不足フラグ",
+        "R2 = 0.810  (Adj 0.802)":      "R² = 0.810（調整済 0.802）",
+        "16 predictors   N = 397":      "16予測変数  N = 397",
+        "Newey-West HAC   sig = 8":     "Newey-West HAC  有意 = 8",
+        "DW (LDV) = 1.898":             "DW（LDV）= 1.898",
+        "Weather lift  +0.056 R2":      "気象寄与  +0.056 R²",
+        "Train R2 = 0.909":             "学習R² = 0.909",
+        "CV R2 = 0.557  (+/- 0.131)":  "CV R² = 0.557（±0.131）",
+        "Hold-out R2 = 0.683":          "ホールドアウトR² = 0.683",
+        "MAE = 1,793 visitors/day":     "MAE = 1,793人/日",
+        "Top: directions, month":       "重要特徴量：方向数・月",
+        "First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8":
+            "一階差分R²=0.708  LDV R²=0.849  Cohen f²=4.25  Newey-West有意=8",
+        "4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552":
+            "4拠点空間交差相関  石川→福井パイプライン  r=+0.552",
+        "Eiheiji quietude threshold x*=42.4%   Kansei Spearman r=+0.148 (p=0.002)":
+            "永平寺静謐閾値 x*=42.4%  感性スピアマン r=+0.148（p=0.002）",
+        # output card titles
+        "Supply-side Nudges":          "供給側ナッジ",
+        "Weather-Resilient Routing":   "気象耐性ルーティング",
+        "Kansei Comfort Governance":   "感性コンフォートガバナンス",
+        "Economic Impact Dashboard":   "経済的影響ダッシュボード",
+        # output card lines
+        "865,917 lost visitors/yr recovered":    "年間損失来訪者865,917人の回復",
+        "Rank lift: 47th  ->  ~35th nationally": "順位改善：全国47位→約35位",
+        "Winter 6.27x more weather-sensitive":   "冬季は気象感応度が6.27倍",
+        "Snow / wind alerts  ->  alternate nodes": "積雪・風速警報 → 代替拠点誘導",
+        "Discomfort Index  +  Wind Chill alerts": "不快指数＋体感気温アラート",
+        "Quietude  <=42.4%  prevents sat. drop":  "静謐度≦42.4%で満足度低下防止",
+        "Annual economic loss: 11.96B JPY":       "年間経済損失：119.6億円",
+        "4-node geographic saturation achieved":  "4拠点による地理的飽和達成",
+        # footer
+        "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026":
+            "データ：福井県AIカメラ ｜ 気象庁 ｜ 経路検索インプレッション（RSI） ｜ 北陸調査 2024-2026",
+        "DHDE v1.0  |  Amil Khanzada  PhD Research":
+            "DHDE v1.0 ｜ Amil Khanzada 博士課程研究",
+    }
+    for text_obj in ax.texts:
+        s = text_obj.get_text()
+        if s in _DHDE_JA:
+            text_obj.set_text(_DHDE_JA[s])
+    _apply_japanese_font(fig)
+    ja_path = out_path.replace(".png", "_ja.png")
+    fig.savefig(ja_path, dpi=dpi)
+    reporter.optimize_png(ja_path)
+    reporter.log(f"  Saved {ja_path}")
+
+    plt.close(fig)
     return fig
