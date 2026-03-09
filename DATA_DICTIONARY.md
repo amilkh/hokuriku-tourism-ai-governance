@@ -104,24 +104,17 @@ Daily aggregation: `mean` for temp/wind/sun/humidity/snow_depth, `sum` for preci
 | `output/fig02_correlation.png` | Feature correlation heatmap (EN + `_ja`) |
 | `output/fig03_feature_importance.png` | RF feature importance (EN + `_ja`) |
 | `output/fig04_dow_boxplot.png` | Day-of-week visitor distribution (EN + `_ja`) |
-| `output/fig05_rf_prediction.png` | RF vs actual prediction plot (EN + `_ja`) |
-| `output/fig06_opportunity_gap.png` | Opportunity gap visualisation (EN + `_ja`) |
-| `output/fig07_lag_correlations.png` | RSI intent lag correlations (EN + `_ja`) |
-| `output/fig08_ishikawa_ccf.png` | Ishikawa → Tojinbo cross-correlation (EN + `_ja`) |
-| `output/fig09_vibrancy_threshold.png` | Vibrancy threshold scatter (EN + `_ja`) |
-| `output/fig10_lost_population.png` | Lost visitors bar chart (EN + `_ja`) |
-| `output/fig11_fukui_resurrection.png` | Rank improvement projection (EN + `_ja`) |
-| `output/fig12_hokuriku_heatmap.png` | Hokuriku-wide weather-sensitivity heatmap (EN + `_ja`) |
-| `output/fig13_spatial_friction.png` | Multi-node spatial friction heatmap (EN + `_ja`) |
-| `output/fig14_weather_shield_network.png` | Weather Shield Network diagram (EN + `_ja`) |
-| `output/fig15_rank_projection.png` | Prefecture ranking recovery chart (EN + `_ja`) |
-| `output/fig16_dhde_architecture.png` | DHDE architecture diagram (EN + `_ja`) |
-| `output/paper_fig1_dhde_architecture.png` | Paper Fig 1 alias → fig16 (EN only) |
-| `output/paper_fig2_rf_prediction.png` | Paper Fig 2 alias → fig05 (EN only) |
-| `output/paper_fig3_vibrancy_threshold.png` | Paper Fig 3 alias → fig09 (EN only) |
-| `output/paper_fig4_ranking_recovery.png` | Paper Fig 4 alias → fig11 (EN only) |
-| `output/paper_fig5_ishikawa_ccf.png` | Paper Fig 5 alias → fig08 (EN only) |
-| `output/paper_fig6_weather_shield.png` | Paper Fig 6 alias → fig14 (EN only) |
+| `output/fig05_opportunity_gap.png` | Opportunity gap visualisation (EN + `_ja`) |
+| `output/fig06_lag_correlations.png` | RSI intent lag correlations (EN + `_ja`) |
+| `output/fig07_lost_population.png` | Lost visitors bar chart (EN + `_ja`) |
+| `output/fig08_spatial_friction.png` | Multi-node spatial friction heatmap (EN + `_ja`) |
+| `output/fig09_rank_projection.png` | Prefecture ranking recovery chart (EN + `_ja`) |
+| `output/paper_fig1_dhde_architecture.png` | Paper Fig 1: DHDE architecture diagram (EN + `_ja`) |
+| `output/paper_fig2_rf_prediction.png` | Paper Fig 2: RF vs actual prediction plot (EN + `_ja`) |
+| `output/paper_fig3_vibrancy_threshold.png` | Paper Fig 3: Vibrancy threshold scatter (EN + `_ja`) |
+| `output/paper_fig4_ranking_recovery.png` | Paper Fig 4: Rank improvement projection (EN + `_ja`) |
+| `output/paper_fig5_ishikawa_ccf.png` | Paper Fig 5: Ishikawa → Tojinbo cross-correlation (EN + `_ja`) |
+| `output/paper_fig6_weather_shield.png` | Paper Fig 6: Weather Shield Network diagram (EN + `_ja`) |
 | `output/table1_ols.png` / `.tex` | OLS regression results table |
 | `output/table2_statistical_rigor.png` / `.tex` | Statistical rigor & effect size table |
 | `output/table3_key_metrics.png` / `.tex` | Key headline metrics table |

@@ -186,11 +186,10 @@ def main() -> None:
         os.path.join(fig_dir, f"fig{fig_num:02d}_dow_boxplot.png"),
         rpt, dpi=dpi)
 
-    fig_num += 1
     viz.plot_rf_prediction(
         model_df["date"], y, rf_result.y_pred,
         rf_result.r2_train, rf_result.cv_r2_mean,
-        os.path.join(fig_dir, f"fig{fig_num:02d}_rf_prediction.png"),
+        os.path.join(fig_dir, "paper_fig2_rf_prediction.png"),
         rpt, dpi=dpi)
 
     fig_num += 1
@@ -212,10 +211,9 @@ def main() -> None:
     best_lag = ccf_data["best_lag"]
     best_r = ccf_data["best_r"]
 
-    fig_num += 1
     viz.plot_ccf(
         ccf_data["ccf_results"],
-        os.path.join(fig_dir, f"fig{fig_num:02d}_ishikawa_ccf.png"),
+        os.path.join(fig_dir, "paper_fig5_ishikawa_ccf.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -227,11 +225,10 @@ def main() -> None:
     spear_r_nps = kansei_data.get("spear_r_nps", 0.0)
     spear_p_nps = kansei_data.get("spear_p_nps", 1.0)
 
-    fig_num += 1
     if "sat_merged" in kansei_data and not kansei_data["sat_merged"].empty:
         viz.plot_kansei_scatter(
             kansei_data["sat_merged"],
-            os.path.join(fig_dir, f"fig{fig_num:02d}_vibrancy_threshold.png"),
+            os.path.join(fig_dir, "paper_fig3_vibrancy_threshold.png"),
             rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -295,16 +292,10 @@ def main() -> None:
     # ══════════════════════════════════════════════════════════════════════
     # 16. FUKUI RESURRECTION CHART
     # ══════════════════════════════════════════════════════════════════════
-    fig_num += 1
     viz.plot_resurrection(
         sim_df, total_lost, mean_actual_rank, mean_hypo_rank,
-        os.path.join(fig_dir, f"fig{fig_num:02d}_fukui_resurrection.png"),
+        os.path.join(fig_dir, "paper_fig4_ranking_recovery.png"),
         rpt, dpi=dpi)
-
-    # ══════════════════════════════════════════════════════════════════════
-    # 11. (fig12 slot reserved — hokuriku_heatmap removed)
-    # ══════════════════════════════════════════════════════════════════════
-    fig_num += 1  # keeps fig13-16 numbering intact
 
     # ══════════════════════════════════════════════════════════════════════
     # BOLSTERED RESULTS + EXECUTIVE SUMMARY
@@ -349,10 +340,9 @@ def main() -> None:
         rpt, dpi=300)
 
     # ★ NEW: High-impact governance visualizations for grant applications
-    fig_num += 1
     viz.plot_weather_shield_network(
         spatial.get("valid_nodes", {}),
-        os.path.join(fig_dir, f"fig{fig_num:02d}_weather_shield_network.png"),
+        os.path.join(fig_dir, "paper_fig6_weather_shield.png"),
         rpt, dpi=300)
 
     fig_num += 1
@@ -362,9 +352,8 @@ def main() -> None:
         os.path.join(fig_dir, f"fig{fig_num:02d}_rank_projection.png"),
         rpt, dpi=300)
 
-    fig_num += 1
     viz.plot_dhde_architecture(
-        os.path.join(fig_dir, f"fig{fig_num:02d}_dhde_architecture.png"),
+        os.path.join(fig_dir, "paper_fig1_dhde_architecture.png"),
         rpt, dpi=300)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -389,23 +378,6 @@ def main() -> None:
     for p in tex_paths:
         rpt.log(f"  Saved LaTeX table: {p}")
 
-    # ══════════════════════════════════════════════════════════════════════
-    # PAPER FIGURE ALIASES  (pipeline internal # → paper Fig N)
-    # ══════════════════════════════════════════════════════════════════════
-    _PAPER_FIGS = [
-        ("fig16_dhde_architecture",      "paper_fig1_dhde_architecture"),
-        ("fig05_rf_prediction",          "paper_fig2_rf_prediction"),
-        ("fig09_vibrancy_threshold",     "paper_fig3_vibrancy_threshold"),
-        ("fig11_fukui_resurrection",     "paper_fig4_ranking_recovery"),
-        ("fig08_ishikawa_ccf",           "paper_fig5_ishikawa_ccf"),
-        ("fig14_weather_shield_network", "paper_fig6_weather_shield"),
-    ]
-    for src_stem, dst_stem in _PAPER_FIGS:
-        for suffix in (".png", "_ja.png"):
-            src = os.path.join(fig_dir, src_stem + suffix)
-            dst = os.path.join(fig_dir, dst_stem + suffix)
-            if os.path.exists(src):
-                shutil.move(src, dst)
 
     # ══════════════════════════════════════════════════════════════════════
     # SAVE
