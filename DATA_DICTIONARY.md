@@ -20,7 +20,7 @@ Daily aggregation: sum of `total count` per file → `count` per date.
 | `precip_1h_mm` | `precip` | float | mm | Hourly precipitation |
 | `sun_1h_h` | `sun` | float | hours | Sunshine duration |
 | `wind_speed_ms` | `wind` | float | m/s | Wind speed |
-| `snow_depth_cm` | `snow_depth` | float | cm | Snow depth |
+| `snow_depth_cm` | `snow_depth` | float | cm | Snow depth *(recorded only at Node B main observatory; unavailable at AMeDAS stations)* |
 | `humidity_pct` | `humidity` | float | % | Relative humidity |
 
 Daily aggregation: `mean` for temp/wind/sun/humidity/snow_depth, `sum` for precip.
@@ -100,27 +100,33 @@ Daily aggregation: `mean` for temp/wind/sun/humidity/snow_depth, `sum` for preci
 | `output/analysis_metrics.txt` | Machine-readable key metrics (all headline numbers) |
 | `output/EXECUTIVE_REPORT.md` | English executive summary report |
 | `output/EXECUTIVE_REPORT.ja.md` | Japanese executive summary report |
-| `output/deep_analysis_fig1_timeseries.png` | Visitor time-series with weather overlay (EN) |
-| `output/deep_analysis_fig2_correlation.png` | Feature correlation heatmap (EN) |
-| `output/deep_analysis_fig3_feature_importance.png` | RF feature importance (EN) |
-| `output/deep_analysis_fig4_dow_boxplot.png` | Day-of-week visitor distribution (EN) |
-| `output/deep_analysis_fig5_rf_prediction.png` | RF vs actual prediction plot (EN) |
-| `output/deep_analysis_fig6_opportunity_gap.png` | Opportunity gap visualisation (EN) |
-| `output/deep_analysis_fig7_lag_correlations.png` | RSI intent lag correlations (EN) |
-| `output/deep_analysis_fig8_ishikawa_ccf.png` | Ishikawa → Tojinbo cross-correlation (EN) |
-| `output/deep_analysis_fig9_kansei_scatter.png` | Discomfort index scatter (EN) |
-| `output/deep_analysis_fig10_lost_population.png` | Lost visitors bar chart (EN) |
-| `output/deep_analysis_fig11_fukui_resurrection.png` | Rank improvement projection (EN) |
-| `output/deep_analysis_fig12_hokuriku_heatmap.png` | Hokuriku-wide weather-sensitivity heatmap (EN) |
-| `output/deep_analysis_fig*_ja.png` | Japanese-label variants of all figures above |
-| `output/spatial_friction_heatmap.png` | Multi-node spatial friction heatmap (EN) |
-| `output/weather_shield_network.png` | Weather Shield Network diagram (EN) |
-| `output/rank_resurrection_projection.png` | Prefecture ranking resurrection chart (EN) |
-| `output/ultimate_fig2_vibrancy_threshold.png` | Vibrancy threshold scatter (EN) |
-| `output/table_ols.tex` | OLS regression results LaTeX table |
-| `output/table_model_comparison.tex` | Model comparison LaTeX table |
-| `output/table_key_metrics.tex` | Key headline metrics LaTeX table |
+| `output/fig01_timeseries.png` | Visitor time-series with weather overlay (EN + `_ja` variant) |
+| `output/fig02_correlation.png` | Feature correlation heatmap (EN + `_ja`) |
+| `output/fig03_feature_importance.png` | RF feature importance (EN + `_ja`) |
+| `output/fig04_dow_boxplot.png` | Day-of-week visitor distribution (EN + `_ja`) |
+| `output/fig05_rf_prediction.png` | RF vs actual prediction plot (EN + `_ja`) |
+| `output/fig06_opportunity_gap.png` | Opportunity gap visualisation (EN + `_ja`) |
+| `output/fig07_lag_correlations.png` | RSI intent lag correlations (EN + `_ja`) |
+| `output/fig08_ishikawa_ccf.png` | Ishikawa → Tojinbo cross-correlation (EN + `_ja`) |
+| `output/fig09_vibrancy_threshold.png` | Vibrancy threshold scatter (EN + `_ja`) |
+| `output/fig10_lost_population.png` | Lost visitors bar chart (EN + `_ja`) |
+| `output/fig11_fukui_resurrection.png` | Rank improvement projection (EN + `_ja`) |
+| `output/fig12_hokuriku_heatmap.png` | Hokuriku-wide weather-sensitivity heatmap (EN + `_ja`) |
+| `output/fig13_spatial_friction.png` | Multi-node spatial friction heatmap (EN + `_ja`) |
+| `output/fig14_weather_shield_network.png` | Weather Shield Network diagram (EN + `_ja`) |
+| `output/fig15_rank_projection.png` | Prefecture ranking recovery chart (EN + `_ja`) |
+| `output/fig16_dhde_architecture.png` | DHDE architecture diagram (EN + `_ja`) |
+| `output/paper_fig1_dhde_architecture.png` | Paper Fig 1 alias → fig16 (EN only) |
+| `output/paper_fig2_rf_prediction.png` | Paper Fig 2 alias → fig05 (EN only) |
+| `output/paper_fig3_vibrancy_threshold.png` | Paper Fig 3 alias → fig09 (EN only) |
+| `output/paper_fig4_ranking_recovery.png` | Paper Fig 4 alias → fig11 (EN only) |
+| `output/paper_fig5_ishikawa_ccf.png` | Paper Fig 5 alias → fig08 (EN only) |
+| `output/paper_fig6_weather_shield.png` | Paper Fig 6 alias → fig14 (EN only) |
+| `output/table1_ols.png` / `.tex` | OLS regression results table |
+| `output/table2_statistical_rigor.png` / `.tex` | Statistical rigor & effect size table |
+| `output/table3_key_metrics.png` / `.tex` | Key headline metrics table |
+| `output/paper_appendices.md` | Full appendices (A–D) for academic paper |
 | `output/pdf/executive_report_pdf_en.md` | Pandoc-ready Markdown source for English PDF |
 | `output/pdf/executive_report_pdf_ja.md` | Pandoc-ready Markdown source for Japanese PDF |
-| `output/pdf/EXECUTIVE_REPORT.pdf` | Compiled 2-page English executive PDF |
-| `output/pdf/EXECUTIVE_REPORT.ja.pdf` | Compiled 2-page Japanese executive PDF |
+| `output/pdf/executive_report_pdf_en.pdf` | Compiled English executive PDF |
+| `output/pdf/executive_report_pdf_ja.pdf` | Compiled Japanese executive PDF |
