@@ -824,7 +824,7 @@ def plot_weather_shield_network(
         metrics = valid_nodes[name]
         lost_k = metrics["lost_visitors"] / 1000
 
-        radius = 0.05 + (lost_k / max_lost_k) * 0.06  # 0.05–0.11
+        radius = 0.03 + 0.08 * np.sqrt(lost_k / max_lost_k)  # sqrt-scaled 0.03–0.11
 
         circle = plt.Circle((x, y), radius, color=colors.get(name, "#999"),
                             alpha=0.85, zorder=5)
@@ -1009,9 +1009,12 @@ def plot_rank_resurrection_projection(
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
     
     # JA version
+    months_ja = ["1月", "2月", "3月", "4月", "5月", "6月",
+                 "7月", "8月", "9月", "10月", "11月", "12月"]
     ax1.set_title("福井県観光ランキング：47位→35位圏への復活パス",
                  fontsize=12, fontweight="bold")
     ax1.set_ylabel("全国ランキング（低い=良い）")
+    ax1.set_xticklabels(months_ja)
     ax1.text(0.98, 0.97, "1位＝最良", transform=ax1.transAxes,
              ha="right", va="top", fontsize=9, color="#2C3E50")
     ax1.text(0.98, 0.03, "47位＝最下位", transform=ax1.transAxes,
@@ -1022,11 +1025,25 @@ def plot_rank_resurrection_projection(
         "目標：35位",
         "閾値：41位",
     ])
-    
+
     ax2.set_title("4拠点喪失人口（回復可能な経済ポテンシャル）",
                  fontsize=12, fontweight="bold")
     ax2.set_xlabel("喪失来訪者数（千人）")
-    
+    # Translate node names on y-axis
+    _node_ja = {
+        "Tojinbo/Mikuni": "東尋坊/三国",
+        "Fukui Station": "福井駅",
+        "Katsuyama/Dinosaur": "勝山/恐竜博物館",
+        "Rainbow Line/Wakasa": "レインボーライン/若狭",
+    }
+    ax2.set_yticklabels([_node_ja.get(n, n) for n in names])
+    # Move yellow summary box to top-left to avoid overlapping bars
+    for child in ax2.get_children():
+        if hasattr(child, "get_text") and "Total:" in child.get_text():
+            child.set_position((0.02, 0.98))
+            child.set_ha("left")
+            child.set_va("top")
+
     ja_path = out_path.replace(".png", "_ja.png")
     _apply_japanese_font(fig)
     fig.savefig(ja_path, dpi=dpi)
@@ -1076,7 +1093,7 @@ def plot_dhde_architecture(
             facecolor=fc, edgecolor=ec, linewidth=lw, alpha=alpha, zorder=3,
         ))
 
-    def txt(x, y, s, size=9, color=C_TEXT, weight="normal", ha="center", va="center", style="normal"):
+    def txt(x, y, s, size=10, color=C_TEXT, weight="normal", ha="center", va="center", style="normal"):
         ax.text(x, y, s, fontsize=size, color=color, fontweight=weight,
                 ha=ha, va=va, zorder=5, style=style)
 
@@ -1103,7 +1120,7 @@ def plot_dhde_architecture(
     ]:
         rbox(px, py, pw, ph, pc, pbc, radius=0.5, lw=1.8, alpha=0.6)
         cx = px + pw / 2
-        txt(cx, py + ph - 0.30, plabel, size=10, color=pbc, weight="bold")
+        txt(cx, py + ph - 0.30, plabel, size=11, color=pbc, weight="bold")
         ax.plot([px + 0.35, px + pw - 0.35], [py + ph - 0.55, py + ph - 0.55],
                 color=pbc, lw=1.0, alpha=0.40, zorder=4)
 
@@ -1119,33 +1136,33 @@ def plot_dhde_architecture(
          "Direction counts  ->  lag / roll features"),
         ("JMA Weather Stations",
          "Temp  |  Precip  |  Snow  |  Wind  |  Humidity",
-         "Winter sensitivity  6.27x  higher than summer"),
+         "Winter sensitivity: seasonal demand gating"),
         ("Edge-AI Cameras",
          "Human-shape detection, 5-min intervals",
          "397 usable days across 4 spatial nodes"),
         ("Visitor Surveys",
-         "95,653 Hokuriku responses (NPS + satisfaction)",
+         "96,986 Hokuriku responses (NPS + satisfaction)",
          "71,288 Fukui free-text  ->  Kansei NLP"),
     ]
     for (title, line1, line2), sy in zip(sensors, sy_starts):
         rbox(0.40, sy, 3.85, CH, C_CARD_S, C_BORDER_S, radius=0.25, lw=1.2)
-        txt(2.325, sy + 1.25, title, size=11, color=C_BORDER_S, weight="bold")
-        txt(2.325, sy + 0.82, line1, size=9.5, color=C_MUTED)
-        txt(2.325, sy + 0.38, line2, size=9.5, color=C_MUTED)
+        txt(2.325, sy + 1.25, title, size=12, color=C_BORDER_S, weight="bold")
+        txt(2.325, sy + 0.82, line1, size=10.0, color=C_MUTED)
+        txt(2.325, sy + 0.38, line2, size=10.0, color=C_MUTED)
 
     # ── Core: Feature Engineering ──────────────────────────────────────────
-    rbox(5.0, 6.25, 7.35, 1.85, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
-    txt(8.675, 7.78, "Feature Engineering", size=11.5, color=C_BORDER_C, weight="bold")
+    rbox(5.0, 5.71, 7.35, 1.85, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(8.675, 7.24, "Feature Engineering", size=12, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
         "Calendar (dow_mean, month, is_holiday)   Lag(1,2,3)   Roll(7d)",
         "Weekend x Intent   Weekend x Severity   interaction terms",
         "Discomfort Index   Wind Chill   Kansei under-vibrancy flags",
     ]):
-        txt(8.675, 7.37 - i * 0.36, ln, size=9.0, color=C_MUTED)
+        txt(8.675, 6.83 - i * 0.36, ln, size=10.0, color=C_MUTED)
 
     # ── Core: OLS ─────────────────────────────────────────────────────────
-    rbox(5.0, 3.90, 3.55, 2.10, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
-    txt(6.775, 5.70, "OLS Regression", size=11, color=C_BORDER_C, weight="bold")
+    rbox(5.0, 3.08, 3.55, 2.10, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(6.775, 4.88, "OLS Regression", size=12, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
         "R2 = 0.810  (Adj 0.802)",
         "16 predictors   N = 397",
@@ -1153,11 +1170,11 @@ def plot_dhde_architecture(
         "DW (LDV) = 1.898",
         "Weather lift  +0.056 R2",
     ]):
-        txt(6.775, 5.31 - i * 0.33, ln, size=9.0, color=C_MUTED)
+        txt(6.775, 4.49 - i * 0.33, ln, size=10.0, color=C_MUTED)
 
     # ── Core: Random Forest ───────────────────────────────────────────────
-    rbox(8.80, 3.90, 3.55, 2.10, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
-    txt(10.575, 5.70, "Random Forest", size=11, color=C_BORDER_C, weight="bold")
+    rbox(8.80, 3.08, 3.55, 2.10, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(10.575, 4.88, "Random Forest", size=12, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
         "Train R2 = 0.909",
         "CV R2 = 0.557  (+/- 0.131)",
@@ -1165,21 +1182,21 @@ def plot_dhde_architecture(
         "MAE = 1,793 visitors/day",
         "Top: directions, month",
     ]):
-        txt(10.575, 5.31 - i * 0.33, ln, size=9.0, color=C_MUTED)
+        txt(10.575, 4.49 - i * 0.33, ln, size=10.0, color=C_MUTED)
 
     # ── Core: Robustness ──────────────────────────────────────────────────
-    rbox(5.0, 2.10, 7.35, 1.58, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
-    txt(8.675, 3.40, "Robustness Suite", size=11, color=C_BORDER_C, weight="bold")
+    rbox(5.0, 0.97, 7.35, 1.58, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(8.675, 2.27, "Robustness Suite", size=12, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
         "First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8",
         "4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552",
         "Eiheiji quietude threshold x*=42.4%   Kansei Spearman r=+0.148 (p=0.002)",
     ]):
-        txt(8.675, 3.02 - i * 0.35, ln, size=8.5, color=C_MUTED)
+        txt(8.675, 1.89 - i * 0.35, ln, size=9.5, color=C_MUTED)
 
     # ── Output governance cards ────────────────────────────────────────────
     outputs = [
-        ("Supply-side Nudges",
+        ("Supply-Side Nudges",
          "865,917 lost visitors/yr recovered",
          "Rank lift: 47th  ->  ~35th nationally"),
         ("Weather-Resilient Routing",
@@ -1189,37 +1206,37 @@ def plot_dhde_architecture(
          "Discomfort Index  +  Wind Chill alerts",
          "Quietude  <=42.4%  prevents sat. drop"),
         ("Economic Impact Dashboard",
-         "Annual economic loss: 11.96B JPY",
+         "Annual loss: ¥11.96B  (~$76.3M USD)",
          "4-node geographic saturation achieved"),
     ]
     for (title, line1, line2), oy in zip(outputs, sy_starts):
         rbox(13.1, oy, 6.50, CH, C_CARD_O, C_BORDER_O, radius=0.25, lw=1.2)
-        txt(16.35, oy + 1.25, title, size=11, color=C_BORDER_O, weight="bold")
-        txt(16.35, oy + 0.82, line1, size=9.5, color=C_MUTED)
-        txt(16.35, oy + 0.38, line2, size=9.5, color=C_MUTED)
+        txt(16.35, oy + 1.25, title, size=12, color=C_BORDER_O, weight="bold")
+        txt(16.35, oy + 0.82, line1, size=10.0, color=C_MUTED)
+        txt(16.35, oy + 0.38, line2, size=10.0, color=C_MUTED)
 
     # ── Arrows: sensors -> feature eng ────────────────────────────────────
     for sy in sy_starts:
-        arr(4.25, sy + 0.79, 4.95, 7.17, color=C_BORDER_S, lw=1.4)
+        arr(4.25, sy + 0.79, 4.95, 6.64, color=C_BORDER_S, lw=1.4)
 
     # ── Arrows: feature eng -> models ─────────────────────────────────────
-    arr(7.8,  6.25, 6.775, 6.00, color=C_BORDER_C, lw=1.4)
-    arr(9.55, 6.25, 10.575, 6.00, color=C_BORDER_C, lw=1.4)
+    arr(7.8,  5.71, 6.775, 5.18, color=C_BORDER_C, lw=1.4)
+    arr(9.55, 5.71, 10.575, 5.18, color=C_BORDER_C, lw=1.4)
 
     # ── Arrows: models -> robustness ──────────────────────────────────────
-    arr(6.775, 3.90, 7.2,  3.68, color=C_BORDER_C, lw=1.4)
-    arr(10.575, 3.90, 10.15, 3.68, color=C_BORDER_C, lw=1.4)
+    arr(6.775, 3.08, 7.2,  2.55, color=C_BORDER_C, lw=1.4)
+    arr(10.575, 3.08, 10.15, 2.55, color=C_BORDER_C, lw=1.4)
 
     # ── Arrows: robustness -> outputs ─────────────────────────────────────
     for oy in sy_starts:
-        arr(12.35, 2.89, 13.05, oy + 0.79, color=C_BORDER_O, lw=1.4)
+        arr(12.35, 1.76, 13.05, oy + 0.79, color=C_BORDER_O, lw=1.4)
 
     # ── Footer ────────────────────────────────────────────────────────────
-    ax.plot([0.3, 19.7], [0.55, 0.55], color="#CCCCCC", lw=0.8, zorder=3)
-    txt(0.4, 0.3,
+    ax.plot([0.3, 19.7], [0.35, 0.35], color="#CCCCCC", lw=0.8, zorder=6)
+    txt(0.4, 0.20,
         "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026",
         size=8.0, color=C_MUTED, ha="left")
-    txt(19.6, 0.3, "DHDE v1.0  |  Amil Khanzada  PhD Research",
+    txt(19.6, 0.20, "DHDE v1.0  |  Special Appointment Professor, University of Fukui",
         size=8.0, color=C_MUTED, ha="right")
 
     fig.tight_layout(pad=0.3)
@@ -1244,10 +1261,10 @@ def plot_dhde_architecture(
         "47-site direction & search queries":            "47サイトの経路・検索クエリ",
         "Direction counts  ->  lag / roll features":     "方向カウント → ラグ/ローリング特徴量",
         "Temp  |  Precip  |  Snow  |  Wind  |  Humidity": "気温｜降水｜積雪｜風速｜湿度",
-        "Winter sensitivity  6.27x  higher than summer": "冬季感応度：夏季比6.27倍",
+        "Winter sensitivity: seasonal demand gating": "冬季感応度：季節的需要制約",
         "Human-shape detection, 5-min intervals":        "人型検知、5分間隔",
         "397 usable days across 4 spatial nodes":        "4拠点で397日分の有効データ",
-        "95,653 Hokuriku responses (NPS + satisfaction)": "北陸回答数95,653件（NPS＋満足度）",
+        "96,986 Hokuriku responses (NPS + satisfaction)": "北陸回答数96,986件（NPS＋満足度）",
         "71,288 Fukui free-text  ->  Kansei NLP":        "福井自由記述71,288件 → 感性NLP",
         # core card titles
         "Feature Engineering": "特徴量エンジニアリング",
@@ -1278,7 +1295,7 @@ def plot_dhde_architecture(
         "Eiheiji quietude threshold x*=42.4%   Kansei Spearman r=+0.148 (p=0.002)":
             "永平寺静謐閾値 x*=42.4%  感性スピアマン r=+0.148（p=0.002）",
         # output card titles
-        "Supply-side Nudges":          "供給側ナッジ",
+        "Supply-Side Nudges":          "供給側ナッジ",
         "Weather-Resilient Routing":   "気象耐性ルーティング",
         "Kansei Comfort Governance":   "感性コンフォートガバナンス",
         "Economic Impact Dashboard":   "経済的影響ダッシュボード",
@@ -1289,13 +1306,13 @@ def plot_dhde_architecture(
         "Snow / wind alerts  ->  alternate nodes": "積雪・風速警報 → 代替拠点誘導",
         "Discomfort Index  +  Wind Chill alerts": "不快指数＋体感気温アラート",
         "Quietude  <=42.4%  prevents sat. drop":  "静謐度≦42.4%で満足度低下防止",
-        "Annual economic loss: 11.96B JPY":       "年間経済損失：119.6億円",
+        "Annual loss: ¥11.96B  (~$76.3M USD)":    "年間損失：¥11.96B（約76.3M USD）",
         "4-node geographic saturation achieved":  "4拠点による地理的飽和達成",
         # footer
         "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026":
             "データ：福井県AIカメラ ｜ 気象庁 ｜ 経路検索インプレッション（RSI） ｜ 北陸調査 2024-2026",
-        "DHDE v1.0  |  Amil Khanzada  PhD Research":
-            "DHDE v1.0 ｜ Amil Khanzada 博士課程研究",
+        "DHDE v1.0  |  Special Appointment Professor, University of Fukui":
+            "DHDE v1.0 ｜ 特命助教、福井大学",
     }
     for text_obj in ax.texts:
         s = text_obj.get_text()

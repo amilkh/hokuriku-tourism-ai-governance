@@ -97,6 +97,18 @@ def main() -> None:
                                 "wind", "is_weekend_or_holiday", "weather_severity"]
                     if c in daily.columns]
     corr_matrix = daily[numeric_cols].corr()
+    # Rename columns for display (more descriptive labels in figure)
+    _label_map = {
+        "count": "AI Camera Count",
+        route_col: f"RSI {route_col.capitalize()}",
+        "precip": "Precipitation (mm)",
+        "temp": "Temperature (°C)",
+        "sun": "Sunshine (h)",
+        "wind": "Wind Speed (m/s)",
+        "is_weekend_or_holiday": "Weekend/Holiday",
+        "weather_severity": "Weather Severity",
+    }
+    corr_matrix = corr_matrix.rename(index=_label_map, columns=_label_map)
 
     # ══════════════════════════════════════════════════════════════════════
     # 3. MULTI-VARIABLE MODELLING
@@ -290,13 +302,9 @@ def main() -> None:
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
-    # 11. HOKURIKU DEMAND HEATMAP
+    # 11. (fig12 slot reserved — hokuriku_heatmap removed)
     # ══════════════════════════════════════════════════════════════════════
-    fig_num += 1
-    viz.plot_hokuriku_heatmap(
-        survey_all,
-        os.path.join(fig_dir, f"fig{fig_num:02d}_hokuriku_heatmap.png"),
-        rpt, dpi=dpi)
+    fig_num += 1  # keeps fig13-16 numbering intact
 
     # ══════════════════════════════════════════════════════════════════════
     # BOLSTERED RESULTS + EXECUTIVE SUMMARY
@@ -398,6 +406,13 @@ def main() -> None:
             dst = os.path.join(fig_dir, dst_stem + suffix)
             if os.path.exists(src):
                 shutil.move(src, dst)
+    # Restore originals as copies so PDF/report references remain valid
+    for src_stem, dst_stem in _PAPER_FIGS:
+        for suffix in (".png", "_ja.png"):
+            dst = os.path.join(fig_dir, dst_stem + suffix)
+            src = os.path.join(fig_dir, src_stem + suffix)
+            if os.path.exists(dst) and not os.path.exists(src):
+                shutil.copyfile(dst, src)
 
     # ══════════════════════════════════════════════════════════════════════
     # SAVE
