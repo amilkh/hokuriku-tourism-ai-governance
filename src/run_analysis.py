@@ -406,13 +406,6 @@ def main() -> None:
             dst = os.path.join(fig_dir, dst_stem + suffix)
             if os.path.exists(src):
                 shutil.move(src, dst)
-    # Restore originals as copies so PDF/report references remain valid
-    for src_stem, dst_stem in _PAPER_FIGS:
-        for suffix in (".png", "_ja.png"):
-            dst = os.path.join(fig_dir, dst_stem + suffix)
-            src = os.path.join(fig_dir, src_stem + suffix)
-            if os.path.exists(dst) and not os.path.exists(src):
-                shutil.copyfile(dst, src)
 
     # ══════════════════════════════════════════════════════════════════════
     # SAVE
