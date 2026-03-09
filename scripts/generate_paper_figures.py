@@ -5,7 +5,7 @@ Standalone script producing two publication-ready figures for the paper:
   - paper_fig3_rank_resurrection.png   (Rank improvement: 47th -> ~35th)
 
 Run from the repo root:
-    python generate_paper_figures.py
+    python scripts/generate_paper_figures.py
 """
 import glob
 import sys
@@ -20,7 +20,7 @@ import pandas as pd
 from scipy import stats
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-REPO_ROOT   = Path(__file__).resolve().parent
+REPO_ROOT   = Path(__file__).resolve().parent.parent
 SURVEY_GLOB = str(REPO_ROOT.parent / "opendata/output_merge/merged_survey_*.csv")
 OUT_DIR     = REPO_ROOT / "output"
 OUT_DIR.mkdir(exist_ok=True)

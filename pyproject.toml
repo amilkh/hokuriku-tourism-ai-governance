@@ -87,7 +87,7 @@ ignore = ["E501"]
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["src/visualizer.py", "src/generate_grant_summary.py"]
+omit = ["src/visualizer.py"]
 
 [tool.coverage.report]
 show_missing = true

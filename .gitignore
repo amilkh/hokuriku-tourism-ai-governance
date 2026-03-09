@@ -33,10 +33,6 @@ pnpm-lock.yaml
 # .py scripts and READMEs inside rawdata/ are still tracked
 jma/*_rawdata
 
-# Generated outputs
-output/grant_summary.json
+# Generated outputs (reproducible — regenerate via pipeline)
+output/validation_report.json
 output/KANSEI_SUMMARY.txt
-
-# Kansei working artifacts (local only for now)
-
-
