@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """generate_paper_figures.py
-Standalone script producing two publication-ready figures for the paper:
-  - paper_fig2_vibrancy_threshold.png  (Kansei scatter + regression curves)
-  - paper_fig3_rank_resurrection.png   (Rank improvement: 47th -> ~35th)
+Standalone script producing publication-ready figures:
+    - paper_fig2_vibrancy_threshold.png        (Kansei scatter + regression curves)
+    - paper_fig3_rank_resurrection.png         (Rank improvement: 47th -> ~35th)
+    - grant_fig2_hokuriku_ccf_3pref(_ja).png  (Ishikawa->Fukui/Toyama CCF)
 
 Run from the repo root:
     python scripts/generate_paper_figures.py
@@ -287,6 +288,22 @@ def plot_rank_resurrection() -> None:
     print(f"  Saved: {out}")
 
 
+def plot_grant_hokuriku_ccf_3pref() -> None:
+    """Generate the final 3-prefecture grant CCF figure pair."""
+    # Keep the implementation in its dedicated grant script and call it from here.
+    from generate_grant_ccf_3pref_figure import build_figure
+
+    out_en, out_ja, stats = build_figure()
+    print(f"  Saved: {out_en}")
+    print(f"  Saved: {out_ja}")
+    print(
+        "  Fukui lag0: r={:+.3f} | Toyama lag0: r={:+.3f}".format(
+            stats["fukui_lag0_r"],
+            stats["toyama_lag0_r"],
+        )
+    )
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
@@ -300,5 +317,8 @@ if __name__ == "__main__":
 
     print("\n[Figure 3] Rank Resurrection...")
     plot_rank_resurrection()
+
+    print("\n[Grant Figure 2] Hokuriku 3-Pref CCF...")
+    plot_grant_hokuriku_ccf_3pref()
 
     print("\nDone. Files written to output/")
