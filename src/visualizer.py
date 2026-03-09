@@ -1236,7 +1236,7 @@ def plot_dhde_architecture(
     txt(0.4, 0.20,
         "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026",
         size=8.0, color=C_MUTED, ha="left")
-    txt(19.6, 0.20, "DHDE v1.0  |  University of Fukui",
+    txt(19.6, 0.20, "DHDE v1.0",
         size=8.0, color=C_MUTED, ha="right")
 
     fig.tight_layout(pad=0.3)
@@ -1311,8 +1311,8 @@ def plot_dhde_architecture(
         # footer
         "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026":
             "データ：福井県AIカメラ ｜ 気象庁 ｜ 経路検索インプレッション（RSI） ｜ 北陸調査 2024-2026",
-        "DHDE v1.0  |  University of Fukui":
-            "DHDE v1.0 ｜ 福井大学",
+        "DHDE v1.0":
+            "DHDE v1.0",
     }
     for text_obj in ax.texts:
         s = text_obj.get_text()
