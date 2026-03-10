@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 """generate_paper_figures.py
 Standalone script producing publication-ready figures:
-    - paper_fig2_vibrancy_threshold.png        (Kansei scatter + regression curves)
-    - paper_fig3_rank_resurrection.png         (Rank improvement: 47th -> ~35th)
+    - paper_fig3_ranking_recovery.png          (Rank improvement: 47th -> ~35th)
     - grant_fig2_hokuriku_ccf_3pref(_ja).png  (Ishikawa->Fukui/Toyama CCF)
 
 Run from the repo root:
     python scripts/generate_paper_figures.py
 """
-import glob
-import sys
 from pathlib import Path
 
 import matplotlib
@@ -18,12 +15,10 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-REPO_ROOT   = Path(__file__).resolve().parent.parent
-SURVEY_GLOB = str(REPO_ROOT.parent / "opendata/output_merge/merged_survey_*.csv")
-OUT_DIR     = REPO_ROOT / "output"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+OUT_DIR   = REPO_ROOT / "output"
 OUT_DIR.mkdir(exist_ok=True)
 
 # ── Shared style ──────────────────────────────────────────────────────────────
@@ -40,135 +35,6 @@ plt.rcParams.update({
 C_TOJ  = "#2B5C8A"   # steel blue – Tojinbo
 C_EI   = "#2A6B45"   # forest green – Eiheiji
 C_ANNO = "#4A5568"
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# LOAD SURVEY DATA
-# ══════════════════════════════════════════════════════════════════════════════
-
-def _load_surveys() -> pd.DataFrame:
-    files = sorted(glob.glob(SURVEY_GLOB))
-    if not files:
-        sys.exit(f"[ERROR] No survey files found at: {SURVEY_GLOB}")
-    dfs = []
-    for f in files:
-        try:
-            dfs.append(pd.read_csv(f, low_memory=False))
-        except Exception as e:
-            print(f"  [WARN] Could not read {f}: {e}")
-    df = pd.concat(dfs, ignore_index=True)
-    df["date"] = pd.to_datetime(df["アンケート回答日"], errors="coerce").dt.normalize()
-    df["satisfaction"] = pd.to_numeric(df["満足度（旅行全体）"], errors="coerce")
-    df["location"] = df["回答場所"].fillna("").astype(str)
-    print(f"Loaded {len(df):,} survey responses from {len(files)} files")
-    return df
-
-
-def _daily_stats(df: pd.DataFrame, keyword: str,
-                 min_resp: int = 5) -> pd.DataFrame:
-    """Aggregate to daily mean satisfaction + response count for one site."""
-    sub = df[df["location"].str.contains(keyword, na=False)].copy()
-    daily = (
-        sub.groupby("date")
-        .agg(n=("satisfaction", "count"),
-             mean_sat=("satisfaction", "mean"))
-        .reset_index()
-        .dropna(subset=["mean_sat"])
-    )
-    daily = daily[daily["n"] >= min_resp].reset_index(drop=True)
-    daily["rel_density"] = daily["n"] / daily["n"].max() * 100
-    return daily
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# FIGURE 2: VIBRANCY THRESHOLD
-# ══════════════════════════════════════════════════════════════════════════════
-
-def plot_vibrancy_threshold(df: pd.DataFrame) -> None:
-    toj = _daily_stats(df, "東尋坊", min_resp=3)
-    ei  = _daily_stats(df, "永平寺", min_resp=3)
-    print(f"  Tojinbo: {len(toj)} qualifying days  |  Eiheiji: {len(ei)} qualifying days")
-
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6),
-                             gridspec_kw={"wspace": 0.35})
-
-    # ── Panel A: Tojinbo – linear regression ──────────────────────────────
-    ax = axes[0]
-    ax.scatter(toj["rel_density"], toj["mean_sat"],
-               color=C_TOJ, alpha=0.55, s=50, edgecolors="none",
-               label="Daily observations")
-
-    slope, intercept, r, p, _ = stats.linregress(toj["rel_density"], toj["mean_sat"])
-    x_line = np.linspace(toj["rel_density"].min(), toj["rel_density"].max(), 200)
-    ax.plot(x_line, slope * x_line + intercept,
-            color=C_TOJ, linewidth=2.0, linestyle="-",
-            label=f"Linear fit  (r = {r:+.2f}, p = {p:.3f})")
-
-    ax.set_xlabel("Daily Crowd Density  (% of site maximum)", fontsize=11)
-    ax.set_ylabel("Mean Overall Satisfaction  (1–5 scale)", fontsize=11)
-    ax.set_title("(A)  Tojinbo — Coastal Natural Site\n"
-                 "Visitor Density vs. Satisfaction (Linear Fit)",
-                 fontsize=12, fontweight="bold")
-    ax.set_ylim(1, 5.3)
-    ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
-    ax.legend(fontsize=9, framealpha=0.7)
-    ax.text(0.97, 0.05,
-            f"N = {len(toj)} days\n"
-            f"β = {slope:+.4f} sat/density unit",
-            transform=ax.transAxes, ha="right", va="bottom",
-            fontsize=8.5, color=C_ANNO,
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="#F8F8F8",
-                      edgecolor="#CCCCCC"))
-
-    # ── Panel B: Eiheiji – quadratic regression ────────────────────────────
-    ax = axes[1]
-    ax.scatter(ei["rel_density"], ei["mean_sat"],
-               color=C_EI, alpha=0.45, s=50, edgecolors="none",
-               label="Daily observations")
-
-    coeffs = np.polyfit(ei["rel_density"], ei["mean_sat"], 2)
-    a, b, c = coeffs
-    x_line = np.linspace(ei["rel_density"].min(), ei["rel_density"].max(), 300)
-    y_fit  = np.polyval(coeffs, x_line)
-    ax.plot(x_line, y_fit,
-            color=C_EI, linewidth=2.0, linestyle="-",
-            label=f"Quadratic fit  (a = {a:.5f})")
-
-    if a < 0:
-        x_star = -b / (2 * a)
-        sat_star = float(np.polyval(coeffs, x_star))
-        ax.axvline(x_star, color=C_EI, linestyle="--", linewidth=1.4, alpha=0.65)
-        ax.annotate(
-            f"Quietude threshold\nx* = {x_star:.1f}%\n(sat = {sat_star:.2f})",
-            xy=(x_star, sat_star),
-            xytext=(x_star + 6, sat_star - 0.35),
-            fontsize=8.5, color=C_EI,
-            arrowprops=dict(arrowstyle="->", color=C_EI, lw=1.2),
-            bbox=dict(boxstyle="round,pad=0.25", facecolor="#F0F8F4",
-                      edgecolor=C_EI, alpha=0.85),
-        )
-
-    spear_r, spear_p = stats.spearmanr(ei["rel_density"], ei["mean_sat"])
-    ax.set_xlabel("Daily Crowd Density  (% of site maximum)", fontsize=11)
-    ax.set_ylabel("Mean Overall Satisfaction  (1–5 scale)", fontsize=11)
-    ax.set_title("(B)  Eiheiji — Zen Temple Heritage Site\n"
-                 "Visitor Density vs. Satisfaction (Quadratic Fit)",
-                 fontsize=12, fontweight="bold")
-    ax.set_ylim(1, 5.3)
-    ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
-    ax.legend(fontsize=9, framealpha=0.7)
-    ax.text(0.97, 0.05,
-            f"N = {len(ei)} days\n"
-            f"Spearman r = {spear_r:+.3f}",
-            transform=ax.transAxes, ha="right", va="bottom",
-            fontsize=8.5, color=C_ANNO,
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="#F8F8F8",
-                      edgecolor="#CCCCCC"))
-
-    out = OUT_DIR / "paper_fig2_vibrancy_threshold.png"
-    fig.savefig(out, dpi=150, bbox_inches="tight", facecolor="white")
-    plt.close(fig)
-    print(f"  Saved: {out}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -230,9 +96,7 @@ def plot_rank_resurrection() -> None:
                        edgecolor="white", linewidth=0.6,
                        label="Projected rank (recovered visitors)")
 
-    # Reference lines
-    ax.axhline(41, color="#B7770D", linestyle="--", linewidth=1.5, alpha=0.8,
-               label="Threshold: rank 41 (top-40 boundary)")
+    # Reference line
     ax.axhline(35, color="#2B5C8A", linestyle=":",  linewidth=1.5, alpha=0.7,
                label="Target: rank 35")
 
@@ -248,10 +112,11 @@ def plot_rank_resurrection() -> None:
         )
 
     ax.invert_yaxis()   # lower rank number = better
-    ax.set_ylim(50, 28)
+    ax.set_ylim(49, 32)
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v, _: str(int(v))))
     ax.set_xticks(x)
     ax.set_xticklabels(months_str, fontsize=10)
-    ax.set_ylabel("National Ranking  (lower = better)", fontsize=11)
+    ax.set_ylabel("National Ranking  (higher = better)", fontsize=11)
     ax.set_title(
         "(A)  Fukui Prefecture Tourism Ranking: Current vs. AI-Governance Projection\n"
         f"Recovering 865,917 lost visitors improves mean winter rank from 47th to ~35th",
@@ -270,8 +135,7 @@ def plot_rank_resurrection() -> None:
     ax2.set_xticks(x)
     ax2.set_xticklabels(months_str, fontsize=10)
     ax2.set_ylabel("Recovered Visitors  (thousands)", fontsize=11)
-    ax2.set_title("(B)  Monthly Distribution of Recovered Visitors"
-                  "  (Winter-weighted allocation)",
+    ax2.set_title("(B)  Monthly Distribution of Recovered Visitors",
                   fontsize=12, fontweight="bold")
     ax2.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"{v:.0f}K"))
     ax2.text(0.98, 0.92,
@@ -282,7 +146,7 @@ def plot_rank_resurrection() -> None:
              bbox=dict(boxstyle="round,pad=0.35", facecolor="#EEF3F9",
                        edgecolor="#2B5C8A", alpha=0.9))
 
-    out = OUT_DIR / "paper_fig3_rank_resurrection.png"
+    out = OUT_DIR / "paper_fig3_ranking_recovery.png"
     fig.savefig(out, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"  Saved: {out}")
@@ -310,10 +174,6 @@ def plot_grant_hokuriku_ccf_3pref() -> None:
 
 if __name__ == "__main__":
     print("=== Generating paper figures ===")
-
-    print("\n[Figure 2] Vibrancy Threshold (loading survey data)...")
-    surveys = _load_surveys()
-    plot_vibrancy_threshold(surveys)
 
     print("\n[Figure 3] Rank Resurrection...")
     plot_rank_resurrection()

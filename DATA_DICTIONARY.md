@@ -111,8 +111,7 @@ Daily aggregation: `mean` for temp/wind/sun/humidity/snow_depth, `sum` for preci
 | `output/fig09_rank_projection.png` | Prefecture ranking recovery chart (EN + `_ja`) |
 | `output/paper_fig1_dhde_architecture.png` | Paper Fig 1: DHDE architecture diagram (EN + `_ja`) |
 | `output/paper_fig2_rf_prediction.png` | Paper Fig 2: RF vs actual prediction plot (EN + `_ja`) |
-| `output/paper_fig3_vibrancy_threshold.png` | Paper Fig 3: Vibrancy threshold scatter (EN + `_ja`) |
-| `output/paper_fig4_ranking_recovery.png` | Paper Fig 4: Rank improvement projection (EN + `_ja`) |
+| `output/paper_fig3_ranking_recovery.png` | Paper Fig 3: Rank improvement projection (EN + `_ja`) |
 | `output/paper_fig5_ishikawa_ccf.png` | Paper Fig 5: Ishikawa → Tojinbo cross-correlation (EN + `_ja`) |
 | `output/paper_fig6_weather_shield.png` | Paper Fig 6: Weather Shield Network diagram (EN + `_ja`) |
 | `output/table1_ols.png` / `.tex` | OLS regression results table |

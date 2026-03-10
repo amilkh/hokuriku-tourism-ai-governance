@@ -1108,7 +1108,7 @@ def plot_dhde_architecture(
     txt(10, 9.62, "Distributed Human Data Engine (DHDE) — AI Governance Architecture",
         size=15, weight="bold")
     txt(10, 9.18, "Hokuriku Tourism Demand Forecasting  |  Fukui Prefecture, Japan  |  2024-2026",
-        size=9.5, color=C_MUTED)
+        size=11.5, color=C_MUTED)
     ax.plot([0.3, 19.7], [8.88, 8.88], color="#CCCCCC", lw=1.0)
 
     # Column panels — tighter gaps, lower to clear title separator
@@ -1120,124 +1120,127 @@ def plot_dhde_architecture(
     ]:
         rbox(px, py, pw, ph, pc, pbc, radius=0.5, lw=1.8, alpha=0.6)
         cx = px + pw / 2
-        txt(cx, py + ph - 0.30, plabel, size=11, color=pbc, weight="bold")
+        txt(cx, py + ph - 0.30, plabel, size=13, color=pbc, weight="bold")
         ax.plot([px + 0.35, px + pw - 0.35], [py + ph - 0.55, py + ph - 0.55],
                 color=pbc, lw=1.0, alpha=0.40, zorder=4)
 
     # Column bodies start below the underline at y ≈ 8.15
-    # 4 cards h=1.58, gap=0.27 → sy[0]=6.30, bottom card bottom=0.97
-    CH = 1.58
-    sy_starts = [6.30, 4.45, 2.60, 0.97]
+    # 4 cards h=1.75, gap=0.163 → sy[0]=6.34, bottom card bottom=0.61 (above footer at 0.35)
+    CH = 1.75
+    sy_starts = [6.34, 4.43, 2.52, 0.61]
 
     # ── Input sensor cards ─────────────────────────────────────────────────
     sensors = [
         ("RSI Business Intent",
-         "47-site direction & search queries",
-         "Direction counts  ->  lag / roll features"),
+         "・47-site direction & search queries",
+         "・Direction counts  ->  lag / roll features"),
         ("JMA Weather Stations",
-         "Temp  |  Precip  |  Snow  |  Wind  |  Humidity",
-         "Winter sensitivity: seasonal demand gating"),
+         "・Temp | Precip | Snow | Wind | Humidity",
+         "・Winter sensitivity: demand gating"),
         ("Edge-AI Cameras",
-         "Human-shape detection, 5-min intervals",
-         "397 usable days across 4 spatial nodes"),
-        ("Visitor Surveys",
-         "96,986 Hokuriku responses (NPS + satisfaction)",
-         "71,288 Fukui free-text  ->  Kansei NLP"),
+         "・Human detection, 5-min intervals",
+         "・397 days, 4 spatial nodes"),
     ]
     for (title, line1, line2), sy in zip(sensors, sy_starts):
         rbox(0.40, sy, 3.85, CH, C_CARD_S, C_BORDER_S, radius=0.25, lw=1.2)
-        txt(2.325, sy + 1.25, title, size=12, color=C_BORDER_S, weight="bold")
-        txt(2.325, sy + 0.82, line1, size=10.0, color=C_MUTED)
-        txt(2.325, sy + 0.38, line2, size=10.0, color=C_MUTED)
+        txt(2.325, sy + 1.42, title, size=14, color=C_BORDER_S, weight="bold")
+        txt(2.325, sy + 0.97, line1, size=14.0, color=C_MUTED)
+        txt(2.325, sy + 0.66, line2, size=14.0, color=C_MUTED)
+
+    # Visitor Surveys — 3-line body to avoid overflow on the 96,986 line
+    sy = sy_starts[3]
+    rbox(0.40, sy, 3.85, CH, C_CARD_S, C_BORDER_S, radius=0.25, lw=1.2)
+    txt(2.325, sy + 1.42, "Visitor Surveys",              size=14,   color=C_BORDER_S, weight="bold")
+    txt(2.325, sy + 1.02, "・96,986 Hokuriku responses",  size=14.0, color=C_MUTED)
+    txt(2.325, sy + 0.74, "  (NPS + satisfaction)",       size=12.0, color=C_MUTED)
+    txt(2.325, sy + 0.46, "・71,288 free-text → Kansei NLP", size=14.0, color=C_MUTED)
 
     # ── Core: Feature Engineering ──────────────────────────────────────────
     rbox(5.0, 5.71, 7.35, 1.85, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
-    txt(8.675, 7.24, "Feature Engineering", size=12, color=C_BORDER_C, weight="bold")
+    txt(8.675, 7.24, "Feature Engineering", size=14, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
-        "Calendar (dow_mean, month, is_holiday)   Lag(1,2,3)   Roll(7d)",
-        "Weekend x Intent   Weekend x Severity   interaction terms",
-        "Discomfort Index   Wind Chill   Kansei under-vibrancy flags",
+        "・Calendar (dow_mean, month, is_holiday)   Lag(1,2,3)   Roll(7d)",
+        "・Weekend x Intent   Weekend x Severity   interaction terms",
+        "・Discomfort Index   Wind Chill   Kansei under-vibrancy flags",
     ]):
-        txt(8.675, 6.83 - i * 0.36, ln, size=10.0, color=C_MUTED)
+        txt(8.675, 6.83 - i * 0.33, ln, size=12.5, color=C_MUTED)
 
     # ── Core: OLS ─────────────────────────────────────────────────────────
-    rbox(5.0, 3.08, 3.55, 2.10, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
-    txt(6.775, 4.88, "OLS Regression", size=12, color=C_BORDER_C, weight="bold")
+    rbox(5.0, 2.95, 3.55, 2.25, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(6.775, 4.96, "OLS Regression", size=14, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
-        "R2 = 0.810  (Adj 0.802)",
-        "16 predictors   N = 397",
-        "Newey-West HAC   sig = 8",
-        "DW (LDV) = 1.898",
-        "Weather lift  +0.056 R2",
+        "・R2 = 0.810  (Adj 0.802)",
+        "・16 predictors   N = 397",
+        "・Newey-West HAC   sig = 8",
+        "・DW (LDV) = 1.898",
+        "・Weather lift  +0.056 R2",
     ]):
-        txt(6.775, 4.49 - i * 0.33, ln, size=10.0, color=C_MUTED)
+        txt(6.775, 4.58 - i * 0.27, ln, size=12.5, color=C_MUTED)
 
     # ── Core: Random Forest ───────────────────────────────────────────────
-    rbox(8.80, 3.08, 3.55, 2.10, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
-    txt(10.575, 4.88, "Random Forest", size=12, color=C_BORDER_C, weight="bold")
+    rbox(8.80, 2.95, 3.55, 2.25, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(10.575, 4.96, "Random Forest", size=14, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
-        "Train R2 = 0.909",
-        "CV R2 = 0.557  (+/- 0.131)",
-        "Hold-out R2 = 0.683",
-        "MAE = 1,793 visitors/day",
-        "Top: directions, month",
+        "・Train R2 = 0.909",
+        "・CV R2 = 0.557  (+/- 0.131)",
+        "・Hold-out R2 = 0.683",
+        "・MAE = 1,793 visitors/day",
+        "・Top: directions, month",
     ]):
-        txt(10.575, 4.49 - i * 0.33, ln, size=10.0, color=C_MUTED)
+        txt(10.575, 4.58 - i * 0.27, ln, size=12.5, color=C_MUTED)
 
     # ── Core: Robustness ──────────────────────────────────────────────────
-    rbox(5.0, 0.97, 7.35, 1.58, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
-    txt(8.675, 2.27, "Robustness Suite", size=12, color=C_BORDER_C, weight="bold")
+    rbox(5.0, 0.65, 7.35, 1.90, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
+    txt(8.675, 2.27, "Robustness Suite", size=14, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
-        "First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8",
-        "4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552",
-        "Eiheiji quietude threshold x*=42.4%   Kansei Spearman r=+0.148 (p=0.002)",
+        "・First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8",
+        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552",
+        "・Kansei Spearman r=+0.148 (p=0.002)   under-vibrancy positive correlation",
     ]):
-        txt(8.675, 1.89 - i * 0.35, ln, size=9.5, color=C_MUTED)
+        txt(8.675, 1.89 - i * 0.34, ln, size=12.5, color=C_MUTED)
 
     # ── Output governance cards ────────────────────────────────────────────
     outputs = [
         ("Supply-Side Nudges",
-         "865,917 lost visitors/yr recovered",
-         "Rank lift: 47th  ->  ~35th nationally"),
+         "・865,917 lost visitors/yr recovered",
+         "・Rank lift: 47th  ->  ~35th nationally"),
         ("Weather-Resilient Routing",
-         "Winter 6.27x more weather-sensitive",
-         "Snow / wind alerts  ->  alternate nodes"),
+         "・Winter 6.27x more weather-sensitive",
+         "・Snow / wind alerts  ->  alternate nodes"),
         ("Kansei Comfort Governance",
-         "Discomfort Index  +  Wind Chill alerts",
-         "Quietude  <=42.4%  prevents sat. drop"),
+         "・Discomfort Index  +  Wind Chill alerts",
+         "・Satisfaction resilient to crowd density"),
         ("Economic Impact Dashboard",
-         "Annual loss: ¥11.96B  (~$76.3M USD)",
-         "4-node geographic saturation achieved"),
+         "・Annual loss: ¥11.96B  (~$76.3M USD)",
+         "・4-node geographic saturation achieved"),
     ]
     for (title, line1, line2), oy in zip(outputs, sy_starts):
         rbox(13.1, oy, 6.50, CH, C_CARD_O, C_BORDER_O, radius=0.25, lw=1.2)
-        txt(16.35, oy + 1.25, title, size=12, color=C_BORDER_O, weight="bold")
-        txt(16.35, oy + 0.82, line1, size=10.0, color=C_MUTED)
-        txt(16.35, oy + 0.38, line2, size=10.0, color=C_MUTED)
+        txt(16.35, oy + 1.42, title, size=15, color=C_BORDER_O, weight="bold")
+        txt(16.35, oy + 0.97, line1, size=15.0, color=C_MUTED)
+        txt(16.35, oy + 0.66, line2, size=15.0, color=C_MUTED)
 
     # ── Arrows: sensors -> feature eng ────────────────────────────────────
     for sy in sy_starts:
-        arr(4.25, sy + 0.79, 4.95, 6.64, color=C_BORDER_S, lw=1.4)
+        arr(4.25, sy + 0.875, 4.95, 6.64, color=C_BORDER_S, lw=1.4)
 
     # ── Arrows: feature eng -> models ─────────────────────────────────────
     arr(7.8,  5.71, 6.775, 5.18, color=C_BORDER_C, lw=1.4)
     arr(9.55, 5.71, 10.575, 5.18, color=C_BORDER_C, lw=1.4)
 
     # ── Arrows: models -> robustness ──────────────────────────────────────
-    arr(6.775, 3.08, 7.2,  2.55, color=C_BORDER_C, lw=1.4)
-    arr(10.575, 3.08, 10.15, 2.55, color=C_BORDER_C, lw=1.4)
+    arr(6.775, 2.95, 7.2,  2.55, color=C_BORDER_C, lw=1.4)
+    arr(10.575, 2.95, 10.15, 2.55, color=C_BORDER_C, lw=1.4)
 
     # ── Arrows: robustness -> outputs ─────────────────────────────────────
     for oy in sy_starts:
-        arr(12.35, 1.76, 13.05, oy + 0.79, color=C_BORDER_O, lw=1.4)
+        arr(12.35, 1.60, 13.05, oy + 0.875, color=C_BORDER_O, lw=1.4)
 
     # ── Footer ────────────────────────────────────────────────────────────
     ax.plot([0.3, 19.7], [0.35, 0.35], color="#CCCCCC", lw=0.8, zorder=6)
     txt(0.4, 0.20,
         "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026",
-        size=8.0, color=C_MUTED, ha="left")
-    txt(19.6, 0.20, "DHDE v1.0",
-        size=8.0, color=C_MUTED, ha="right")
+        size=10.5, color=C_MUTED, ha="left")
 
     fig.tight_layout(pad=0.3)
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
@@ -1258,61 +1261,60 @@ def plot_dhde_architecture(
         "Edge-AI Cameras":         "エッジAIカメラ",
         "Visitor Surveys":         "来訪者調査",
         # sensor card lines
-        "47-site direction & search queries":            "47サイトの経路・検索クエリ",
-        "Direction counts  ->  lag / roll features":     "方向カウント → ラグ/ローリング特徴量",
-        "Temp  |  Precip  |  Snow  |  Wind  |  Humidity": "気温｜降水｜積雪｜風速｜湿度",
-        "Winter sensitivity: seasonal demand gating": "冬季感応度：季節的需要制約",
-        "Human-shape detection, 5-min intervals":        "人型検知、5分間隔",
-        "397 usable days across 4 spatial nodes":        "4拠点で397日分の有効データ",
-        "96,986 Hokuriku responses (NPS + satisfaction)": "北陸回答数96,986件（NPS＋満足度）",
-        "71,288 Fukui free-text  ->  Kansei NLP":        "福井自由記述71,288件 → 感性NLP",
+        "・47-site direction & search queries":            "・47サイトの経路・検索クエリ",
+        "・Direction counts  ->  lag / roll features":     "・方向カウント → ラグ/ローリング特徴量",
+        "・Temp | Precip | Snow | Wind | Humidity": "・気温｜降水｜積雪｜風速｜湿度",
+        "・Winter sensitivity: demand gating": "・冬季感応度：需要制約",
+        "・Human detection, 5-min intervals":  "・人型検知、5分間隔",
+        "・397 days, 4 spatial nodes":          "・4拠点397日分の有効データ",
+        "・96,986 Hokuriku responses":     "・北陸回答数 96,986件",
+        "  (NPS + satisfaction)":          "  （NPS＋満足度）",
+        "・71,288 free-text → Kansei NLP": "・福井自由記述71,288件 → 感性NLP",
         # core card titles
         "Feature Engineering": "特徴量エンジニアリング",
         "OLS Regression":      "OLS回帰",
         "Random Forest":       "ランダムフォレスト",
         "Robustness Suite":    "頑健性検証スイート",
         # core card lines
-        "Calendar (dow_mean, month, is_holiday)   Lag(1,2,3)   Roll(7d)":
-            "カレンダー（曜日均・月・祝日）  ラグ(1,2,3)  ローリング(7日)",
-        "Weekend x Intent   Weekend x Severity   interaction terms":
-            "週末×インテント  週末×深刻度  交互作用項",
-        "Discomfort Index   Wind Chill   Kansei under-vibrancy flags":
-            "不快指数  体感気温  感性活気不足フラグ",
-        "R2 = 0.810  (Adj 0.802)":      "R² = 0.810（調整済 0.802）",
-        "16 predictors   N = 397":      "16予測変数  N = 397",
-        "Newey-West HAC   sig = 8":     "Newey-West HAC  有意 = 8",
-        "DW (LDV) = 1.898":             "DW（LDV）= 1.898",
-        "Weather lift  +0.056 R2":      "気象寄与  +0.056 R²",
-        "Train R2 = 0.909":             "学習R² = 0.909",
-        "CV R2 = 0.557  (+/- 0.131)":  "CV R² = 0.557（±0.131）",
-        "Hold-out R2 = 0.683":          "ホールドアウトR² = 0.683",
-        "MAE = 1,793 visitors/day":     "MAE = 1,793人/日",
-        "Top: directions, month":       "重要特徴量：方向数・月",
-        "First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8":
-            "一階差分R²=0.708  LDV R²=0.849  Cohen f²=4.25  Newey-West有意=8",
-        "4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552":
-            "4拠点空間交差相関  石川→福井パイプライン  r=+0.552",
-        "Eiheiji quietude threshold x*=42.4%   Kansei Spearman r=+0.148 (p=0.002)":
-            "永平寺静謐閾値 x*=42.4%  感性スピアマン r=+0.148（p=0.002）",
+        "・Calendar (dow_mean, month, is_holiday)   Lag(1,2,3)   Roll(7d)":
+            "・カレンダー（曜日均・月・祝日）  ラグ(1,2,3)  ローリング(7日)",
+        "・Weekend x Intent   Weekend x Severity   interaction terms":
+            "・週末×インテント  週末×深刻度  交互作用項",
+        "・Discomfort Index   Wind Chill   Kansei under-vibrancy flags":
+            "・不快指数  体感気温  感性活気不足フラグ",
+        "・R2 = 0.810  (Adj 0.802)":      "・R² = 0.810（調整済 0.802）",
+        "・16 predictors   N = 397":      "・16予測変数  N = 397",
+        "・Newey-West HAC   sig = 8":     "・Newey-West HAC  有意 = 8",
+        "・DW (LDV) = 1.898":             "・DW（LDV）= 1.898",
+        "・Weather lift  +0.056 R2":      "・気象寄与  +0.056 R²",
+        "・Train R2 = 0.909":             "・学習R² = 0.909",
+        "・CV R2 = 0.557  (+/- 0.131)":  "・CV R² = 0.557（±0.131）",
+        "・Hold-out R2 = 0.683":          "・ホールドアウトR² = 0.683",
+        "・MAE = 1,793 visitors/day":     "・MAE = 1,793人/日",
+        "・Top: directions, month":       "・重要特徴量：方向数・月",
+        "・First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8":
+            "・一階差分R²=0.708  LDV R²=0.849  Cohen f²=4.25  Newey-West有意=8",
+        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552":
+            "・4拠点空間交差相関  石川→福井パイプライン  r=+0.552",
+        "・Kansei Spearman r=+0.148 (p=0.002)   under-vibrancy positive correlation":
+            "・感性スピアマン r=+0.148（p=0.002）  過少賑わい正の相関",
         # output card titles
         "Supply-Side Nudges":          "供給側ナッジ",
         "Weather-Resilient Routing":   "気象耐性ルーティング",
         "Kansei Comfort Governance":   "感性コンフォートガバナンス",
         "Economic Impact Dashboard":   "経済的影響ダッシュボード",
         # output card lines
-        "865,917 lost visitors/yr recovered":    "年間損失来訪者865,917人の回復",
-        "Rank lift: 47th  ->  ~35th nationally": "順位改善：全国47位→約35位",
-        "Winter 6.27x more weather-sensitive":   "冬季は気象感応度が6.27倍",
-        "Snow / wind alerts  ->  alternate nodes": "積雪・風速警報 → 代替拠点誘導",
-        "Discomfort Index  +  Wind Chill alerts": "不快指数＋体感気温アラート",
-        "Quietude  <=42.4%  prevents sat. drop":  "静謐度≦42.4%で満足度低下防止",
-        "Annual loss: ¥11.96B  (~$76.3M USD)":    "年間損失：¥11.96B（約76.3M USD）",
-        "4-node geographic saturation achieved":  "4拠点による地理的飽和達成",
+        "・865,917 lost visitors/yr recovered":    "・年間損失来訪者865,917人の回復",
+        "・Rank lift: 47th  ->  ~35th nationally": "・順位改善：全国47位→約35位",
+        "・Winter 6.27x more weather-sensitive":   "・冬季は気象感応度が6.27倍",
+        "・Snow / wind alerts  ->  alternate nodes": "・積雪・風速警報 → 代替拠点誘導",
+        "・Discomfort Index  +  Wind Chill alerts": "・不快指数＋体感気温アラート",
+        "・Satisfaction resilient to crowd density": "・来訪者密度に対して満足度は安定",
+        "・Annual loss: ¥11.96B  (~$76.3M USD)":    "・年間損失：¥11.96B（約76.3M USD）",
+        "・4-node geographic saturation achieved":  "・4拠点による地理的飽和達成",
         # footer
         "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026":
             "データ：福井県AIカメラ ｜ 気象庁 ｜ 経路検索インプレッション（RSI） ｜ 北陸調査 2024-2026",
-        "DHDE v1.0":
-            "DHDE v1.0",
     }
     for text_obj in ax.texts:
         s = text_obj.get_text()

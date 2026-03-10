@@ -225,12 +225,6 @@ def main() -> None:
     spear_r_nps = kansei_data.get("spear_r_nps", 0.0)
     spear_p_nps = kansei_data.get("spear_p_nps", 1.0)
 
-    if "sat_merged" in kansei_data and not kansei_data["sat_merged"].empty:
-        viz.plot_kansei_scatter(
-            kansei_data["sat_merged"],
-            os.path.join(fig_dir, "paper_fig3_vibrancy_threshold.png"),
-            rpt, dpi=dpi)
-
     # ══════════════════════════════════════════════════════════════════════
     # 9. LOST POPULATION
     # ══════════════════════════════════════════════════════════════════════
@@ -294,7 +288,7 @@ def main() -> None:
     # ══════════════════════════════════════════════════════════════════════
     viz.plot_resurrection(
         sim_df, total_lost, mean_actual_rank, mean_hypo_rank,
-        os.path.join(fig_dir, "paper_fig4_ranking_recovery.png"),
+        os.path.join(fig_dir, "paper_fig3_ranking_recovery.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
