@@ -36,3 +36,6 @@ jma/*_rawdata
 # Generated outputs (reproducible — regenerate via pipeline)
 output/validation_report.json
 output/KANSEI_SUMMARY.txt
+
+# Downloaded GeoJSON cache (regenerated automatically by generate_weather_shield_map.py)
+output/.cache/
