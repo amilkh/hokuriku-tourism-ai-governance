@@ -342,7 +342,7 @@ def main() -> None:
     # ★ NEW: High-impact governance visualizations for grant applications
     viz.plot_weather_shield_network(
         spatial.get("valid_nodes", {}),
-        os.path.join(fig_dir, "paper_fig6_weather_shield.png"),
+        os.path.join(fig_dir, "paper_fig6_weather_shield_map.png"),
         rpt, dpi=300)
 
     fig_num += 1
