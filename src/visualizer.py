@@ -953,13 +953,14 @@ def plot_rank_resurrection_projection(
     x = np.arange(len(months))
     width = 0.35
     
-    bars1 = ax1.bar(x - width/2, current_ranks, width, label="Current Rank (47th)", 
-                   color="#E74C3C", alpha=0.8)
+    bars1 = ax1.bar(x - width/2, current_ranks, width, label="Current Rank (47th)",
+                   color="#2B5C8A", alpha=0.8)
     bars2 = ax1.bar(x + width/2, projected_ranks, width, label="Projected Rank (With Recovery)", 
                    color="#27AE60", alpha=0.8)
     
     ax1.set_ylabel("National Ranking (Lower = Better)")
-    ax1.set_title("Fukui Prefecture Tourism Ranking: 47th → Mid-30s Resurrection Path",
+    ax1.set_title("Fukui Prefecture Tourism Ranking: Current vs. AI-Governance Projection\n"
+                 "Recovering 865,917 lost visitors improves peak monthly rank to ~35th nationally",
                  fontsize=12, fontweight="bold")
     ax1.set_xticks(x)
     ax1.set_xticklabels(months)
@@ -1011,7 +1012,8 @@ def plot_rank_resurrection_projection(
     # JA version
     months_ja = ["1月", "2月", "3月", "4月", "5月", "6月",
                  "7月", "8月", "9月", "10月", "11月", "12月"]
-    ax1.set_title("福井県観光ランキング：47位→35位圏への復活パス",
+    ax1.set_title("福井県観光ランキング：現状 vs. AIガバナンス予測\n"
+                 "86.6万人回復により月別ピーク順位が全国35位圏に改善",
                  fontsize=12, fontweight="bold")
     ax1.set_ylabel("全国ランキング（低い=良い）")
     ax1.set_xticklabels(months_ja)
