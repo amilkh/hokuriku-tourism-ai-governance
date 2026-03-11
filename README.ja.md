@@ -70,7 +70,7 @@ DHDEは4種類のデータストリームを単一の分析パイプラインに
 | A | 東尋坊／三国 | tojinbo-shotaro | 三国（JMA） |
 | B | 福井駅東口 | fukui-station-east | 福井（JMA） |
 | C | 勝山（恐竜博物館） | katsuyama | 勝山（JMA） |
-| D | レインボーライン | rainbow-line-parking | 福井（代理） |
+| D | レインボーライン | rainbow-line-parking-lot-1-gate | 福井（代理） |
 
 ---
 
@@ -272,7 +272,31 @@ pip install ".[dev]"
 
 ---
 
-## 10. テスト & 検証
+## 10. モジュラーアーキテクチャ
+
+パイプラインは厳格な**関心の分離**に従っています：
+
+```python
+# エントリポイント: src/run_analysis.py
+cfg = load_config()                           # config.py
+rpt = Reporter(cfg)                           # report.py
+validation = validate_pipeline(cfg, rpt)      # validator.py
+data = load_all_data(cfg, rpt)                # data_loader.py
+daily, features = build_features(daily, ..)   # feature_engineering.py
+ols = fit_ols(model_df, features, rpt)        # models.py
+rf  = fit_random_forest(model_df, ..)         # models.py
+robust = robustness_suite(model_df, ..)       # models.py
+gap = compute_opportunity_gap(daily, ..)      # economics.py
+kansei = discomfort_index_analysis(..)        # kansei.py
+spatial = multi_node_analysis(cfg, ..)        # spatial.py
+export_all_tables(results, ..)                # latex_export.py
+```
+
+すべてのモジュールは `Reporter` インスタンスを受け取り、決定論的なログ出力を行います。どのモジュールも `print()` を直接使用せず、すべての出力は集中型レポーターを経由します。
+
+---
+
+## 11. テスト & 検証
 
 ```
 tests/
@@ -292,7 +316,7 @@ tests/
 
 ---
 
-## 11. 引用
+## 12. 引用
 
 ```bibtex
 @misc{khanzada2026hokuriku,

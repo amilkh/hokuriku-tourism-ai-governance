@@ -965,13 +965,29 @@ def plot_rank_resurrection_projection(
         for w in _season_w
     ]
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+    # ── Projected ranks: use per-month recovery consistent with Panel B ───────
+    # This avoids overstating summer rank improvement (summer only gets ~25K/mo)
+    projected_ranks = []
+    for i, (rank, gap_k) in enumerate(zip(current_ranks, gap_to_41_k)):
+        rec_k = monthly_rec_k[i]
+        if rec_k >= gap_k * 2:       # major recovery: >2× the gap to rank 41
+            projected_ranks.append(max(35, rank - 12))
+        elif rec_k >= gap_k:         # moderate: meets the gap
+            projected_ranks.append(max(40, rank - 6))
+        elif rec_k >= gap_k * 0.5:  # minor: half the gap
+            projected_ranks.append(max(44, rank - 2))
+        else:
+            projected_ranks.append(rank)  # no meaningful change
+
+    import matplotlib.patches as mpatches
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8.5))
 
     # ── Panel A: rank trajectory ──────────────────────────────────────────────
     x = np.arange(len(months))
     width = 0.35
 
-    ax1.bar(x - width/2, current_ranks,  width, label="Current Rank (47th)",
+    ax1.bar(x - width/2, current_ranks,  width, label="Current Rank",
             color=C_CURRENT, alpha=0.85)
     ax1.bar(x + width/2, projected_ranks, width, label="Projected Rank (With Recovery)",
             color=C_PROJECTED, alpha=0.85)
@@ -982,52 +998,61 @@ def plot_rank_resurrection_projection(
                   fontsize=11, fontweight="bold")
     ax1.set_xticks(x)
     ax1.set_xticklabels(months)
-    ax1.legend(loc="lower left")
-    ax1.set_ylim(25, 50)
+    ax1.set_xlim(-0.6, 11.8)
+    ax1.legend(loc="lower left", fontsize=9)
+    ax1.set_ylim(28, 50)
     ax1.invert_yaxis()
-    ax1.axhline(y=35, color="#555", linestyle="--", linewidth=0.9, alpha=0.6)
-    ax1.text(11.6, 35.4, "~35th target", fontsize=8, color="#555", va="bottom")
-    ax1.text(0.98, 0.97, "1st = best",   transform=ax1.transAxes,
+    ax1.axhline(y=35, color="#555", linestyle="--", linewidth=0.9, alpha=0.7)
+    # Use axes-fraction x so the label is always inside the plot
+    ax1.text(0.99, 0.08, "- - 35th target", transform=ax1.transAxes,
+             ha="right", va="bottom", fontsize=8, color="#555")
+    ax1.text(0.99, 0.97, "1st = best",   transform=ax1.transAxes,
              ha="right", va="top",    fontsize=9, color="#2C3E50")
-    ax1.text(0.98, 0.03, "47th = worst", transform=ax1.transAxes,
+    ax1.text(0.99, 0.03, "47th = worst", transform=ax1.transAxes,
              ha="right", va="bottom", fontsize=9, color="#7F8C8D")
 
-    best_idx = int(np.argmax(np.array(current_ranks) - np.array(projected_ranks)))
-    ax1.annotate(f"+{current_ranks[best_idx] - projected_ranks[best_idx]} ranks",
-                 xy=(best_idx + width/2, projected_ranks[best_idx]),
-                 xytext=(best_idx + 1.2, projected_ranks[best_idx] - 4),
-                 arrowprops=dict(arrowstyle="->", color=C_PROJECTED, lw=1.4),
-                 fontsize=10, color=C_PROJECTED, fontweight="bold")
+    # Annotation on the best-improvement bar (first winter month)
+    improvements = [c - p for c, p in zip(current_ranks, projected_ranks)]
+    best_idx = int(np.argmax(improvements))
+    if improvements[best_idx] > 0:
+        ax1.annotate(f"+{improvements[best_idx]} ranks",
+                     xy=(best_idx + width/2, projected_ranks[best_idx]),
+                     xytext=(best_idx + 1.5, projected_ranks[best_idx] - 3),
+                     arrowprops=dict(arrowstyle="->", color=C_PROJECTED, lw=1.4),
+                     fontsize=10, color=C_PROJECTED, fontweight="bold",
+                     bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                               edgecolor=C_PROJECTED, linewidth=0.8, alpha=0.9))
 
     # ── Panel B: monthly recovered demand distribution ────────────────────────
-    import matplotlib.patches as mpatches
-
     ax2.bar(x, monthly_rec_k, color=_bar_colors, alpha=0.88,
             edgecolor="white", linewidth=0.4)
     ax2.set_xlabel("Month")
     ax2.set_ylabel("Recovered Visitors (Thousands)")
     ax2.set_title("Panel (B)  -  Monthly Distribution of Recovered Demand\n"
-                  "Winter months allocated proportionally higher (6.26x summer sensitivity)",
+                  "Winter months allocated proportionally higher (6.26x summer weather sensitivity)",
                   fontsize=11, fontweight="bold")
     ax2.set_xticks(x)
     ax2.set_xticklabels(months)
+    # Enough headroom for value labels above tallest bars (~154K)
+    ax2.set_ylim(0, max(monthly_rec_k) * 1.22)
 
     for i, val in enumerate(monthly_rec_k):
-        ax2.text(i, val + 1.5, f"{val:.0f}K", ha="center", va="bottom", fontsize=8)
+        ax2.text(i, val + max(monthly_rec_k) * 0.01,
+                 f"{val:.0f}K", ha="center", va="bottom", fontsize=8)
 
     ax2.legend(handles=[
-        mpatches.Patch(color=C_WINTER, label="Winter (Dec-Feb)  x6.26"),
-        mpatches.Patch(color=C_TRANS,  label="Transition months  x2.5"),
-        mpatches.Patch(color=C_SUMMER, label="Summer (Jun-Sep)  x1.0"),
-    ], fontsize=9, loc="upper right")
+        mpatches.Patch(color=C_WINTER, label="Winter (Dec-Feb)"),
+        mpatches.Patch(color=C_TRANS,  label="Transition (Mar-May, Oct-Nov)"),
+        mpatches.Patch(color=C_SUMMER, label="Summer (Jun-Sep)"),
+    ], fontsize=9, loc="upper left")
 
-    ax2.text(0.01, 0.97,
-             f"Total recovered: {total_lost/1000:.0f}K visitors  ~  Y{total_lost*13.811/1e9:.2f}B",
-             transform=ax2.transAxes, ha="left", va="top", fontsize=10,
+    ax2.text(0.99, 0.97,
+             f"Total: {total_lost/1000:.0f}K visitors  |  ~Y{total_lost*13.811/1e9:.2f}B",
+             transform=ax2.transAxes, ha="right", va="top", fontsize=9,
              bbox=dict(boxstyle="round,pad=0.3", facecolor="#D6EAF8",
                        edgecolor=C_CURRENT, linewidth=0.8, alpha=0.9))
 
-    fig.tight_layout()
+    fig.tight_layout(pad=1.5)
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
 
     # ── JA version ────────────────────────────────────────────────────────────
@@ -1038,23 +1063,25 @@ def plot_rank_resurrection_projection(
                   fontsize=11, fontweight="bold")
     ax1.set_ylabel("全国ランキング（低い=良い）")
     ax1.set_xticklabels(months_ja)
-    ax1.text(0.98, 0.97, "1位＝最良",    transform=ax1.transAxes,
+    ax1.text(0.99, 0.08, "- - 35位目標", transform=ax1.transAxes,
+             ha="right", va="bottom", fontsize=8, color="#555")
+    ax1.text(0.99, 0.97, "1位＝最良",    transform=ax1.transAxes,
              ha="right", va="top",    fontsize=9, color="#2C3E50")
-    ax1.text(0.98, 0.03, "47位＝最下位", transform=ax1.transAxes,
+    ax1.text(0.99, 0.03, "47位＝最下位", transform=ax1.transAxes,
              ha="right", va="bottom", fontsize=9, color="#7F8C8D")
-    ax1.legend(["現在の順位 (47位)", "回復後予測順位"], loc="lower left")
+    ax1.legend(["現在の順位", "回復後予測順位"], loc="lower left", fontsize=9)
 
     ax2.set_title("パネル（B）  -  回復需要の月別分布\n"
-                  "冬季に比例配分増（夏季比6.26倍の感度）",
+                  "冬季に比例配分増（夏季比6.26倍の気象感度）",
                   fontsize=11, fontweight="bold")
     ax2.set_xlabel("月")
     ax2.set_ylabel("回復来訪者数（千人）")
     ax2.set_xticklabels(months_ja)
     ax2.legend(handles=[
-        mpatches.Patch(color=C_WINTER, label="冬季（12〜2月）×6.26"),
-        mpatches.Patch(color=C_TRANS,  label="移行期　×2.5"),
-        mpatches.Patch(color=C_SUMMER, label="夏季（6〜9月）×1.0"),
-    ], fontsize=9, loc="upper right")
+        mpatches.Patch(color=C_WINTER, label="冬季（12〜2月）"),
+        mpatches.Patch(color=C_TRANS,  label="移行期（3〜5月・10〜11月）"),
+        mpatches.Patch(color=C_SUMMER, label="夏季（6〜9月）"),
+    ], fontsize=9, loc="upper left")
 
     ja_path = out_path.replace(".png", "_ja.png")
     _apply_japanese_font(fig)
