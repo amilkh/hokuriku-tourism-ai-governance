@@ -39,7 +39,7 @@ from src.kansei import (
     discomfort_index_analysis,
     overtourism_threshold,
     text_mine_undervibrancy,
-    eiheiji_quietude_threshold,
+    eiheiji_atmospheric_resilience,
 )
 from src import visualizer as viz
 from src.latex_export import export_all_tables
@@ -279,9 +279,9 @@ def main() -> None:
     n_text_fukui = text_result.get("n_text_fukui", 0)
 
     # ══════════════════════════════════════════════════════════════════════
-    # 15b. EIHEIJI QUIETUDE THRESHOLD
+    # 15b. EIHEIJI ATMOSPHERIC RESILIENCE
     # ══════════════════════════════════════════════════════════════════════
-    eiheiji_result = eiheiji_quietude_threshold(sat_all, rpt)
+    eiheiji_result = eiheiji_atmospheric_resilience(sat_all, rpt)
 
     # ══════════════════════════════════════════════════════════════════════
     # 16. FUKUI RESURRECTION CHART
@@ -484,17 +484,18 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
 """)
 
     ei = ctx.get("eiheiji_result", {})
-    ei_threshold = ei.get("threshold_pct")
     rpt.metrics(f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  8b. EIHEIJI ZEN-SILENCE THRESHOLD
+  8b. EIHEIJI ATMOSPHERIC RESILIENCE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Eiheiji survey responses:          {ei.get('n_responses', 'N/A')}
+  High-satisfaction (4-5★) rate:     {ei.get('sat_rate_pct', 'N/A')}%
   Qualifying days (≥3 resp/day):     {ei.get('n_days', 'N/A')}
   Spearman r (density vs sat):       {ei.get('spearman_r', float('nan')):+.3f} (p = {ei.get('spearman_p', float('nan')):.4f})
-  Quietude threshold (vertex x*):    {f"{ei_threshold:.1f}%" if ei_threshold is not None else "N/A"}
-  Peak satisfaction at threshold:    {ei.get('peak_sat', 'N/A')}
-  Raw survey entries (all.csv):      574,137
+  Congestion complaints (all):       {ei.get('congestion_pct', 'N/A')}% of responses
+  Congestion in low-sat reviews:     {ei.get('congestion_low_sat_pct', 'N/A')}% of 1-2★
+  Under-vibrancy in low-sat reviews: {ei.get('undervibrancy_low_sat', 'N/A')}
+  Raw survey entries (all.csv):      90,317
 """)
 
     rigor = ctx.get("rigor")

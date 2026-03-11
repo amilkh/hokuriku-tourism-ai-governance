@@ -295,6 +295,9 @@ def load_survey_satisfaction(
             loc_col = "回答場所"
             sub["location"] = sdf[loc_col].astype(str) if loc_col in sdf.columns else ""
 
+            for txt_col in ["満足度理由", "不便に感じたこと・困ったこと", "自由意見"]:
+                sub[txt_col] = sdf[txt_col].astype(str) if txt_col in sdf.columns else ""
+
             sub = sub.dropna(subset=["date"])
             frames.append(sub)
         except Exception as exc:

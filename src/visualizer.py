@@ -1139,7 +1139,7 @@ def plot_dhde_architecture(
          "・Winter sensitivity: demand gating"),
         ("Edge-AI Cameras",
          "・Human detection, 5-min intervals",
-         "・397 days, 4 spatial nodes"),
+         "・427 days, 4 spatial nodes"),
     ]
     for (title, line1, line2), sy in zip(sensors, sy_starts):
         rbox(0.40, sy, 3.85, CH, C_CARD_S, C_BORDER_S, radius=0.25, lw=1.2)
@@ -1147,13 +1147,13 @@ def plot_dhde_architecture(
         txt(2.325, sy + 0.97, line1, size=14.0, color=C_MUTED)
         txt(2.325, sy + 0.66, line2, size=14.0, color=C_MUTED)
 
-    # Visitor Surveys — 3-line body to avoid overflow on the 96,986 line
+    # Visitor Surveys — 3-line body to avoid overflow on the 97,719 line
     sy = sy_starts[3]
     rbox(0.40, sy, 3.85, CH, C_CARD_S, C_BORDER_S, radius=0.25, lw=1.2)
     txt(2.325, sy + 1.42, "Visitor Surveys",              size=14,   color=C_BORDER_S, weight="bold")
-    txt(2.325, sy + 1.02, "・96,986 Hokuriku responses",  size=14.0, color=C_MUTED)
+    txt(2.325, sy + 1.02, "・97,719 Hokuriku responses",  size=14.0, color=C_MUTED)
     txt(2.325, sy + 0.74, "  (NPS + satisfaction)",       size=12.0, color=C_MUTED)
-    txt(2.325, sy + 0.46, "・71,288 free-text → Kansei NLP", size=14.0, color=C_MUTED)
+    txt(2.325, sy + 0.46, "・71,623 free-text → Kansei NLP", size=14.0, color=C_MUTED)
 
     # ── Core: Feature Engineering ──────────────────────────────────────────
     rbox(5.0, 5.71, 7.35, 1.85, C_CARD_C, C_BORDER_C, radius=0.25, lw=1.2)
@@ -1194,8 +1194,8 @@ def plot_dhde_architecture(
     txt(8.675, 2.27, "Robustness Suite", size=14, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
         "・First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8",
-        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552",
-        "・Kansei Spearman r=+0.148 (p=0.002)   under-vibrancy positive correlation",
+        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.549",
+        "・Kansei Spearman r=+0.150 (p=0.002)   under-vibrancy positive correlation",
     ]):
         txt(8.675, 1.89 - i * 0.34, ln, size=12.5, color=C_MUTED)
 
@@ -1205,7 +1205,7 @@ def plot_dhde_architecture(
          "・865,917 lost visitors/yr recovered",
          "・Rank lift: 47th  ->  ~35th nationally"),
         ("Weather-Resilient Routing",
-         "・Winter 6.27x more weather-sensitive",
+         "・Winter 6.26x more weather-sensitive",
          "・Snow / wind alerts  ->  alternate nodes"),
         ("Kansei Comfort Governance",
          "・Discomfort Index  +  Wind Chill alerts",
@@ -1266,10 +1266,10 @@ def plot_dhde_architecture(
         "・Temp | Precip | Snow | Wind | Humidity": "・気温｜降水｜積雪｜風速｜湿度",
         "・Winter sensitivity: demand gating": "・冬季感応度：需要制約",
         "・Human detection, 5-min intervals":  "・人型検知、5分間隔",
-        "・397 days, 4 spatial nodes":          "・4拠点397日分の有効データ",
-        "・96,986 Hokuriku responses":     "・北陸回答数 96,986件",
+        "・427 days, 4 spatial nodes":          "・4拠点427日分の有効データ",
+        "・97,719 Hokuriku responses":     "・北陸回答数 97,719件",
         "  (NPS + satisfaction)":          "  （NPS＋満足度）",
-        "・71,288 free-text → Kansei NLP": "・福井自由記述71,288件 → 感性NLP",
+        "・71,623 free-text → Kansei NLP": "・福井自由記述71,623件 → 感性NLP",
         # core card titles
         "Feature Engineering": "特徴量エンジニアリング",
         "OLS Regression":      "OLS回帰",
@@ -1294,10 +1294,10 @@ def plot_dhde_architecture(
         "・Top: directions, month":       "・重要特徴量：方向数・月",
         "・First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8":
             "・一階差分R²=0.708  LDV R²=0.849  Cohen f²=4.25  Newey-West有意=8",
-        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.552":
-            "・4拠点空間交差相関  石川→福井パイプライン  r=+0.552",
-        "・Kansei Spearman r=+0.148 (p=0.002)   under-vibrancy positive correlation":
-            "・感性スピアマン r=+0.148（p=0.002）  過少賑わい正の相関",
+        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.549":
+            "・4拠点空間交差相関  石川→福井パイプライン  r=+0.549",
+        "・Kansei Spearman r=+0.150 (p=0.002)   under-vibrancy positive correlation":
+            "・感性スピアマン r=+0.150（p=0.002）  過少賑わい正の相関",
         # output card titles
         "Supply-Side Nudges":          "供給側ナッジ",
         "Weather-Resilient Routing":   "気象耐性ルーティング",
@@ -1306,7 +1306,7 @@ def plot_dhde_architecture(
         # output card lines
         "・865,917 lost visitors/yr recovered":    "・年間損失来訪者865,917人の回復",
         "・Rank lift: 47th  ->  ~35th nationally": "・順位改善：全国47位→約35位",
-        "・Winter 6.27x more weather-sensitive":   "・冬季は気象感応度が6.27倍",
+        "・Winter 6.26x more weather-sensitive":   "・冬季は気象感応度が6.26倍",
         "・Snow / wind alerts  ->  alternate nodes": "・積雪・風速警報 → 代替拠点誘導",
         "・Discomfort Index  +  Wind Chill alerts": "・不快指数＋体感気温アラート",
         "・Satisfaction resilient to crowd density": "・来訪者密度に対して満足度は安定",
