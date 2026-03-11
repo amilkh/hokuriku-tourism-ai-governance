@@ -266,7 +266,7 @@ def _build_figure(geojson: dict, japanese: bool = False) -> plt.Figure:
                                 alpha=0.92,
                                 connectionstyle="arc3,rad=0.30"),
                 zorder=8)
-    spill_txt = "石川スピルオーバー\nr = +0.552" if japanese else "Ishikawa Spillover\nr = +0.552"
+    spill_txt = "石川スピルオーバー\nr = +0.549" if japanese else "Ishikawa Spillover\nr = +0.549"
     ax.text(spill_src_lon + 0.04, spill_src_lat + 0.02, spill_txt,
             ha="left", va="bottom", fontsize=8, color="#C0640A",
             fontweight="bold", zorder=9,
