@@ -947,104 +947,114 @@ def plot_rank_resurrection_projection(
         else:
             projected_ranks.append(max(38, rank - 3))
     
+    # ── Colour palette: blue/teal only ───────────────────────────────────────
+    C_CURRENT   = "#2B5C8A"   # deep blue  – current rank bars
+    C_PROJECTED = "#1A7A6E"   # teal       – projected rank bars
+    C_WINTER    = "#1A4F72"   # darkest blue – winter recovery bars
+    C_TRANS     = "#2980B9"   # mid blue   – transition month bars
+    C_SUMMER    = "#85C1E9"   # light blue – summer recovery bars
+
+    # ── Monthly recovery weighted by seasonal sensitivity (6.26× winter) ─────
+    _season_w = [6.26, 6.26, 2.5, 2.5, 2.5, 1.0,
+                 1.0,  1.0,  1.0, 2.5, 2.5, 6.26]
+    total_lost = sum(m["lost_visitors"] for m in valid_nodes.values())
+    _w_total = sum(_season_w)
+    monthly_rec_k = [total_lost * w / _w_total / 1000 for w in _season_w]
+    _bar_colors = [
+        C_WINTER if w == 6.26 else (C_TRANS if w == 2.5 else C_SUMMER)
+        for w in _season_w
+    ]
+
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-    
-    # Panel 1: Rank trajectory
+
+    # ── Panel A: rank trajectory ──────────────────────────────────────────────
     x = np.arange(len(months))
     width = 0.35
-    
-    bars1 = ax1.bar(x - width/2, current_ranks, width, label="Current Rank (47th)",
-                   color="#2B5C8A", alpha=0.8)
-    bars2 = ax1.bar(x + width/2, projected_ranks, width, label="Projected Rank (With Recovery)", 
-                   color="#27AE60", alpha=0.8)
-    
+
+    ax1.bar(x - width/2, current_ranks,  width, label="Current Rank (47th)",
+            color=C_CURRENT, alpha=0.85)
+    ax1.bar(x + width/2, projected_ranks, width, label="Projected Rank (With Recovery)",
+            color=C_PROJECTED, alpha=0.85)
+
     ax1.set_ylabel("National Ranking (Lower = Better)")
-    ax1.set_title("Fukui Prefecture Tourism Ranking: Current vs. AI-Governance Projection\n"
-                 "Recovering 865,917 lost visitors improves peak monthly rank to ~35th nationally",
-                 fontsize=12, fontweight="bold")
+    ax1.set_title("Panel (A)  -  Current vs. AI-Governance Projected Ranking\n"
+                  "Recovering 865,917 lost visitors improves peak monthly rank to ~35th nationally",
+                  fontsize=11, fontweight="bold")
     ax1.set_xticks(x)
     ax1.set_xticklabels(months)
-    ax1.legend()
+    ax1.legend(loc="lower left")
     ax1.set_ylim(25, 50)
-    ax1.invert_yaxis()  # Lower rank is better
-    ax1.axhline(y=35, color="#666", linestyle="--", alpha=0.5, label="Target: 35th")
-    ax1.axhline(y=41, color="#999", linestyle=":", alpha=0.5, label="Threshold: 41st")
-    ax1.text(0.98, 0.97, "1st = best", transform=ax1.transAxes,
-             ha="right", va="top", fontsize=9, color="#2C3E50")
+    ax1.invert_yaxis()
+    ax1.axhline(y=35, color="#555", linestyle="--", linewidth=0.9, alpha=0.6)
+    ax1.text(11.6, 35.4, "~35th target", fontsize=8, color="#555", va="bottom")
+    ax1.text(0.98, 0.97, "1st = best",   transform=ax1.transAxes,
+             ha="right", va="top",    fontsize=9, color="#2C3E50")
     ax1.text(0.98, 0.03, "47th = worst", transform=ax1.transAxes,
              ha="right", va="bottom", fontsize=9, color="#7F8C8D")
-    
-    # Annotate best improvement
-    best_idx = np.argmax(np.array(current_ranks) - np.array(projected_ranks))
+
+    best_idx = int(np.argmax(np.array(current_ranks) - np.array(projected_ranks)))
     ax1.annotate(f"+{current_ranks[best_idx] - projected_ranks[best_idx]} ranks",
-                xy=(best_idx + width/2, projected_ranks[best_idx]), 
-                xytext=(best_idx + 1, projected_ranks[best_idx] - 5),
-                arrowprops=dict(arrowstyle="->", color="green"),
-                fontsize=10, color="green", fontweight="bold")
-    
-    # Panel 2: Lost visitor recovery potential
-    lost_per_node = {name.split("(")[1].replace(")", ""): m["lost_visitors"]/1000 
-                    for name, m in valid_nodes.items()}
-    names = list(lost_per_node.keys())
-    values = list(lost_per_node.values())
-    colors = ["#E74C3C", "#3498DB", "#2ECC71", "#9B59B6"][:len(names)]
-    
-    bars3 = ax2.barh(names, values, color=colors, alpha=0.8)
-    ax2.set_xlabel("Lost Visitors (Thousands)")
-    ax2.set_title("4-Node Lost Population by Location (Recoverable Economic Potential)",
-                 fontsize=12, fontweight="bold")
-    
-    # Add value labels
-    for bar, val in zip(bars3, values):
-        ax2.text(bar.get_width() + 2, bar.get_y() + bar.get_height()/2,
-                f"{val:.0f}K", va="center", fontsize=10)
-    
-    # Summary annotation
-    total_visitors = sum(values)
-    satake_b = total_visitors * 13.811 / 1000
-    ax2.text(0.98, 0.02, f"Total: {total_visitors:.0f}K visitors\n≈ ¥{satake_b:.2f}B opportunity",
-            transform=ax2.transAxes, ha="right", va="bottom", fontsize=11,
-            bbox=dict(boxstyle="round", facecolor="#F7DC6F", alpha=0.9))
-    
+                 xy=(best_idx + width/2, projected_ranks[best_idx]),
+                 xytext=(best_idx + 1.2, projected_ranks[best_idx] - 4),
+                 arrowprops=dict(arrowstyle="->", color=C_PROJECTED, lw=1.4),
+                 fontsize=10, color=C_PROJECTED, fontweight="bold")
+
+    # ── Panel B: monthly recovered demand distribution ────────────────────────
+    import matplotlib.patches as mpatches
+
+    ax2.bar(x, monthly_rec_k, color=_bar_colors, alpha=0.88,
+            edgecolor="white", linewidth=0.4)
+    ax2.set_xlabel("Month")
+    ax2.set_ylabel("Recovered Visitors (Thousands)")
+    ax2.set_title("Panel (B)  -  Monthly Distribution of Recovered Demand\n"
+                  "Winter months allocated proportionally higher (6.26x summer sensitivity)",
+                  fontsize=11, fontweight="bold")
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(months)
+
+    for i, val in enumerate(monthly_rec_k):
+        ax2.text(i, val + 1.5, f"{val:.0f}K", ha="center", va="bottom", fontsize=8)
+
+    ax2.legend(handles=[
+        mpatches.Patch(color=C_WINTER, label="Winter (Dec-Feb)  x6.26"),
+        mpatches.Patch(color=C_TRANS,  label="Transition months  x2.5"),
+        mpatches.Patch(color=C_SUMMER, label="Summer (Jun-Sep)  x1.0"),
+    ], fontsize=9, loc="upper right")
+
+    ax2.text(0.01, 0.97,
+             f"Total recovered: {total_lost/1000:.0f}K visitors  ~  Y{total_lost*13.811/1e9:.2f}B",
+             transform=ax2.transAxes, ha="left", va="top", fontsize=10,
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="#D6EAF8",
+                       edgecolor=C_CURRENT, linewidth=0.8, alpha=0.9))
+
     fig.tight_layout()
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
-    
-    # JA version
+
+    # ── JA version ────────────────────────────────────────────────────────────
     months_ja = ["1月", "2月", "3月", "4月", "5月", "6月",
                  "7月", "8月", "9月", "10月", "11月", "12月"]
-    ax1.set_title("福井県観光ランキング：現状 vs. AIガバナンス予測\n"
-                 "86.6万人回復により月別ピーク順位が全国35位圏に改善",
-                 fontsize=12, fontweight="bold")
+    ax1.set_title("パネル（A）  -  現状 vs. AIガバナンス予測ランキング\n"
+                  "86.6万人回復により月別ピーク順位が全国35位圏に改善",
+                  fontsize=11, fontweight="bold")
     ax1.set_ylabel("全国ランキング（低い=良い）")
     ax1.set_xticklabels(months_ja)
-    ax1.text(0.98, 0.97, "1位＝最良", transform=ax1.transAxes,
-             ha="right", va="top", fontsize=9, color="#2C3E50")
+    ax1.text(0.98, 0.97, "1位＝最良",    transform=ax1.transAxes,
+             ha="right", va="top",    fontsize=9, color="#2C3E50")
     ax1.text(0.98, 0.03, "47位＝最下位", transform=ax1.transAxes,
              ha="right", va="bottom", fontsize=9, color="#7F8C8D")
-    ax1.legend([
-        "現在の順位 (47位)",
-        "回復後予測順位",
-        "目標：35位",
-        "閾値：41位",
-    ])
+    ax1.legend(["現在の順位 (47位)", "回復後予測順位"], loc="lower left")
 
-    ax2.set_title("4拠点喪失人口（回復可能な経済ポテンシャル）",
-                 fontsize=12, fontweight="bold")
-    ax2.set_xlabel("喪失来訪者数（千人）")
-    # Translate node names on y-axis
-    _node_ja = {
-        "Tojinbo/Mikuni": "東尋坊/三国",
-        "Fukui Station": "福井駅",
-        "Katsuyama/Dinosaur": "勝山/恐竜博物館",
-        "Rainbow Line/Wakasa": "レインボーライン/若狭",
-    }
-    ax2.set_yticklabels([_node_ja.get(n, n) for n in names])
-    # Move yellow summary box to top-left to avoid overlapping bars
-    for child in ax2.get_children():
-        if hasattr(child, "get_text") and "Total:" in child.get_text():
-            child.set_position((0.02, 0.98))
-            child.set_ha("left")
-            child.set_va("top")
+    ax2.set_title("パネル（B）  -  回復需要の月別分布\n"
+                  "冬季に比例配分増（夏季比6.26倍の感度）",
+                  fontsize=11, fontweight="bold")
+    ax2.set_xlabel("月")
+    ax2.set_ylabel("回復来訪者数（千人）")
+    ax2.set_xticklabels(months_ja)
+    ax2.legend(handles=[
+        mpatches.Patch(color=C_WINTER, label="冬季（12〜2月）×6.26"),
+        mpatches.Patch(color=C_TRANS,  label="移行期　×2.5"),
+        mpatches.Patch(color=C_SUMMER, label="夏季（6〜9月）×1.0"),
+    ], fontsize=9, loc="upper right")
 
     ja_path = out_path.replace(".png", "_ja.png")
     _apply_japanese_font(fig)
