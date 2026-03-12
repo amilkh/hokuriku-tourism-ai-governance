@@ -111,7 +111,7 @@ class Reporter:
                     "--force",
                     "--ext",
                     ".png",
-                    "--quality=80-100",
+                    "--quality=85-95",
                     "--speed",
                     "1",
                     "--strip",

@@ -260,6 +260,8 @@ def plot_rf_prediction(
 ) -> plt.Figure:
     """Actual vs RF-predicted time-series."""
     fig, ax = plt.subplots(figsize=(14, 5.8))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
     ax.plot(dates, y_actual, label="Actual", color="tab:blue", alpha=0.8)
     ax.plot(dates, y_pred, label="RF Predicted", color="tab:red", alpha=0.7, linestyle="--")
     ax.set_title("")
@@ -384,6 +386,8 @@ def plot_ccf(
         return None
     ccf_df = pd.DataFrame(ccf_results, columns=["lag", "r", "n"])
     fig, ax = plt.subplots(figsize=(10, 5))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
     colors = ["tab:red" if r < 0 else "steelblue" for r in ccf_df["r"]]
     ax.bar(ccf_df["lag"], ccf_df["r"], color=colors)
 
@@ -414,11 +418,11 @@ def plot_ccf(
         xy=(best_lag, best_r),
         xytext=(best_lag + 1, min(y_max - 0.03, best_r + 0.06)),
         arrowprops=dict(arrowstyle="->", color="#2C3E50", lw=1.2),
-        fontsize=9,
+        fontsize=10,
         color="#2C3E50",
         bbox=dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.85, edgecolor="#2C3E50"),
     )
-    ax.legend()
+    ax.legend(fontsize=10)
     fig.tight_layout()
     def _ja(fig_ja: plt.Figure) -> None:
         ax_ja = fig_ja.axes[0]
@@ -755,6 +759,8 @@ def plot_weather_shield_network(
         return None
 
     fig, ax = plt.subplots(figsize=(12, 8))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
 
     # Node positions (geographic layout of Fukui)
     positions = {
@@ -814,7 +820,7 @@ def plot_weather_shield_network(
                 mid_x = (ax_x + tx) / 2 + (0.08 if rad > 0 else -0.08)
                 mid_y = (ax_y + ty) / 2 + (0.06 if rad > 0 else -0.06)
                 ax.text(mid_x, mid_y, "weather\nreroute",
-                        ha="center", va="center", fontsize=7,
+                        ha="center", va="center", fontsize=10,
                         color="#1A5276", style="italic", zorder=3)
 
     # 3. Draw nodes (radius ∝ lost visitors)
@@ -834,7 +840,7 @@ def plot_weather_shield_network(
                ha="center", va="bottom", fontsize=10, fontweight="bold", zorder=6)
 
         ax.text(x, y - radius - 0.025, f"{lost_k:.0f}K lost/yr",
-               ha="center", va="top", fontsize=8, color="#444", zorder=6)
+               ha="center", va="top", fontsize=10, color="#444", zorder=6)
 
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
@@ -852,13 +858,13 @@ def plot_weather_shield_network(
         Line2D([0], [0], color="#2471A3", lw=2, label="Bad-weather reroute"),
         Line2D([0], [0], color="#D5D8DC", lw=1.5, label="Hub connection"),
     ]
-    ax.legend(handles=legend_elements, loc="lower right", fontsize=9,
+    ax.legend(handles=legend_elements, loc="lower right", fontsize=10,
               framealpha=0.9)
 
     # Bubble size note
     total_lost = sum(m["lost_visitors"] for m in valid_nodes.values()) / 1000
     ax.text(0.02, 0.97, "Bubble area ∝ lost visitors per node",
-            transform=ax.transAxes, fontsize=8, color="#777",
+            transform=ax.transAxes, fontsize=10, color="#777",
             va="top", style="italic")
 
     fig.tight_layout()
@@ -894,7 +900,7 @@ def plot_weather_shield_network(
         Line2D([0], [0], color="#2471A3", lw=2, label="悪天候時誘導経路"),
         Line2D([0], [0], color="#D5D8DC", lw=1.5, label="拠点接続"),
     ]
-    ax.legend(handles=legend_elements_ja, loc="lower right", fontsize=9,
+    ax.legend(handles=legend_elements_ja, loc="lower right", fontsize=10,
               framealpha=0.9)
 
     ja_path = out_path.replace(".png", "_ja.png")
@@ -976,6 +982,9 @@ def plot_rank_resurrection_projection(
     import matplotlib.patches as mpatches
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8.5))
+    fig.patch.set_facecolor("white")
+    ax1.set_facecolor("white")
+    ax2.set_facecolor("white")
 
     # ── Panel A: rank trajectory ──────────────────────────────────────────────
     x = np.arange(len(months))
@@ -993,7 +1002,7 @@ def plot_rank_resurrection_projection(
     ax1.set_xticks(x)
     ax1.set_xticklabels(months)
     ax1.set_xlim(-0.6, 11.8)
-    ax1.legend(loc="lower left", fontsize=9)
+    ax1.legend(loc="lower left", fontsize=10)
     ax1.set_ylim(27, 49)
     ax1.invert_yaxis()
     ax1.set_yticks(range(30, 46, 5))
@@ -1027,13 +1036,13 @@ def plot_rank_resurrection_projection(
 
     for i, val in enumerate(monthly_rec_k):
         ax2.text(i, val + max(monthly_rec_k) * 0.01,
-                 f"{val:.0f}K", ha="center", va="bottom", fontsize=8)
+                 f"{val:.0f}K", ha="center", va="bottom", fontsize=10)
 
     ax2.legend(handles=[
         mpatches.Patch(color=C_WINTER, label="Winter (Dec-Feb)"),
         mpatches.Patch(color=C_TRANS,  label="Transition (Mar-May, Oct-Nov)"),
         mpatches.Patch(color=C_SUMMER, label="Summer (Jun-Sep)"),
-    ], fontsize=9, loc="upper center")
+    ], fontsize=10, loc="upper center")
 
 
     fig.tight_layout(pad=1.5)
@@ -1047,7 +1056,7 @@ def plot_rank_resurrection_projection(
                   fontsize=11, fontweight="bold")
     ax1.set_ylabel("全国ランキング（低い=良い）")
     ax1.set_xticklabels(months_ja)
-    ax1.legend(["現在の順位", "回復後予測順位"], loc="lower left", fontsize=9)
+    ax1.legend(["現在の順位", "回復後予測順位"], loc="lower left", fontsize=10)
 
     ax2.set_title("パネル（B）  -  回復需要の月別分布（86.6万人）\n"
                   "季節係数適用：冬季6.26倍  |  出典：japan-kanko-stat / 観光庁2025",
@@ -1059,7 +1068,7 @@ def plot_rank_resurrection_projection(
         mpatches.Patch(color=C_WINTER, label="冬季（12〜2月）"),
         mpatches.Patch(color=C_TRANS,  label="移行期（3〜5月・10〜11月）"),
         mpatches.Patch(color=C_SUMMER, label="夏季（6〜9月）"),
-    ], fontsize=9, loc="upper center")
+    ], fontsize=10, loc="upper center")
 
     ja_path = out_path.replace(".png", "_ja.png")
     _apply_japanese_font(fig)
