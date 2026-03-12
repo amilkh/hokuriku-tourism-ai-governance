@@ -292,7 +292,7 @@ def main() -> None:
     # produced later as part of the spatial section and copied below.
     viz.plot_resurrection(
         sim_df, total_lost, mean_actual_rank, mean_hypo_rank,
-        os.path.join(fig_dir, "fig16_resurrection_temp.png"),
+        os.path.join("/tmp", "fig16_resurrection_temp.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -341,22 +341,15 @@ def main() -> None:
     # do NOT overwrite with the bubble network diagram.
     viz.plot_weather_shield_network(
         spatial.get("valid_nodes", {}),
-        os.path.join(fig_dir, "fig_weather_shield_network.png"),
+        os.path.join("/tmp", "fig_weather_shield_network.png"),
         rpt, dpi=300)
 
     fig_num += 1
-    _rank_proj_path = os.path.join(fig_dir, f"fig{fig_num:02d}_rank_projection.png")
     viz.plot_rank_resurrection_projection(
         spatial.get("valid_nodes", {}),
         cfg.get("ranking", {}),
-        _rank_proj_path,
+        os.path.join(fig_dir, "paper_fig3_ranking_recovery.png"),
         rpt, dpi=300)
-    # paper_fig3 is this polished dual-panel projection (not plot_resurrection)
-    shutil.copyfile(_rank_proj_path,
-                    os.path.join(fig_dir, "paper_fig3_ranking_recovery.png"))
-    _rank_proj_ja = _rank_proj_path.replace(".png", "_ja.png")
-    shutil.copyfile(_rank_proj_ja,
-                    os.path.join(fig_dir, "paper_fig3_ranking_recovery_ja.png"))
 
     viz.plot_dhde_architecture(
         os.path.join(fig_dir, "paper_fig1_dhde_architecture.png"),
