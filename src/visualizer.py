@@ -965,19 +965,13 @@ def plot_rank_resurrection_projection(
         for w in _season_w
     ]
 
-    # ── Projected ranks: use per-month recovery consistent with Panel B ───────
-    # This avoids overstating summer rank improvement (summer only gets ~25K/mo)
+    # ── Projected ranks: proportional to gap coverage, scaled 0–12 rank positions
+    # improvement = (rec / gap) * 12, capped at 12.  Smooth, no cliff-edges.
     projected_ranks = []
-    for i, (rank, gap_k) in enumerate(zip(current_ranks, gap_to_41_k)):
-        rec_k = monthly_rec_k[i]
-        if rec_k >= gap_k * 2:       # major recovery: >2× the gap to rank 41
-            projected_ranks.append(max(35, rank - 12))
-        elif rec_k >= gap_k:         # moderate: meets the gap
-            projected_ranks.append(max(40, rank - 6))
-        elif rec_k >= gap_k * 0.5:  # minor: half the gap
-            projected_ranks.append(max(44, rank - 2))
-        else:
-            projected_ranks.append(rank)  # no meaningful change
+    for rank, gap_k, rec_k in zip(current_ranks, gap_to_41_k, monthly_rec_k):
+        coverage = rec_k / gap_k if gap_k > 0 else 0
+        improvement = min(12, int(coverage * 12))
+        projected_ranks.append(max(35, rank - improvement))
 
     import matplotlib.patches as mpatches
 
@@ -993,23 +987,18 @@ def plot_rank_resurrection_projection(
             color=C_PROJECTED, alpha=0.85)
 
     ax1.set_ylabel("National Ranking (Lower = Better)")
-    ax1.set_title("Panel (A)  -  Current vs. AI-Governance Projected Ranking\n"
-                  "Recovering 865,917 lost visitors improves peak monthly rank to ~35th nationally",
+    ax1.set_title("Panel (A)  -  Current vs. Projected Ranking  (4-Node Recovery)\n"
+                  "Four nodes close up to 66% of monthly shortfall; prefecture-wide deployment projects top-35 ranking",
                   fontsize=11, fontweight="bold")
     ax1.set_xticks(x)
     ax1.set_xticklabels(months)
     ax1.set_xlim(-0.6, 11.8)
     ax1.legend(loc="lower left", fontsize=9)
-    ax1.set_ylim(28, 50)
+    ax1.set_ylim(27, 49)
     ax1.invert_yaxis()
+    ax1.set_yticks(range(30, 46, 5))
+    ax1.set_yticklabels([str(i) for i in range(30, 46, 5)])
     ax1.axhline(y=35, color="#555", linestyle="--", linewidth=0.9, alpha=0.7)
-    # Use axes-fraction x so the label is always inside the plot
-    ax1.text(0.99, 0.08, "- - 35th target", transform=ax1.transAxes,
-             ha="right", va="bottom", fontsize=8, color="#555")
-    ax1.text(0.99, 0.97, "1st = best",   transform=ax1.transAxes,
-             ha="right", va="top",    fontsize=9, color="#2C3E50")
-    ax1.text(0.99, 0.03, "47th = worst", transform=ax1.transAxes,
-             ha="right", va="bottom", fontsize=9, color="#7F8C8D")
 
     # Annotation on the best-improvement bar (first winter month)
     improvements = [c - p for c, p in zip(current_ranks, projected_ranks)]
@@ -1028,8 +1017,8 @@ def plot_rank_resurrection_projection(
             edgecolor="white", linewidth=0.4)
     ax2.set_xlabel("Month")
     ax2.set_ylabel("Recovered Visitors (Thousands)")
-    ax2.set_title("Panel (B)  -  Monthly Distribution of Recovered Demand\n"
-                  "Winter months allocated proportionally higher (6.26x summer weather sensitivity)",
+    ax2.set_title("Panel (B)  -  Monthly Distribution of Recovered Demand  (865,917 visitors)\n"
+                  "Seasonal weights applied: winter 6.26× summer  |  Source: japan-kanko-stat / JTA 2025",
                   fontsize=11, fontweight="bold")
     ax2.set_xticks(x)
     ax2.set_xticklabels(months)
@@ -1044,13 +1033,8 @@ def plot_rank_resurrection_projection(
         mpatches.Patch(color=C_WINTER, label="Winter (Dec-Feb)"),
         mpatches.Patch(color=C_TRANS,  label="Transition (Mar-May, Oct-Nov)"),
         mpatches.Patch(color=C_SUMMER, label="Summer (Jun-Sep)"),
-    ], fontsize=9, loc="upper left")
+    ], fontsize=9, loc="upper center")
 
-    ax2.text(0.99, 0.97,
-             f"Total: {total_lost/1000:.0f}K visitors  |  ~Y{total_lost*13.811/1e9:.2f}B",
-             transform=ax2.transAxes, ha="right", va="top", fontsize=9,
-             bbox=dict(boxstyle="round,pad=0.3", facecolor="#D6EAF8",
-                       edgecolor=C_CURRENT, linewidth=0.8, alpha=0.9))
 
     fig.tight_layout(pad=1.5)
     reporter.save_fig(fig, out_path, dpi=dpi, ja_copy=False)
@@ -1058,21 +1042,15 @@ def plot_rank_resurrection_projection(
     # ── JA version ────────────────────────────────────────────────────────────
     months_ja = ["1月", "2月", "3月", "4月", "5月", "6月",
                  "7月", "8月", "9月", "10月", "11月", "12月"]
-    ax1.set_title("パネル（A）  -  現状 vs. AIガバナンス予測ランキング\n"
-                  "86.6万人回復により月別ピーク順位が全国35位圏に改善",
+    ax1.set_title("パネル（A）  -  現状 vs. 予測ランキング（4拠点回復）\n"
+                  "4拠点のみで月次不足分の最大66%を補填；全県展開で全国35位圏を射程に",
                   fontsize=11, fontweight="bold")
     ax1.set_ylabel("全国ランキング（低い=良い）")
     ax1.set_xticklabels(months_ja)
-    ax1.text(0.99, 0.08, "- - 35位目標", transform=ax1.transAxes,
-             ha="right", va="bottom", fontsize=8, color="#555")
-    ax1.text(0.99, 0.97, "1位＝最良",    transform=ax1.transAxes,
-             ha="right", va="top",    fontsize=9, color="#2C3E50")
-    ax1.text(0.99, 0.03, "47位＝最下位", transform=ax1.transAxes,
-             ha="right", va="bottom", fontsize=9, color="#7F8C8D")
     ax1.legend(["現在の順位", "回復後予測順位"], loc="lower left", fontsize=9)
 
-    ax2.set_title("パネル（B）  -  回復需要の月別分布\n"
-                  "冬季に比例配分増（夏季比6.26倍の気象感度）",
+    ax2.set_title("パネル（B）  -  回復需要の月別分布（86.6万人）\n"
+                  "季節係数適用：冬季6.26倍  |  出典：japan-kanko-stat / 観光庁2025",
                   fontsize=11, fontweight="bold")
     ax2.set_xlabel("月")
     ax2.set_ylabel("回復来訪者数（千人）")
@@ -1081,7 +1059,7 @@ def plot_rank_resurrection_projection(
         mpatches.Patch(color=C_WINTER, label="冬季（12〜2月）"),
         mpatches.Patch(color=C_TRANS,  label="移行期（3〜5月・10〜11月）"),
         mpatches.Patch(color=C_SUMMER, label="夏季（6〜9月）"),
-    ], fontsize=9, loc="upper left")
+    ], fontsize=9, loc="upper center")
 
     ja_path = out_path.replace(".png", "_ja.png")
     _apply_japanese_font(fig)
