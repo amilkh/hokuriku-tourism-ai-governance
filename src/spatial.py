@@ -386,6 +386,34 @@ def multi_node_analysis(
     except (KeyError, Exception):
         node_d_weather = pd.DataFrame(columns=["date", "temp", "precip", "wind", "snow_depth"])
 
+    # ── Survey proxy validation (Node C fallback) ─────────────────────────────
+    # Validate that daily survey-response frequency is a reliable density proxy
+    # by correlating Fukui-area survey volumes with Tojinbo ground-truth counts.
+    proxy_validation: dict[str, Any] = {}
+    if node_c_source == "survey_proxy" and survey_all is not None and not node_a_counts.empty:
+        try:
+            from scipy import stats as _stats
+            fukui_daily_survey = (
+                survey_all[survey_all["prefecture"].astype(str).str.contains("福井", na=False)]
+                .groupby("date").size().reset_index(name="survey_count")
+            )
+            val_df = node_a_counts.merge(fukui_daily_survey, on="date", how="inner").dropna()
+            if len(val_df) >= 30:
+                proxy_r, proxy_p = _stats.pearsonr(val_df["count"], val_df["survey_count"])
+                proxy_validation = {
+                    "proxy_r": float(proxy_r),
+                    "proxy_p": float(proxy_p),
+                    "proxy_n": int(len(val_df)),
+                }
+                reporter.log(
+                    f"\n★ Survey Proxy Validation (Fukui daily survey vol vs Tojinbo camera):"
+                    f"\n  Pearson r = {proxy_r:.3f}, p = {proxy_p:.3e} (n={len(val_df)})"
+                )
+            else:
+                reporter.log(f"Survey proxy validation: insufficient overlap (n={len(val_df)}).")
+        except Exception as _e:
+            reporter.log(f"Survey proxy validation skipped: {_e}")
+
     node_metrics: dict[str, dict[str, Any] | None] = {}
     nodes_to_analyze = [
         ("Node A (Tojinbo/Mikuni)", node_a_counts, node_a_weather),
@@ -488,4 +516,5 @@ def multi_node_analysis(
         "satake_yen": satake_yen,
         "spatial_heat_df": heat_df,
         "ishikawa_lag_results": ishikawa_lag_results,
+        "proxy_validation": proxy_validation,
     }

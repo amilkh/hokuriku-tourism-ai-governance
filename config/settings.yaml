@@ -51,7 +51,7 @@ model:
 # ─── Economics ────────────────────────────────────────────────────────────────
 economics:
   spending_per_visitor_yen: 13811.0
-  usd_exchange_rate: 156.81
+  usd_exchange_rate: 157.0
 
 # ─── Kansei Engineering ──────────────────────────────────────────────────────
 kansei:

@@ -250,16 +250,17 @@ def main() -> None:
     rigor = statistical_rigor(model_df, ols_result, feature_cols, rpt)
 
     # ══════════════════════════════════════════════════════════════════════
-    # 13. RANKING SIMULATION (FUKUI RESURRECTION)
+    # 13. RANKING SIMULATION (preliminary – single-node, for resurrection fig)
+    # The definitive 4-node simulation runs after step 20 (multi_node_analysis).
     # ══════════════════════════════════════════════════════════════════════
-    ranking_data = ranking_simulation(
+    ranking_data_prelim = ranking_simulation(
         total_lost, gap_model, rpt,
         ranking_cfg=cfg.get("ranking"),
     )
-    sim_df = ranking_data["sim_df"]
-    mean_actual_rank = ranking_data["mean_actual_rank"]
-    mean_hypo_rank = ranking_data["mean_hypo_rank"]
-    best_improvement = ranking_data["best_improvement"]
+    sim_df = ranking_data_prelim["sim_df"]
+    mean_actual_rank = ranking_data_prelim["mean_actual_rank"]
+    mean_hypo_rank = ranking_data_prelim["mean_hypo_rank"]
+    best_improvement = ranking_data_prelim["best_improvement"]
 
     # ══════════════════════════════════════════════════════════════════════
     # 14. SEASONAL SENSITIVITY
@@ -308,9 +309,6 @@ def main() -> None:
         mean_spending = raw_survey["spending_midpoint"].mean()
     total_yen_loss = abs(total_lost) * mean_spending if mean_spending else 0
 
-    _write_bolstered(rpt, locals())
-    _write_executive(rpt, locals())
-
     # ══════════════════════════════════════════════════════════════════════
     # 17. ECONOMIC WEIGHTING
     # ══════════════════════════════════════════════════════════════════════
@@ -330,6 +328,23 @@ def main() -> None:
     except Exception as exc:
         logger.warning("multi_node_analysis failed (%s); continuing with empty spatial data.", exc)
         spatial = {"valid_nodes": {}, "node_count": 0}
+
+    # ══════════════════════════════════════════════════════════════════════
+    # 20b. DEFINITIVE RANKING SIMULATION (4-node Satake total)
+    # ══════════════════════════════════════════════════════════════════════
+    satake_total = spatial.get("satake_lost_visitors", total_lost)
+    ranking_data = ranking_simulation(
+        satake_total, gap_model, rpt,
+        ranking_cfg=cfg.get("ranking"),
+        total_override=satake_total,
+    )
+    sim_df = ranking_data["sim_df"]
+    mean_actual_rank = ranking_data["mean_actual_rank"]
+    mean_hypo_rank = ranking_data["mean_hypo_rank"]
+    best_improvement = ranking_data["best_improvement"]
+
+    _write_bolstered(rpt, locals())
+    _write_executive(rpt, locals())
 
     fig_num += 1
     viz.plot_spatial_friction(
@@ -461,12 +476,13 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
 
     rpt.metrics(f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  6. RANKING IMPACT SIMULATION (Fukui Resurrection)
+  6. RANKING IMPACT SIMULATION (Fukui Resurrection – 4-node Satake total)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Total lost visitors:        {total_lost:,.0f}
+  4-node Satake total:        {ctx.get('satake_total', total_lost):,.0f}
   Winter actual mean rank:    {ctx['mean_actual_rank']:.1f}
   Winter hypothetical rank:   {ctx['mean_hypo_rank']:.1f}
   Best monthly improvement:   {ctx['best_improvement']} ranks
+  Shortfall closure range:    {ctx['ranking_data'].get('min_closure_pct', 0):.1f}% – {ctx['ranking_data'].get('max_closure_pct', 0):.1f}%
 """)
 
     rpt.metrics(f"""
@@ -587,8 +603,9 @@ def _write_metrics(rpt: Reporter, ctx: dict, spatial: dict, cfg: dict) -> None:
                 rpt.metrics(f"  {key}={nudge[key]:+.4f}")
 
     spending = cfg["economics"]["spending_per_visitor_yen"]
+    usd_rate = cfg["economics"].get("usd_exchange_rate", 157.0)
     node_count = spatial.get("node_count", 3)
-    
+
     # ★ UPDATED: 4-Node Satake Number
     rpt.metrics(f"FourNode_Satake_Number (nodes={node_count})")
     rpt.metrics(f"  Node_D_Status={spatial.get('node_d_source', 'not_available')}")
@@ -597,8 +614,33 @@ def _write_metrics(rpt: Reporter, ctx: dict, spatial: dict, cfg: dict) -> None:
     rpt.metrics(f"  Total_Lost_Yen={spatial.get('satake_yen', 0):.2f}")
     satake_billion = spatial.get('satake_yen', 0) / 1e9
     rpt.metrics(f"  Total_Lost_Billion_Yen={satake_billion:.3f}")
+    satake_usd_m = spatial.get('satake_yen', 0) / usd_rate / 1e6
+    rpt.metrics(f"  USD_Exchange_Rate={usd_rate:.1f}")
+    rpt.metrics(f"  Total_Lost_USD_Million={satake_usd_m:.1f}")
     if node_count >= 4:
         rpt.metrics("  ★ GEOGRAPHIC_SATURATION=ACHIEVED (North/Central/South/East)")
+
+    # Survey proxy validation (Node C)
+    pv = spatial.get("proxy_validation", {})
+    if pv:
+        rpt.metrics(f"Survey_Proxy_Validation")
+        rpt.metrics(f"  Pearson_r={pv.get('proxy_r', float('nan')):.3f}")
+        rpt.metrics(f"  p_value={pv.get('proxy_p', float('nan')):.3e}")
+        rpt.metrics(f"  n={pv.get('proxy_n', 0)}")
+
+    # Ranking simulation (4-node)
+    ranking_data_ctx = ctx.get("ranking_data", {})
+    rpt.metrics(f"Ranking_Simulation_4Node")
+    rpt.metrics(f"  Best_Monthly_Improvement={ctx.get('best_improvement', 0)}_ranks")
+    rpt.metrics(f"  Shortfall_Closure_Min={ranking_data_ctx.get('min_closure_pct', 0):.1f}%")
+    rpt.metrics(f"  Shortfall_Closure_Max={ranking_data_ctx.get('max_closure_pct', 0):.1f}%")
+
+    # Chi-square test
+    text_ctx = ctx.get("text_result", {})
+    if "chi2_stat" in text_ctx:
+        rpt.metrics(f"Undervibrancy_ChiSquare")
+        rpt.metrics(f"  chi2={text_ctx['chi2_stat']:.1f}")
+        rpt.metrics(f"  p={text_ctx['chi2_p']:.3e}")
     
     for nm, lag, r, n in spatial.get("ishikawa_lag_results", []):
         rpt.metrics(f"  {nm}: lag={lag:+d}, r={r:+.6f}, n={n}")

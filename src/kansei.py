@@ -386,6 +386,22 @@ def text_mine_undervibrancy(
     reporter.log(f"\n  High-sat vibrancy mentions: {high_hits} ({pct_high:.1f}%)")
     reporter.log(f"  ★ Ratio: {ratio:.1f}x more prevalent in dissatisfied visitors")
 
+    # Chi-square test of proportions (low-sat vs high-sat under-vibrancy rate)
+    n_low_sat = len(low_sat)
+    n_high_sat_total = len(high_sat)
+    if n_low_sat > 0 and n_high_sat_total > 0:
+        obs = np.array([
+            [hits, n_low_sat - hits],
+            [high_hits, n_high_sat_total - high_hits],
+        ])
+        chi2_stat, chi2_p, _, _ = stats.chi2_contingency(obs)
+        result["chi2_stat"] = float(chi2_stat)
+        result["chi2_p"] = float(chi2_p)
+        reporter.log(
+            f"\n  Chi-square test (under-vibrancy low-sat vs high-sat): "
+            f"χ² = {chi2_stat:.1f}, p = {chi2_p:.3e}"
+        )
+
     return result
 
 

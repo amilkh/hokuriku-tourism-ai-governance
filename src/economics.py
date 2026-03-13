@@ -129,6 +129,7 @@ def ranking_simulation(
     reporter: Reporter,
     *,
     ranking_cfg: dict[str, Any] | None = None,
+    total_override: float | None = None,
 ) -> dict[str, Any]:
     """Simulate national ranking improvement from recovered visitors.
 
@@ -137,10 +138,14 @@ def ranking_simulation(
         gap_model: Gap days DataFrame with ``date`` and ``lost_population``.
         reporter: ``Reporter``.
         ranking_cfg: Config section with ranking baselines.
+        total_override: When provided (e.g. 4-node Satake total), distribute
+            this figure across months using seasonal weights matching the
+            6.26× winter/summer sensitivity ratio, overriding ``gap_model``
+            monthly sums.
 
     Returns:
         Dict with ``sim_df``, ``mean_actual_rank``, ``mean_hypo_rank``,
-        ``best_improvement``.
+        ``best_improvement``, ``min_closure_pct``, ``max_closure_pct``.
     """
     reporter.section(13, "Ranking Impact Simulation (Fukui Resurrection)")
 
@@ -159,29 +164,44 @@ def ranking_simulation(
         "gap_to_rank41_k": gap_41_k,
     })
 
+    effective_total = total_override if total_override is not None else total_lost
+
     # Monthly distribution of lost visitors
-    if len(gap_model) > 0 and "date" in gap_model.columns:
+    if total_override is not None:
+        # Distribute using seasonal weights that reflect the 6.26× winter/summer
+        # weather-sensitivity ratio (matches plot_rank_resurrection_projection).
+        season_w = [6.26, 6.26, 2.5, 2.5, 2.5, 1.0, 1.0, 1.0, 1.0, 2.5, 2.5, 6.26]
+        w_total = sum(season_w)
+        monthly = pd.DataFrame({
+            "month": list(range(1, 13)),
+            "monthly_lost": [effective_total * w / w_total for w in season_w],
+        })
+        reporter.log(f"\nUsing 4-node total ({effective_total:,.0f}) with seasonal weights.")
+    elif len(gap_model) > 0 and "date" in gap_model.columns:
         gm = gap_model.copy()
         gm["month"] = gm["date"].dt.month
         monthly = gm.groupby("month")["lost_population"].sum().reset_index()
         monthly.columns = ["month", "monthly_lost"]
     else:
         monthly = pd.DataFrame({
-            "month": range(1, 13),
-            "monthly_lost": [total_lost / 12] * 12,
+            "month": list(range(1, 13)),
+            "monthly_lost": [effective_total / 12] * 12,
         })
 
     sim_df = sim_df.merge(monthly, on="month", how="left")
     sim_df["monthly_lost"] = sim_df["monthly_lost"].fillna(0)
 
-    # Estimate rank gains
+    # Estimate rank gains using coverage formula: improvement = min(12, int(coverage × 12))
+    # This matches the visualizer (plot_rank_resurrection_projection) formula exactly.
+    sim_df["closure_pct"] = 0.0
     sim_df["ranks_gained"] = 0
     for idx, row in sim_df.iterrows():
         extra_k = row["monthly_lost"] / 1000
         gap_k = row["gap_to_rank41_k"]
         if gap_k > 0 and extra_k > 0:
-            rank_per_k = 6.0 / gap_k
-            sim_df.at[idx, "ranks_gained"] = min(int(extra_k * rank_per_k), 10)
+            coverage = extra_k / gap_k
+            sim_df.at[idx, "closure_pct"] = coverage * 100
+            sim_df.at[idx, "ranks_gained"] = min(12, int(coverage * 12))
 
     sim_df["hypo_rank"] = (sim_df["fukui_rank_2025"] - sim_df["ranks_gained"]).clip(lower=1)
 
@@ -189,18 +209,31 @@ def ranking_simulation(
     winter = sim_df[sim_df["month"].isin([1, 2, 12])]
     mean_actual = winter["fukui_rank_2025"].mean()
     mean_hypo = winter["hypo_rank"].mean()
-    best = sim_df["ranks_gained"].max()
+    best = int(sim_df["ranks_gained"].max())
 
-    reporter.log(f"\n★ RESURRECTION SUMMARY:")
-    reporter.log(f"  Winter actual mean rank:  {mean_actual:.1f}")
-    reporter.log(f"  Winter hypothetical rank: {mean_hypo:.1f}")
-    reporter.log(f"  Best monthly improvement: {best} ranks")
+    valid_closure = sim_df[sim_df["gap_to_rank41_k"] > 0]["closure_pct"]
+    min_closure = float(valid_closure.min()) if len(valid_closure) > 0 else 0.0
+    max_closure = float(valid_closure.max()) if len(valid_closure) > 0 else 0.0
+
+    reporter.log(f"\n★ RESURRECTION SUMMARY (effective total: {effective_total:,.0f}):")
+    reporter.log(f"  Winter actual mean rank:    {mean_actual:.1f}")
+    reporter.log(f"  Winter hypothetical rank:   {mean_hypo:.1f}")
+    reporter.log(f"  Best monthly improvement:   {best} ranks")
+    reporter.log(f"  Shortfall closure range:    {min_closure:.1f}% – {max_closure:.1f}%")
+
+    jan = sim_df[sim_df["month"] == 1].iloc[0]
+    reporter.log(
+        f"  January: rank {int(jan['fukui_rank_2025'])}→{int(jan['hypo_rank'])} "
+        f"(+{int(jan['ranks_gained'])} ranks, {jan['closure_pct']:.1f}% shortfall closure)"
+    )
 
     return {
         "sim_df": sim_df,
         "mean_actual_rank": mean_actual,
         "mean_hypo_rank": mean_hypo,
         "best_improvement": best,
+        "min_closure_pct": min_closure,
+        "max_closure_pct": max_closure,
     }
 
 
