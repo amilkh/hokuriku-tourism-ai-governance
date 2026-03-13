@@ -1237,7 +1237,7 @@ def plot_dhde_architecture(
          "・Discomfort Index  +  Wind Chill alerts",
          "・Satisfaction resilient to crowd density"),
         ("Economic Impact Dashboard",
-         "・Annual loss: ¥11.96B  (~$76.3M USD)",
+         "・Annual loss: ¥11.96B  (~$72.6M USD)",
          "・4-node geographic saturation achieved"),
     ]
     for (title, line1, line2), oy in zip(outputs, sy_starts):
@@ -1336,7 +1336,7 @@ def plot_dhde_architecture(
         "・Snow / wind alerts  ->  alternate nodes": "・積雪・風速警報 → 代替拠点誘導",
         "・Discomfort Index  +  Wind Chill alerts": "・不快指数＋体感気温アラート",
         "・Satisfaction resilient to crowd density": "・来訪者密度に対して満足度は安定",
-        "・Annual loss: ¥11.96B  (~$76.3M USD)":    "・年間損失：¥11.96B（約76.3M USD）",
+        "・Annual loss: ¥11.96B  (~$72.6M USD)":    "・年間損失：¥11.96B（約72.6M USD）",
         "・4-node geographic saturation achieved":  "・4拠点による地理的飽和達成",
         # footer
         "Data: Fukui Prefecture AI cameras  |  JMA  |  Route Search Impressions (RSI)  |  Hokuriku Survey  2024-2026":
