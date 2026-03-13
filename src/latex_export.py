@@ -365,9 +365,9 @@ def export_all_tables(
     spatial = results.get("spatial", {})
     if "total_lost" in economics:
         kv["Lost Visitors (single-node)"] = int(economics["total_lost"])
-    if "satake_lost_visitors" in spatial:
-        kv["Lost Visitors (3-node)"] = int(spatial["satake_lost_visitors"])
-        kv["Satake Number (\u00a5)"] = f"\u00a5{spatial['satake_yen']:,.0f}"
+    if "aggregate_lost_visitors" in spatial:
+        kv["Lost Visitors (multi-node)"] = int(spatial["aggregate_lost_visitors"])
+        kv["Aggregate Revenue Loss (\u00a5)"] = f"\u00a5{spatial['aggregate_yen']:,.0f}"
     ccf_res = results.get("ccf", {})
     if "best_r" in ccf_res:
         kv["Ishikawa CCF r"] = ccf_res["best_r"]

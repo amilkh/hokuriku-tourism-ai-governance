@@ -324,7 +324,7 @@ def multi_node_analysis(
         reporter: ``Reporter``.
 
     Returns:
-        Dict with ``valid_nodes``, ``nudge``, ``satake``, ``spatial_heat_df``,
+        Dict with ``valid_nodes``, ``nudge``, ``aggregate_loss``, ``spatial_heat_df``,
         ``ishikawa_lag_results``, ``node_count`` (4-node).
     """
 
@@ -453,13 +453,13 @@ def multi_node_analysis(
     wind_threshold = cfg.get("thresholds", {}).get("wind_nudge_ms", 10.0)
     nudge = atmospheric_nudge_analysis(valid_nodes, wind_threshold, reporter)
 
-    satake_lost = float(sum(v["lost_visitors"] for v in valid_nodes.values()))
-    satake_yen = satake_lost * spending
+    agg_lost = float(sum(v["lost_visitors"] for v in valid_nodes.values()))
+    agg_yen = agg_lost * spending
 
     node_count = len(valid_nodes)
-    reporter.log(f"\nPrefectural Satake Number ({node_count}-node analysis):")
-    reporter.log(f"   Cumulative opportunity gap: {satake_lost:,.0f} visitors")
-    reporter.log(f"   Total economic loss: ¥{satake_yen:,.0f}")
+    reporter.log(f"\nAggregate visitor loss ({node_count}-node analysis):")
+    reporter.log(f"   Cumulative opportunity gap: {agg_lost:,.0f} visitors")
+    reporter.log(f"   Total economic loss: ¥{agg_yen:,.0f}")
     reporter.log(f"   Nodes analyzed: {node_count}")
 
     if node_count >= 4:
@@ -506,8 +506,8 @@ def multi_node_analysis(
         "node_c_source": node_c_source,
         "node_d_source": node_d_source if node_d_source == "camera" else None,
         "nudge": nudge,
-        "satake_lost_visitors": satake_lost,
-        "satake_yen": satake_yen,
+        "aggregate_lost_visitors": agg_lost,
+        "aggregate_yen": agg_yen,
         "spatial_heat_df": heat_df,
         "ishikawa_lag_results": ishikawa_lag_results,
         "proxy_validation": proxy_validation,

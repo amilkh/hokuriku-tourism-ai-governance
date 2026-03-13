@@ -137,7 +137,7 @@ def ranking_simulation(
         gap_model: Gap days DataFrame with ``date`` and ``lost_population``.
         reporter: ``Reporter``.
         ranking_cfg: Config section with ranking baselines.
-        total_override: When provided (e.g. 4-node Satake total), distribute
+        total_override: When provided (e.g. 4-node aggregate total), distribute
             this figure across months using seasonal weights matching the
             6.26× winter/summer sensitivity ratio, overriding ``gap_model``
             monthly sums.

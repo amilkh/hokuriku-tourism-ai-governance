@@ -328,13 +328,13 @@ def main() -> None:
         spatial = {"valid_nodes": {}, "node_count": 0}
 
     # ══════════════════════════════════════════════════════════════════════
-    # 20b. DEFINITIVE RANKING SIMULATION (4-node Satake total)
+    # 20b. DEFINITIVE RANKING SIMULATION (4-node aggregate total)
     # ══════════════════════════════════════════════════════════════════════
-    satake_total = spatial.get("satake_lost_visitors", total_lost)
+    aggregate_total = spatial.get("aggregate_lost_visitors", total_lost)
     ranking_data = ranking_simulation(
-        satake_total, gap_model, rpt,
+        aggregate_total, gap_model, rpt,
         ranking_cfg=cfg.get("ranking"),
-        total_override=satake_total,
+        total_override=aggregate_total,
     )
     sim_df = ranking_data["sim_df"]
     mean_actual_rank = ranking_data["mean_actual_rank"]
@@ -450,7 +450,7 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
 
     rpt.metrics(f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  4. LOST POPULATION (The "Satake Number")
+  4. LOST POPULATION (Aggregate Visitor Loss)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Opportunity Gap days:             {len(gap_model)}
   Total Lost Visitors:              {total_lost:,.0f}
@@ -474,9 +474,9 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
 
     rpt.metrics(f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  6. RANKING IMPACT SIMULATION (Fukui Resurrection – 4-node Satake total)
+  6. RANKING IMPACT SIMULATION (Fukui Resurrection – 4-node aggregate total)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  4-node Satake total:        {ctx.get('satake_total', total_lost):,.0f}
+  4-node aggregate total:     {ctx.get('aggregate_total', total_lost):,.0f}
   Winter actual mean rank:    {ctx['mean_actual_rank']:.1f}
   Winter hypothetical rank:   {ctx['mean_hypo_rank']:.1f}
   Best monthly improvement:   {ctx['best_improvement']} ranks
@@ -558,7 +558,7 @@ Key Findings:
 4. KANSEI OVERTOURISM
    Visitors vs Satisfaction: r = {ctx['spear_r']:+.3f} (p = {ctx['spear_p']:.4f})
 
-5. LOST POPULATION ("SATAKE NUMBER")
+5. AGGREGATE VISITOR LOSS
    {len(ctx['gap_model'])} gap days → {abs(ctx['total_lost']):,.0f} visitors lost
 
 6. MODEL ROBUSTNESS
@@ -604,19 +604,18 @@ def _write_metrics(rpt: Reporter, ctx: dict, spatial: dict, cfg: dict) -> None:
     usd_rate = cfg["economics"].get("usd_exchange_rate", 157.0)
     node_count = spatial.get("node_count", 3)
 
-    # ★ UPDATED: 4-Node Satake Number
-    rpt.metrics(f"FourNode_Satake_Number (nodes={node_count})")
+    rpt.metrics(f"Multinode_Aggregate_Loss (nodes={node_count})")
     rpt.metrics(f"  Node_D_Status={spatial.get('node_d_source', 'not_available')}")
-    rpt.metrics(f"  Lost_Visitors={spatial.get('satake_lost_visitors', 0):.2f}")
+    rpt.metrics(f"  Lost_Visitors={spatial.get('aggregate_lost_visitors', 0):.2f}")
     rpt.metrics(f"  Spending_Per_Visitor_Yen={spending:.2f}")
-    rpt.metrics(f"  Total_Lost_Yen={spatial.get('satake_yen', 0):.2f}")
-    satake_billion = spatial.get('satake_yen', 0) / 1e9
-    rpt.metrics(f"  Total_Lost_Billion_Yen={satake_billion:.3f}")
-    satake_usd_m = spatial.get('satake_yen', 0) / usd_rate / 1e6
+    rpt.metrics(f"  Total_Lost_Yen={spatial.get('aggregate_yen', 0):.2f}")
+    loss_billion = spatial.get('aggregate_yen', 0) / 1e9
+    rpt.metrics(f"  Total_Lost_Billion_Yen={loss_billion:.3f}")
+    loss_usd_m = spatial.get('aggregate_yen', 0) / usd_rate / 1e6
     rpt.metrics(f"  USD_Exchange_Rate={usd_rate:.1f}")
-    rpt.metrics(f"  Total_Lost_USD_Million={satake_usd_m:.1f}")
+    rpt.metrics(f"  Total_Lost_USD_Million={loss_usd_m:.1f}")
     if node_count >= 4:
-        rpt.metrics("  ★ GEOGRAPHIC_SATURATION=ACHIEVED (North/Central/South/East)")
+        rpt.metrics("  GEOGRAPHIC_SATURATION=ACHIEVED (North/Central/South/East)")
 
     # Survey proxy validation (Node C)
     pv = spatial.get("proxy_validation", {})
