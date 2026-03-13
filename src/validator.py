@@ -296,7 +296,7 @@ def validate_camera_data(
 
     # Aggregate daily for analysis
     daily_rows: list[dict[str, Any]] = []
-    for f, df in zip(files, frames):
+    for f, df in zip(files, frames, strict=False):
         if "total count" in df.columns:
             import os
             daily_rows.append({
@@ -542,8 +542,8 @@ def validate_pipeline(
     Returns:
         ``ValidationReport`` with per-source and aggregated results.
     """
-    from .config import resolve_repo_path, resolve_ws_path
     from . import __version__
+    from .config import resolve_repo_path, resolve_ws_path
 
     reporter.section("V", "Data Integrity Validation")
 
@@ -625,7 +625,7 @@ def validate_pipeline(
         "overall_passed": vr.overall_passed,
     }
 
-    reporter.log(f"\n  ── Validation Summary ──")
+    reporter.log("\n  ── Validation Summary ──")
     reporter.log(f"  Sources audited:   {len(vr.sources)}")
     reporter.log(f"  Total rows:        {vr.total_rows_audited:,}")
     reporter.log(f"  Warnings:          {total_warnings}")

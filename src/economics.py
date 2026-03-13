@@ -14,7 +14,6 @@ import statsmodels.api as sm
 
 from .report import Reporter
 
-
 # ── Opportunity Gap ──────────────────────────────────────────────────────────
 
 def compute_opportunity_gap(
@@ -52,7 +51,7 @@ def compute_opportunity_gap(
     reporter.log(f"  Intent median: {intent_med:.0f}   Count median: {count_med:.0f}")
 
     if len(gap_days) > 0:
-        reporter.log(f"\nTop 10 gap days:")
+        reporter.log("\nTop 10 gap days:")
         for _, row in gap_days.sort_values(route_col, ascending=False).head(10).iterrows():
             reporter.log(f"  {row['date'].date()!s:12s}  count={row['count']:.0f}  "
                          f"intent={row[route_col]:.0f}  precip={row['precip']:.1f}")
@@ -110,7 +109,7 @@ def compute_lost_population(
     total = gap_model["lost_population"].sum()
     mean = gap_model["lost_population"].mean()
 
-    reporter.log(f"\n★ LOST POPULATION:")
+    reporter.log("\n★ LOST POPULATION:")
     reporter.log(f"  Total lost visitors: {total:,.0f}")
     reporter.log(f"  Mean per gap day:    {mean:,.0f}")
 

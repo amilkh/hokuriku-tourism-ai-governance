@@ -21,11 +21,11 @@ import urllib.request
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.patches import Polygon as MplPolygon
 import numpy as np
+from matplotlib.patches import Polygon as MplPolygon
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -94,7 +94,7 @@ def _fetch_geojson() -> dict:
     if GEOJSON_CACHE.exists():
         print(f"  Using cached GeoJSON: {GEOJSON_CACHE}")
         return json.loads(GEOJSON_CACHE.read_text(encoding="utf-8"))
-    print(f"  Downloading prefecture boundaries …")
+    print("  Downloading prefecture boundaries …")
     with urllib.request.urlopen(GEOJSON_URL, timeout=30) as resp:
         raw = resp.read()
     GEOJSON_CACHE.write_bytes(raw)
@@ -430,8 +430,9 @@ def _build_figure(geojson: dict, japanese: bool = False) -> plt.Figure:
 
 
 def _apply_jp_font(fig: plt.Figure) -> None:
-    import matplotlib.font_manager as fm
     import warnings
+
+    import matplotlib.font_manager as fm
     candidates = ["Noto Sans CJK JP", "IPAexGothic", "IPAPGothic",
                   "Hiragino Sans", "Yu Gothic", "MS Gothic", "TakaoGothic"]
     available = {f.name for f in fm.fontManager.ttflist}
@@ -454,7 +455,8 @@ def main() -> None:
     plt.close(fig_en)
     print(f"  Saved: {out_en}")
 
-    _apply_jp_font(plt.figure()); plt.close()
+    _apply_jp_font(plt.figure())
+    plt.close()
     fig_ja = _build_figure(geojson, japanese=True)
     _apply_jp_font(fig_ja)
     fig_ja.savefig(out_ja, dpi=300, bbox_inches="tight", facecolor="white")

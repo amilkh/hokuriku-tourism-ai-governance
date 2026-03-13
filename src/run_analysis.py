@@ -11,38 +11,37 @@ from __future__ import annotations
 
 import logging
 import os
-import shutil
 import warnings
 
 warnings.filterwarnings("ignore")
 
 import matplotlib
+
 matplotlib.use("Agg")
 
-import numpy as np
 import pandas as pd
 
+from src import visualizer as viz
 from src.config import load_config
-from src.report import Reporter
-from src.validator import validate_pipeline
 from src.data_loader import load_all_data
-from src.feature_engineering import build_features
-from src.models import fit_ols, fit_random_forest, robustness_suite, statistical_rigor
 from src.economics import (
-    compute_opportunity_gap,
     compute_lost_population,
+    compute_opportunity_gap,
     ranking_simulation,
     seasonal_sensitivity,
 )
-from src.spatial import cross_prefectural_ccf, multi_node_analysis
+from src.feature_engineering import build_features
 from src.kansei import (
     discomfort_index_analysis,
+    eiheiji_atmospheric_resilience,
     overtourism_threshold,
     text_mine_undervibrancy,
-    eiheiji_atmospheric_resilience,
 )
-from src import visualizer as viz
 from src.latex_export import export_all_tables
+from src.models import fit_ols, fit_random_forest, robustness_suite, statistical_rigor
+from src.report import Reporter
+from src.spatial import cross_prefectural_ccf, multi_node_analysis
+from src.validator import validate_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -245,7 +244,7 @@ def main() -> None:
     robust = robustness_suite(model_df, ols_result, feature_cols, rpt)
 
     # ══════════════════════════════════════════════════════════════════════
-    # 10b. STATISTICAL RIGOR (効果量 – for Prof. Takemoto review)
+    # 10b. STATISTICAL RIGOR (効果量 – effect sizes & hold-out validation)
     # ══════════════════════════════════════════════════════════════════════
     rigor = statistical_rigor(model_df, ols_result, feature_cols, rpt)
 
@@ -317,7 +316,6 @@ def main() -> None:
         rpt.log(f"Mean Spending per Visitor: ¥{mean_spending:,.0f}")
         rpt.log(f"Total Annual Economic Revenue Loss: ¥{total_yen_loss:,.0f}")
 
-    # Discomfort Index (NEW)
     di_result = discomfort_index_analysis(weather_daily, sat_all, rpt)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -525,7 +523,7 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
         top_str = ", ".join(f"{f}={v:+.3f}" for f, v in top_beta.head(3).items())
         rpt.metrics(f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  9. STATISTICAL RIGOR (効果量 / Prof. Takemoto Review)
+  9. STATISTICAL RIGOR (効果量 / Effect Sizes & Hold-Out Validation)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Top-3 Standardised β: {top_str}
   Cohen's f²:           {rigor.cohens_f2:.4f}
@@ -623,14 +621,14 @@ def _write_metrics(rpt: Reporter, ctx: dict, spatial: dict, cfg: dict) -> None:
     # Survey proxy validation (Node C)
     pv = spatial.get("proxy_validation", {})
     if pv:
-        rpt.metrics(f"Survey_Proxy_Validation")
+        rpt.metrics("Survey_Proxy_Validation")
         rpt.metrics(f"  Pearson_r={pv.get('proxy_r', float('nan')):.3f}")
         rpt.metrics(f"  p_value={pv.get('proxy_p', float('nan')):.3e}")
         rpt.metrics(f"  n={pv.get('proxy_n', 0)}")
 
     # Ranking simulation (4-node)
     ranking_data_ctx = ctx.get("ranking_data", {})
-    rpt.metrics(f"Ranking_Simulation_4Node")
+    rpt.metrics("Ranking_Simulation_4Node")
     rpt.metrics(f"  Best_Monthly_Improvement={ctx.get('best_improvement', 0)}_ranks")
     rpt.metrics(f"  Shortfall_Closure_Min={ranking_data_ctx.get('min_closure_pct', 0):.1f}%")
     rpt.metrics(f"  Shortfall_Closure_Max={ranking_data_ctx.get('max_closure_pct', 0):.1f}%")
@@ -638,10 +636,10 @@ def _write_metrics(rpt: Reporter, ctx: dict, spatial: dict, cfg: dict) -> None:
     # Chi-square test
     text_ctx = ctx.get("text_result", {})
     if "chi2_stat" in text_ctx:
-        rpt.metrics(f"Undervibrancy_ChiSquare")
+        rpt.metrics("Undervibrancy_ChiSquare")
         rpt.metrics(f"  chi2={text_ctx['chi2_stat']:.1f}")
         rpt.metrics(f"  p={text_ctx['chi2_p']:.3e}")
-    
+
     for nm, lag, r, n in spatial.get("ishikawa_lag_results", []):
         rpt.metrics(f"  {nm}: lag={lag:+d}, r={r:+.6f}, n={n}")
 

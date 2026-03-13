@@ -10,6 +10,7 @@ Run from the repo root:
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -87,14 +88,14 @@ def plot_rank_resurrection() -> None:
     x = np.arange(12)
     w = 0.35
 
-    bars_act  = ax.bar(x - w/2, sim["actual_rank"],  width=w,
-                       color=["#5B8DB8" if iw else "#A8C7E3" for iw in is_winter],
-                       edgecolor="white", linewidth=0.6,
-                       label="Current rank (2025 baseline)")
-    bars_hypo = ax.bar(x + w/2, sim["hypo_rank"],   width=w,
-                       color=["#2A6B45" if iw else "#7EC8A0" for iw in is_winter],
-                       edgecolor="white", linewidth=0.6,
-                       label="Projected rank (recovered visitors)")
+    ax.bar(x - w/2, sim["actual_rank"],  width=w,
+           color=["#5B8DB8" if iw else "#A8C7E3" for iw in is_winter],
+           edgecolor="white", linewidth=0.6,
+           label="Current rank (2025 baseline)")
+    ax.bar(x + w/2, sim["hypo_rank"],   width=w,
+           color=["#2A6B45" if iw else "#7EC8A0" for iw in is_winter],
+           edgecolor="white", linewidth=0.6,
+           label="Projected rank (recovered visitors)")
 
     # Reference line
     ax.axhline(35, color="#2B5C8A", linestyle=":",  linewidth=1.5, alpha=0.7,
@@ -119,7 +120,7 @@ def plot_rank_resurrection() -> None:
     ax.set_ylabel("National Ranking  (higher = better)", fontsize=11)
     ax.set_title(
         "(A)  Fukui Prefecture Tourism Ranking: Current vs. AI-Governance Projection\n"
-        f"Recovering 865,917 lost visitors improves mean winter rank from 47th to ~35th",
+        "Recovering 865,917 lost visitors improves mean winter rank from 47th to ~35th",
         fontsize=12, fontweight="bold",
     )
     ax.legend(fontsize=9, loc="lower right", framealpha=0.8, ncol=2)

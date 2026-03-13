@@ -18,7 +18,6 @@ from statsmodels.tsa.stattools import adfuller
 
 from .report import Reporter
 
-
 # ── Camera (AI people-flow) ──────────────────────────────────────────────────
 
 def _parse_camera_rows(glob_pattern: str) -> list[dict[str, Any]]:

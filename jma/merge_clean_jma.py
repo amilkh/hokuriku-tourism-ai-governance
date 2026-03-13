@@ -156,7 +156,7 @@ def _to_float(value: str):
 
 
 def _parse_raw_file(path: str) -> pd.DataFrame:
-    with open(path, "r", encoding="cp932", errors="replace", newline="") as f:
+    with open(path, encoding="cp932", errors="replace", newline="") as f:
         rows = list(csv.reader(f))
 
     header_idx = _detect_header_index(rows)
@@ -171,8 +171,8 @@ def _parse_raw_file(path: str) -> pd.DataFrame:
         if not ts_raw:
             continue
 
-        def _cell(idx: int) -> str:
-            return row[idx] if idx < len(row) else ""
+        def _cell(idx: int, _row: list = row) -> str:
+            return _row[idx] if idx < len(_row) else ""
 
         records.append({
             "timestamp":      ts_raw,

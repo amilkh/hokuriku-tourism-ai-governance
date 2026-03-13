@@ -42,7 +42,6 @@ import re
 import time
 from io import StringIO
 from pathlib import Path
-from typing import Optional
 from urllib.request import Request, urlopen
 
 import pandas as pd
@@ -103,9 +102,9 @@ UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chr
 #   timestamp, snow_depth_cm, snowfall_1h_cm, temp_c, precip_1h_mm,
 #   sun_1h_h, wind_speed_ms, weather_type, humidity_pct
 
-def _find_col(cols: list, *keywords: str, level: Optional[int] = None) -> Optional[int]:
+def _find_col(cols: list, *keywords: str, level: int | None = None) -> int | None:
     """Find column index matching keywords.
-    
+
     If level is specified, only check that specific level of the multi-index.
     Otherwise, check all levels joined together.
     """
@@ -144,10 +143,10 @@ def _extract_rows(df: pd.DataFrame, page_type: str) -> list[dict]:
     for _, row in df.iterrows():
         vals = row.values.tolist()
 
-        def _clean(idx: Optional[int]) -> str:
-            if idx is None or idx >= len(vals):
+        def _clean(idx: int | None, _vals: list = vals) -> str:
+            if idx is None or idx >= len(_vals):
                 return ""
-            v = str(vals[idx]).strip()
+            v = str(_vals[idx]).strip()
             # JMA uses these markers for missing/unavailable data
             if v in ("--", "///", "×", "nan", "NaN", "#", ""):
                 return ""
@@ -180,7 +179,7 @@ def _extract_rows(df: pd.DataFrame, page_type: str) -> list[dict]:
 # HTTP fetch with retries
 # ---------------------------------------------------------------------------
 def _fetch_html(url: str, *, timeout: int = 30, retries: int = 3) -> str:
-    last_err: Optional[Exception] = None
+    last_err: Exception | None = None
     for attempt in range(1, retries + 1):
         try:
             req = Request(url, headers={"User-Agent": UA})
@@ -334,9 +333,9 @@ def main() -> None:
             except KeyboardInterrupt:
                 print(f"\n  interrupted at day {day}; saving partial data...")
                 break
-            except Exception as e:
+            except Exception:
                 failed_days += 1
-                print(f"x", end="", flush=True)
+                print("x", end="", flush=True)
                 if failed_days >= 5:
                     print(f"\n  too many failures ({failed_days}); saving partial data...")
                     break

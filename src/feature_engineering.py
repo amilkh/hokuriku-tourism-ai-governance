@@ -7,8 +7,8 @@ terms, and day-of-week mean encoding are computed here.
 
 from __future__ import annotations
 
-import pandas as pd
 import jpholiday
+import pandas as pd
 
 from .report import Reporter
 

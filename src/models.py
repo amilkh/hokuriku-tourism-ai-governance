@@ -14,14 +14,13 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import cross_val_score
-from sklearn.inspection import permutation_importance
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.stattools import durbin_watson
 
 from .report import Reporter
-
 
 # ── Result containers ────────────────────────────────────────────────────────
 
@@ -50,7 +49,7 @@ class RFResult:
 
 @dataclass
 class StatisticalRigorResult:
-    """Container for statistical rigor metrics (Prof. Takemoto 効果量 review)."""
+    """Container for statistical rigor metrics (standardised β, Cohen's f², hold-out)."""
     beta_coefficients: pd.Series   # standardised OLS betas (feature_cols only)
     cohens_f2: float               # global Cohen's f² for the full OLS model
     train_n: int
@@ -388,7 +387,7 @@ def statistical_rigor(
         "small (≥0.02)" if cohens_f2 >= 0.02 else
         "negligible (<0.02)"
     )
-    reporter.log(f"\n--- Cohen's f² ---")
+    reporter.log("\n--- Cohen's f² ---")
     reporter.log(f"  f² = R² / (1 − R²) = {r2:.4f} / {1 - r2:.4f} = {cohens_f2:.4f}")
     reporter.log(f"  Effect magnitude: {magnitude}")
 

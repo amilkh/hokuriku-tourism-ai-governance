@@ -85,6 +85,12 @@ line-length = 100
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 ignore = ["E501"]
 
+[tool.ruff.lint.per-file-ignores]
+# matplotlib backend must be configured before pyplot is imported; standalone
+# scripts also modify sys.path before importing from src/
+"src/run_analysis.py" = ["E402"]
+"scripts/*.py" = ["E402"]
+
 [tool.coverage.run]
 source = ["src"]
 omit = ["src/visualizer.py"]

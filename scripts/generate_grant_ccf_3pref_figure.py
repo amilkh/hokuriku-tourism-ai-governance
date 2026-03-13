@@ -14,9 +14,9 @@ import sys
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
 # Allow direct script execution without package installation.
@@ -24,11 +24,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from src import visualizer as viz
 from src.config import load_config, resolve_ws_path
 from src.data_loader import load_camera_daily, load_survey_prefectures
 from src.report import Reporter
-from src import visualizer as viz
-
 
 LAGS = list(range(-3, 8))
 FIG_WIDTH_IN = 10.0

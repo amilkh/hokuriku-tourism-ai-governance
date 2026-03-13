@@ -10,6 +10,7 @@ import os
 from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -72,7 +73,7 @@ def _render_table_png(
     tbl.set_fontsize(FONTSIZE)
 
     # Booktabs-style: horizontal rules only, no vertical lines
-    for (row, col), cell in tbl.get_celld().items():
+    for (row, _col), cell in tbl.get_celld().items():
         cell.set_edgecolor("black")
         cell.set_linewidth(0.8)
         if row == 0:                           # header: toprule + midrule

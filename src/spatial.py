@@ -17,7 +17,6 @@ import statsmodels.api as sm
 
 from .report import Reporter
 
-
 # ── Helper loaders ───────────────────────────────────────────────────────────
 
 def _load_peopleflow_daily(person_glob: str) -> pd.DataFrame:
@@ -325,13 +324,11 @@ def multi_node_analysis(
         reporter: ``Reporter``.
 
     Returns:
-        Dict with ``valid_nodes``, ``nudge``, ``satake``, ``spatial_heat_df``, 
+        Dict with ``valid_nodes``, ``nudge``, ``satake``, ``spatial_heat_df``,
         ``ishikawa_lag_results``, ``node_count`` (4-node).
     """
-    from .config import resolve_repo_path, resolve_ws_path
 
     reporter.section(20, "Multi-Node Spatial Governance Analysis (4-Node DHDE)")
-    reporter.log("★ EXPANDED: Now includes Node D (Rainbow Line) for Prefectural Coverage")
     paths = cfg["paths"]
     spending = cfg["economics"]["spending_per_visitor_yen"]
 
@@ -362,7 +359,7 @@ def multi_node_analysis(
             reporter.log(f"Node C fallback failed ({e})")
             node_c_counts = pd.DataFrame(columns=["date", "count"])
 
-    # ★ NEW: Load Node D (Rainbow Line - Wakasa scenic route)
+    # Load Node D (Rainbow Line - Wakasa scenic route)
     try:
         node_d_counts = _load_peopleflow_daily(str(ws / paths["camera"]["rainbow_line"]))
         node_d_source = "camera"
@@ -370,7 +367,7 @@ def multi_node_analysis(
             node_d_source = None
             reporter.log("Node D (Rainbow Line): No data found")
         else:
-            reporter.log(f"★ Node D loaded: Rainbow Line ({len(node_d_counts)} days)")
+            reporter.log(f"Node D loaded: Rainbow Line ({len(node_d_counts)} days)")
     except (KeyError, Exception) as e:
         node_d_counts = pd.DataFrame(columns=["date", "count"])
         node_d_source = None
@@ -379,8 +376,8 @@ def multi_node_analysis(
     node_a_weather = _load_node_weather_daily(str(repo / paths["weather"]["mikuni"]))
     node_b_weather = _load_node_weather_daily(str(repo / paths["weather"]["fukui"]))
     node_c_weather = _load_node_weather_daily(str(repo / paths["weather"]["katsuyama"]))
-    
-    # ★ NEW: Load weather for Node D
+
+    # Load weather for Node D
     try:
         node_d_weather = _load_node_weather_daily(str(repo / paths["weather"]["rainbow_line"]))
     except (KeyError, Exception):
@@ -420,22 +417,21 @@ def multi_node_analysis(
         ("Node B (Fukui Station)", node_b_counts, node_b_weather),
         ("Node C (Katsuyama/Dinosaur)", node_c_counts, node_c_weather),
     ]
-    
-    # ★ NEW: Add Node D to analysis if data available
+
+    # Add Node D to analysis if data available
     if node_d_source == "camera" and not node_d_counts.empty:
         nodes_to_analyze.append(("Node D (Rainbow Line/Wakasa)", node_d_counts, node_d_weather))
-    
+
     for name, counts, weather in nodes_to_analyze:
         node_metrics[name] = build_node_metrics(
             name, counts, weather, rsi, route_col, spending, reporter,
         )
 
     valid_nodes = {k: v for k, v in node_metrics.items() if v is not None}
-    
-    # ★ Enhanced logging for 4-node analysis
+
     num_nodes = len(valid_nodes)
-    reporter.log(f"\n★ VALID NODES: {num_nodes} (Geographic coverage: {'North, Central, South, East' if num_nodes >= 4 else 'Limited'})")
-    
+    reporter.log(f"\nValid nodes: {num_nodes} (geographic coverage: {'North, Central, South, East' if num_nodes >= 4 else 'partial'})")
+
     for nm, m in valid_nodes.items():
         reporter.log(
             f"{nm}: n={m['n']}, OLS R²={m['r2']:.4f}, "
@@ -457,19 +453,17 @@ def multi_node_analysis(
     wind_threshold = cfg.get("thresholds", {}).get("wind_nudge_ms", 10.0)
     nudge = atmospheric_nudge_analysis(valid_nodes, wind_threshold, reporter)
 
-    # ★ ENHANCED: Satake number now includes Node D
     satake_lost = float(sum(v["lost_visitors"] for v in valid_nodes.values()))
     satake_yen = satake_lost * spending
-    
+
     node_count = len(valid_nodes)
-    reporter.log(f"\n★ PREFECTURAL SATAKE NUMBER (4-Node Analysis):")
+    reporter.log(f"\nPrefectural Satake Number ({node_count}-node analysis):")
     reporter.log(f"   Cumulative opportunity gap: {satake_lost:,.0f} visitors")
     reporter.log(f"   Total economic loss: ¥{satake_yen:,.0f}")
     reporter.log(f"   Nodes analyzed: {node_count}")
-    
+
     if node_count >= 4:
-        reporter.log(f"   ✓ GEOGRAPHIC SATURATION: Full Fukui coverage achieved")
-        reporter.log(f"   Expected ¥15B+ impact (Node D Rainbow Line integrated)")
+        reporter.log("   Geographic saturation: Full Fukui coverage achieved")
 
     # Ishikawa pipeline per node
     ishikawa_lag_results: list[tuple[str, int, float, int]] = []

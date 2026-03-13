@@ -18,7 +18,6 @@ from scipy import stats
 
 from .report import Reporter
 
-
 # ── Discomfort Index ─────────────────────────────────────────────────────────
 
 def compute_discomfort_index(

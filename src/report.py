@@ -7,8 +7,8 @@ module; at the end of the pipeline, call ``save()`` to flush to disk.
 
 from __future__ import annotations
 
+import contextlib
 import logging
-import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -104,7 +104,7 @@ class Reporter:
             return
         if shutil.which("pngquant") is None:
             return
-        try:
+        with contextlib.suppress(Exception):
             subprocess.run(
                 [
                     "pngquant",
@@ -122,8 +122,6 @@ class Reporter:
                 stderr=subprocess.DEVNULL,
                 check=False,
             )
-        except Exception:
-            pass
 
     # ── Flush to disk ─────────────────────────────────────────────────────
 

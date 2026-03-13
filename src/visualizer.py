@@ -7,19 +7,19 @@ customisation if desired.
 
 from __future__ import annotations
 
+import contextlib
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
+import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
 from .report import Reporter
-
 
 _JP_FONT_NAME: str | None = None
 
@@ -89,10 +89,8 @@ def _apply_japanese_font(fig: plt.Figure) -> None:
     if not _JP_FONT_NAME:
         return
     for text_obj in fig.findobj(lambda obj: isinstance(obj, mpl.text.Text)):
-        try:
+        with contextlib.suppress(Exception):
             text_obj.set_fontfamily(_JP_FONT_NAME)
-        except Exception:
-            pass
 
 
 _configure_japanese_font()
@@ -330,7 +328,7 @@ def plot_opportunity_gap(
                 f"来訪者中央値={count_median:.0f}",
                 f"需要中央値={intent_median:.0f}",
             ]
-            for txt, lbl in zip(leg.get_texts(), labels):
+            for txt, lbl in zip(leg.get_texts(), labels, strict=False):
                 txt.set_text(lbl)
 
     _save_with_ja(fig, out_path, reporter, _ja, dpi=dpi)
@@ -400,10 +398,7 @@ def plot_ccf(
 
     y_min_data = float(ccf_df["r"].min())
     y_max_data = float(ccf_df["r"].max())
-    if y_min_data > -0.05:
-        y_min = 0.0
-    else:
-        y_min = min(-0.05, y_min_data - 0.03)
+    y_min = 0.0 if y_min_data > -0.05 else min(-0.05, y_min_data - 0.03)
     y_max = min(1.0, y_max_data + 0.08)
     ax.set_ylim(y_min, y_max)
 
@@ -862,7 +857,6 @@ def plot_weather_shield_network(
               framealpha=0.9)
 
     # Bubble size note
-    total_lost = sum(m["lost_visitors"] for m in valid_nodes.values()) / 1000
     ax.text(0.02, 0.97, "Bubble area ∝ lost visitors per node",
             transform=ax.transAxes, fontsize=10, color="#777",
             va="top", style="italic")
@@ -921,30 +915,30 @@ def plot_rank_resurrection_projection(
     reporter: Reporter,
     dpi: int = 300,
 ) -> plt.Figure | None:
-    """Chart showing how recovering 4-node lost population would improve 
+    """Chart showing how recovering 4-node lost population would improve
     Fukui's national ranking from 47th toward mid-30s.
     """
     import matplotlib.patches as mpatches
-    
+
     if len(valid_nodes) < 3:
         reporter.log("Rank projection: needs at least 3 nodes")
         return None
-    
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    
+
     # Current ranks (from config)
     current_ranks = ranking_data.get("fukui_rank_2025", [47]*12)
-    visitors_k = ranking_data.get("fukui_visitors_k", [100]*12)
+    _visitors_k = ranking_data.get("fukui_visitors_k", [100]*12)
     gap_to_41_k = ranking_data.get("gap_to_rank41_k", [30]*12)
-    
+
     # Calculate potential recovery
     total_lost_k = sum(m["lost_visitors"] for m in valid_nodes.values()) / 1000
     monthly_recovery = total_lost_k / 12  # Simple even distribution
-    
+
     # Project new ranks (rough heuristic)
     projected_ranks = []
-    for i, (rank, gap) in enumerate(zip(current_ranks, gap_to_41_k)):
+    for _, (rank, gap) in enumerate(zip(current_ranks, gap_to_41_k, strict=False)):
         if monthly_recovery >= gap:
             # Recovery exceeds gap to rank 41
             projected_ranks.append(max(32, rank - 12))  # Cap at ~35th
@@ -952,7 +946,7 @@ def plot_rank_resurrection_projection(
             projected_ranks.append(max(35, rank - 6))
         else:
             projected_ranks.append(max(38, rank - 3))
-    
+
     # ── Colour palette: blue/teal only ───────────────────────────────────────
     C_CURRENT   = "#2B5C8A"   # deep blue  – current rank bars
     C_PROJECTED = "#1A7A6E"   # teal       – projected rank bars
@@ -974,12 +968,11 @@ def plot_rank_resurrection_projection(
     # ── Projected ranks: proportional to gap coverage, scaled 0–12 rank positions
     # improvement = (rec / gap) * 12, capped at 12.  Smooth, no cliff-edges.
     projected_ranks = []
-    for rank, gap_k, rec_k in zip(current_ranks, gap_to_41_k, monthly_rec_k):
+    for rank, gap_k, rec_k in zip(current_ranks, gap_to_41_k, monthly_rec_k, strict=False):
         coverage = rec_k / gap_k if gap_k > 0 else 0
         improvement = min(12, int(coverage * 12))
         projected_ranks.append(max(35, rank - improvement))
 
-    import matplotlib.patches as mpatches
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8.5))
     fig.patch.set_facecolor("white")
@@ -1010,7 +1003,7 @@ def plot_rank_resurrection_projection(
     ax1.axhline(y=35, color="#555", linestyle="--", linewidth=0.9, alpha=0.7)
 
     # Annotation on the best-improvement bar (first winter month)
-    improvements = [c - p for c, p in zip(current_ranks, projected_ranks)]
+    improvements = [c - p for c, p in zip(current_ranks, projected_ranks, strict=False)]
     best_idx = int(np.argmax(improvements))
     if improvements[best_idx] > 0:
         ax1.annotate(f"+{improvements[best_idx]} ranks",
@@ -1087,7 +1080,7 @@ def plot_dhde_architecture(
     dpi: int = 300,
 ) -> plt.Figure:
     """Conceptual architecture diagram for the Distributed Human Data Engine."""
-    from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+    from matplotlib.patches import FancyBboxPatch
 
     # Journal-appropriate palette: muted, desaturated, print-safe
     C_BG       = "#FFFFFF"
@@ -1103,7 +1096,7 @@ def plot_dhde_architecture(
     C_TEXT     = "#1A1A2E"
     C_MUTED    = "#4A5568"
     C_ARROW    = "#4A5568"
-    C_ACCENT   = "#5A3E85"   # muted violet for feedback arc
+    _C_ACCENT  = "#5A3E85"   # muted violet (reserved for future feedback arc)
 
     fig, ax = plt.subplots(figsize=(20, 10))
     ax.set_xlim(0, 20)
@@ -1167,7 +1160,7 @@ def plot_dhde_architecture(
          "・Human detection, 5-min intervals",
          "・427 days, 4 spatial nodes"),
     ]
-    for (title, line1, line2), sy in zip(sensors, sy_starts):
+    for (title, line1, line2), sy in zip(sensors, sy_starts, strict=False):
         rbox(0.40, sy, 3.85, CH, C_CARD_S, C_BORDER_S, radius=0.25, lw=1.2)
         txt(2.325, sy + 1.42, title, size=14, color=C_BORDER_S, weight="bold")
         txt(2.325, sy + 0.97, line1, size=14.0, color=C_MUTED)
@@ -1240,7 +1233,7 @@ def plot_dhde_architecture(
          "・Annual loss: ¥11.96B  (~$72.6M USD)",
          "・4-node geographic saturation achieved"),
     ]
-    for (title, line1, line2), oy in zip(outputs, sy_starts):
+    for (title, line1, line2), oy in zip(outputs, sy_starts, strict=False):
         rbox(13.1, oy, 6.50, CH, C_CARD_O, C_BORDER_O, radius=0.25, lw=1.2)
         txt(16.35, oy + 1.42, title, size=15, color=C_BORDER_O, weight="bold")
         txt(16.35, oy + 0.97, line1, size=15.0, color=C_MUTED)
