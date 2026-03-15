@@ -12,8 +12,8 @@
 [![Data Validated](https://img.shields.io/badge/rows%20audited-1.4M-brightgreen.svg)](src/validator.py)
 
 > **エグゼクティブレポート：**
-> [English](output/EXECUTIVE_REPORT.md) ·
-> [日本語](output/EXECUTIVE_REPORT.ja.md)
+> [English](EXECUTIVE_REPORT.en.md) ·
+> [日本語](EXECUTIVE_REPORT.ja.md)
 >
 > **Read in:** [English](README.md)
 
@@ -209,8 +209,8 @@ hokuriku-tourism-ai-governance/
 │   ├── merge_clean_jma.py        # ステーション別CSVへのマージ
 │   └── jma_*.csv                 # マージ済み8フィールドデータセット
 ├── output/                       # 生成物（参照用にコミット済み）
-│   ├── EXECUTIVE_REPORT.md       # 英語エグゼクティブレポート
-│   ├── EXECUTIVE_REPORT.ja.md    # 日本語エグゼクティブレポート
+├── EXECUTIVE_REPORT.en.md        # 英語エグゼクティブレポート（pandoc → PDF ソース）
+├── EXECUTIVE_REPORT.ja.md        # 日本語エグゼクティブレポート（pandoc → PDF ソース）
 │   ├── analysis_metrics.txt      # 機械可読なキーメトリクス
 │   ├── *.png                     # 12種以上の論文品質図表（EN & JA）
 │   ├── *.tex                     # 論文投稿用LaTeXテーブル
@@ -258,8 +258,8 @@ pip install ".[dev]"
 | コマンド | 内容 |
 |---------|------|
 | `python -m src.run_analysis` | フルパイプライン実行 → 図表・メトリクス・LaTeXテーブル生成 |
-| `pandoc output/pdf/executive_report_pdf_en.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.pdf` | 英語PDF生成 |
-| `pandoc output/pdf/executive_report_pdf.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf` | 日本語PDF生成 |
+| `pandoc EXECUTIVE_REPORT.en.md --pdf-engine=xelatex -o output/pdf/executive_report_en.pdf` | 英語PDF生成 |
+| `pandoc EXECUTIVE_REPORT.ja.md --pdf-engine=xelatex -o output/pdf/executive_report_ja.pdf` | 日本語PDF生成 |
 | `pytest` | テスト実行 |
 | `pytest --cov=src --cov-report=html` | カバレッジレポート付きテスト |
 | `ruff check src/ tests/` | リントチェック |
