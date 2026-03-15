@@ -12,8 +12,8 @@
 [![Data Validated](https://img.shields.io/badge/rows%20audited-1.4M-brightgreen.svg)](src/validator.py)
 
 > **Executive Reports:**
-> [English](output/EXECUTIVE_REPORT.md) ·
-> [日本語](output/EXECUTIVE_REPORT.ja.md)
+> [English](EXECUTIVE_REPORT.en.md) ·
+> [日本語](EXECUTIVE_REPORT.ja.md)
 >
 > **他の言語で読む:** [日本語 (Japanese)](README.ja.md)
 
@@ -216,9 +216,9 @@ hokuriku-tourism-ai-governance/
 │   ├── fetch_jma_monthly.py      # Scraper for JMA hourly CSVs
 │   ├── merge_clean_jma.py        # Merge rawdata into per-station CSVs
 │   └── jma_*.csv                 # Merged per-station 8-field datasets
+├── EXECUTIVE_REPORT.en.md        # English executive report (pandoc → PDF source)
+├── EXECUTIVE_REPORT.ja.md        # Japanese executive report (pandoc → PDF source)
 ├── output/                       # Generated artifacts (committed for reference)
-│   ├── EXECUTIVE_REPORT.md       # English executive report
-│   ├── EXECUTIVE_REPORT.ja.md    # Japanese executive report
 │   ├── analysis_metrics.txt      # Machine-readable key metrics
 │   ├── *.png                     # 12+ publication figures (EN & JA variants)
 │   ├── *.tex                     # LaTeX tables for paper submission
@@ -266,8 +266,8 @@ pip install ".[dev]"
 | Command | What it does |
 |---------|-------------|
 | `python -m src.run_analysis` | Run full pipeline → figures, metrics, LaTeX tables |
-| `pandoc output/pdf/executive_report_pdf_en.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.pdf` | Build English executive PDF |
-| `pandoc output/pdf/executive_report_pdf_ja.md --pdf-engine=xelatex -o output/pdf/EXECUTIVE_REPORT.ja.pdf` | Build Japanese executive PDF |
+| `pandoc EXECUTIVE_REPORT.en.md --pdf-engine=xelatex -o output/pdf/executive_report_en.pdf` | Build English executive PDF |
+| `pandoc EXECUTIVE_REPORT.ja.md --pdf-engine=xelatex -o output/pdf/executive_report_ja.pdf` | Build Japanese executive PDF |
 | `pytest` | Run test suite |
 | `pytest --cov=src --cov-report=html` | Tests with coverage report |
 | `ruff check src/ tests/` | Lint check |
