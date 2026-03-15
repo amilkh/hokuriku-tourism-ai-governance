@@ -84,16 +84,16 @@ The DHDE integrates four sensor modalities into a single analytical pipeline:
 
 | Metric | Value | Interpretation |
 |--------|-------|---------------|
-| **OLS $R^2$** | 0.810 (Adj $R^2$ = 0.802) | Baseline explanatory power |
-| **RF 5-fold CV $R^2$** | 0.557 ± 0.131 | Out-of-sample predictive accuracy |
-| **First-Difference $R^2$** | 0.708 | Autocorrelation-corrected |
-| **LDV $R^2$ / DW** | 0.848 / 1.893 | Dynamic model, clean residuals |
-| **#1 Predictor** | `directions` (RSI) | Route-search intent, $r = +0.781$ |
-| **Ishikawa → Tojinbo lag** | $r = +0.537$ | Cross-prefectural demand pipeline |
-| **Visitors vs Satisfaction** | $r = +0.161$ ($p = 0.001$) | **No overtourism** detected |
-| **Lost Visitors** | 85,512 | Annual Opportunity Gap |
-| **Winter Weather Sensitivity** | 6.29× summer | Seasonal asymmetry |
-| **Under-vibrancy Ratio** | 11.4× | Low-satisfaction review prevalence |
+| **OLS R²** | 0.810 (Adj R² = 0.802) | Baseline explanatory power |
+| **RF 5-fold CV R²** | 0.557 ± 0.131 | Out-of-sample predictive accuracy |
+| **First-Difference R²** | 0.708 | Autocorrelation-corrected |
+| **LDV R² / DW** | 0.848 / 1.899 | Dynamic model, clean residuals |
+| **#1 Predictor** | `directions` (RSI) | Route-search intent, r = +0.781 |
+| **Ishikawa → Tojinbo lag** | r = +0.549 | Cross-prefectural demand pipeline |
+| **Visitors vs Satisfaction** | rs = +0.150 (p = 0.002) | **No overtourism** detected |
+| **Lost Visitors** | 85,522 (single-node) | Annual Opportunity Gap |
+| **Winter Weather Sensitivity** | 6.26× summer | Seasonal asymmetry |
+| **Under-vibrancy Ratio** | 11.5× | Low-satisfaction review prevalence |
 | **National Ranking (Winter)** | 47th / 47 | Fukui's structural deficit |
 
 ---
@@ -114,8 +114,8 @@ where $\bar{S} = ¥13{,}811$ is the mean spending per visitor (from Fukui survey
 
 | Component | Value |
 |-----------|-------|
-| Gap days | 207 |
-| Total lost visitors | 85,512 |
+| Gap days | 42 (high-friction days) |
+| Total lost visitors | 85,522 |
 | Mean spending per visitor | ¥13,811 |
 | **Total annual revenue loss** | **¥11.96 billion** |
 
@@ -145,9 +145,7 @@ where $V$ is wind speed in km/h. Valid for $T \leq 10°C$ and $V > 4.8$ km/h.
 
 Spearman correlation between daily visitor count and mean satisfaction:
 
-$$
-r_s(\text{visitors}, \text{satisfaction}) = +0.161 \quad (p = 0.001)
-$$
+rs(visitors, satisfaction) = +0.150 (p = 0.002)
 
 The **positive** correlation confirms Fukui's problem is *under-vibrancy*, not overtourism. More visitors → higher satisfaction.
 
@@ -174,13 +172,13 @@ Each node is modelled independently with local JMA weather, enabling:
 
 | Diagnostic | Statistic | Interpretation |
 |-----------|-----------|---------------|
-| Durbin–Watson (OLS) | 1.187 | Mild autocorrelation → corrected below |
-| Durbin–Watson (1st-diff) | 1.956 | **Clean** residuals |
-| Newey–West HAC | 11 significant | Robust to heteroskedasticity |
-| First-Difference $R^2$ | 0.708 | Controls for trend |
-| LDV $R^2$ | 0.848 | Dynamic specification |
+| Durbin–Watson (OLS) | 1.005 | Corrected via Newey-West HAC |
+| Durbin–Watson (1st-diff) | 2.525 | **Clean** residuals |
+| Newey–West HAC | 8 significant | Robust to heteroskedasticity |
+| First-Difference R² | 0.708 | Controls for trend |
+| LDV R² | 0.848 | Dynamic specification |
 | VIF (max) | < 10 | No multicollinearity |
-| Weather data value | +0.068 $R^2$ | JMA contribution quantified |
+| Weather data value | +0.056 R² | JMA contribution quantified |
 
 ---
 
