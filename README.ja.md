@@ -316,28 +316,8 @@ tests/
 
 ---
 
-## 12. 引用
-
-```bibtex
-@misc{khanzada2026hokuriku,
-  author       = {Khanzada, Amil},
-  title        = {Hokuriku Tourism {AI} Governance Framework:
-                  Distributed Human Data Engine for Visitor Demand
-                  Forecasting and Spatial Under-vibrancy Analysis},
-  year         = {2026},
-  institution  = {University of Fukui, Regional Revitalization Lab},
-  url          = {https://github.com/amilkh/hokuriku-tourism-ai-governance},
-  note         = {PhD Research -- Kanazawa University \&
-                  University of Fukui Joint Program.
-                  Supported by the Hokuriku Regional Tourism
-                  AI Governance Grant.}
-}
-```
-
----
-
 ## ライセンス
 
-Copyright © 2024–2026 Amil Khanzada. All rights reserved.
+Copyright © 2026 Amil Khanzada. All rights reserved.
 
 現時点ではライセンスを付与していません。再利用・再配布・公開には著者による事前の書面許諾が必要です。
