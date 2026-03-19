@@ -38,7 +38,14 @@ from src.kansei import (
     text_mine_undervibrancy,
 )
 from src.latex_export import export_all_tables
-from src.models import fit_ols, fit_random_forest, robustness_suite, statistical_rigor
+from src.models import (
+    fit_ols,
+    fit_random_forest,
+    fit_sarimax,
+    fit_xgboost,
+    robustness_suite,
+    statistical_rigor,
+)
 from src.report import Reporter
 from src.spatial import cross_prefectural_ccf, multi_node_analysis
 from src.validator import validate_pipeline
@@ -112,7 +119,7 @@ def main() -> None:
     # ══════════════════════════════════════════════════════════════════════
     # 3. MULTI-VARIABLE MODELLING
     # ══════════════════════════════════════════════════════════════════════
-    rpt.section(3, "Multi-Variable Modelling (OLS + Random Forest)")
+    rpt.section(3, "Multi-Variable Modelling (OLS + RF + XGBoost + SARIMAX)")
 
     # Build model DataFrame (drop rows with NaN in features)
     model_df = daily[["date", "count"] + feature_cols].dropna().copy()
@@ -122,6 +129,22 @@ def main() -> None:
     rf_result = fit_random_forest(
         model_df, feature_cols, rpt,
         rf_params=cfg.get("model", {}).get("random_forest"),
+    )
+    xgb_result = fit_xgboost(
+        model_df,
+        feature_cols,
+        rpt,
+        xgb_params=cfg.get("model", {}).get("xgboost"),
+        train_pct=float(cfg.get("model", {}).get("xgboost", {}).get("train_pct", 0.80)),
+    )
+    sarimax_cfg = cfg.get("model", {}).get("sarimax", {})
+    sarimax_result = fit_sarimax(
+        model_df,
+        feature_cols,
+        rpt,
+        order=tuple(sarimax_cfg.get("order", [1, 0, 1])),
+        seasonal_order=tuple(sarimax_cfg.get("seasonal_order", [1, 0, 1, 7])),
+        train_pct=float(sarimax_cfg.get("train_pct", 0.80)),
     )
 
     # ══════════════════════════════════════════════════════════════════════
@@ -379,6 +402,8 @@ def main() -> None:
     results_bundle = {
         "ols": ols_result,
         "rf": rf_result,
+        "xgb": xgb_result,
+        "sarimax": sarimax_result,
         "robust": robust,
         "rigor": rigor,
         "economics": {"total_lost": total_lost},
@@ -427,6 +452,12 @@ def _write_bolstered(rpt: Reporter, ctx: dict) -> None:
   OLS R²           = {ols.r2:.4f}  (Adj R² = {ols.adj_r2:.4f})
   RF Train R²      = {rf.r2_train:.4f}
   RF 5-fold CV R²  = {rf.cv_r2_mean:.4f} ± {rf.cv_r2_std:.4f}
+    XGB Hold-out R²     = {ctx['xgb_result'].r2_holdout:.4f}
+    XGB Hold-out MAE    = {ctx['xgb_result'].mae_holdout:.1f}
+    XGB Hold-out RMSE   = {ctx['xgb_result'].rmse_holdout:.1f}
+    SARIMAX Hold-out R² = {ctx['sarimax_result'].r2_holdout:.4f}
+    SARIMAX Hold-out MAE= {ctx['sarimax_result'].mae_holdout:.1f}
+    SARIMAX AIC / BIC   = {ctx['sarimax_result'].aic:.1f} / {ctx['sarimax_result'].bic:.1f}
 
   Top 3 Predictors (MDI): {', '.join(top3_mdi)}
   Top 3 Predictors (PI):  {', '.join(top3_perm)}
@@ -551,6 +582,10 @@ Key Findings:
 2. MODEL PERFORMANCE
    OLS R²     = {ctx['ols_result'].r2:.3f}
    RF CV R²   = {ctx['rf_result'].cv_r2_mean:.3f} ± {ctx['rf_result'].cv_r2_std:.3f}
+    XGB holdout R² = {ctx['xgb_result'].r2_holdout:.3f}
+    XGB holdout MAE = {ctx['xgb_result'].mae_holdout:.1f}
+    SARIMAX holdout R² = {ctx['sarimax_result'].r2_holdout:.3f}
+    SARIMAX holdout MAE = {ctx['sarimax_result'].mae_holdout:.1f}
 
 3. CROSS-PREFECTURAL PIPELINE
    Best Ishikawa → Tojinbo lag: {ctx['best_lag']:+d} day(s), r = {ctx['best_r']:+.3f}
@@ -631,6 +666,30 @@ def _write_metrics(rpt: Reporter, ctx: dict, spatial: dict, cfg: dict) -> None:
     rpt.metrics(f"  Best_Monthly_Improvement={ctx.get('best_improvement', 0)}_ranks")
     rpt.metrics(f"  Shortfall_Closure_Min={ranking_data_ctx.get('min_closure_pct', 0):.1f}%")
     rpt.metrics(f"  Shortfall_Closure_Max={ranking_data_ctx.get('max_closure_pct', 0):.1f}%")
+
+    sarimax = ctx.get("sarimax_result")
+    if sarimax is not None:
+        rpt.metrics("SARIMAX_Model")
+        rpt.metrics(f"  order={sarimax.order}")
+        rpt.metrics(f"  seasonal_order={sarimax.seasonal_order}")
+        rpt.metrics(f"  train_n={sarimax.train_n}")
+        rpt.metrics(f"  holdout_n={sarimax.holdout_n}")
+        rpt.metrics(f"  aic={sarimax.aic:.4f}")
+        rpt.metrics(f"  bic={sarimax.bic:.4f}")
+        rpt.metrics(f"  holdout_mae={sarimax.mae_holdout:.4f}")
+        rpt.metrics(f"  holdout_rmse={sarimax.rmse_holdout:.4f}")
+        rpt.metrics(f"  holdout_r2={sarimax.r2_holdout:.6f}")
+
+    xgb = ctx.get("xgb_result")
+    if xgb is not None:
+        rpt.metrics("XGBOOST_Model")
+        rpt.metrics(f"  train_n={xgb.train_n}")
+        rpt.metrics(f"  holdout_n={xgb.holdout_n}")
+        rpt.metrics(f"  train_r2={xgb.r2_train:.6f}")
+        rpt.metrics(f"  train_mae={xgb.mae_train:.4f}")
+        rpt.metrics(f"  holdout_mae={xgb.mae_holdout:.4f}")
+        rpt.metrics(f"  holdout_rmse={xgb.rmse_holdout:.4f}")
+        rpt.metrics(f"  holdout_r2={xgb.r2_holdout:.6f}")
 
     # Chi-square test
     text_ctx = ctx.get("text_result", {})

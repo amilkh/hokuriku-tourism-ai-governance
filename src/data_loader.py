@@ -8,6 +8,7 @@ pipeline convention (``count``, ``temp``, ``precip``, ``wind``, etc.).
 from __future__ import annotations
 
 import glob
+import logging
 import os
 from pathlib import Path
 from typing import Any
@@ -18,14 +19,16 @@ from statsmodels.tsa.stattools import adfuller
 
 from .report import Reporter
 
+logger = logging.getLogger(__name__)
+
 # ── Camera (AI people-flow) ──────────────────────────────────────────────────
 
 def _parse_camera_rows(glob_pattern: str) -> list[dict[str, Any]]:
     """Scan camera CSV files matching *glob_pattern* and return raw row dicts.
 
     Each returned dict has keys ``date`` (filename stem) and ``count``
-    (sum of the ``total count`` column).  Files that cannot be read or
-    that lack the expected columns are silently skipped.
+    (sum of the ``total count`` column). Files with malformed CSV data,
+    encoding issues, or missing required columns are skipped with warnings.
 
     This helper is shared by :func:`load_camera_daily` and by
     ``spatial._load_peopleflow_daily`` so the CSV-scanning logic lives in
@@ -41,13 +44,30 @@ def _parse_camera_rows(glob_pattern: str) -> list[dict[str, Any]]:
     for f in sorted(glob.glob(glob_pattern, recursive=True)):
         try:
             df = pd.read_csv(f)
-            if "aggregate from" in df.columns and "total count" in df.columns:
-                rows.append({
-                    "date": os.path.basename(f).replace(".csv", ""),
-                    "count": df["total count"].sum(),
-                })
-        except Exception:
-            pass
+        except pd.errors.EmptyDataError:
+            logger.warning("Skipping empty camera CSV: %s", f)
+            continue
+        except pd.errors.ParserError as exc:
+            logger.warning("Skipping malformed camera CSV: %s (%s)", f, exc)
+            continue
+        except (UnicodeDecodeError, OSError) as exc:
+            logger.warning("Skipping unreadable camera CSV: %s (%s)", f, exc)
+            continue
+
+        required = {"aggregate from", "total count"}
+        if not required.issubset(df.columns):
+            logger.warning(
+                "Skipping camera CSV with missing columns: %s (required=%s, found=%s)",
+                f,
+                sorted(required),
+                sorted(df.columns.tolist()),
+            )
+            continue
+
+        rows.append({
+            "date": os.path.basename(f).replace(".csv", ""),
+            "count": df["total count"].sum(),
+        })
     return rows
 
 

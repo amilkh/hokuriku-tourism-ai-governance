@@ -8,6 +8,7 @@ lagged-dependent-variable, VIF, and weather-removal sensitivity).
 from __future__ import annotations
 
 from dataclasses import dataclass
+import importlib
 from typing import Any
 
 import numpy as np
@@ -19,6 +20,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import cross_val_score
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.stattools import durbin_watson
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 from .report import Reporter
 
@@ -45,6 +47,39 @@ class RFResult:
     y_pred: np.ndarray
     mdi_importance: pd.DataFrame
     perm_importance: pd.DataFrame
+
+
+@dataclass
+class SARIMAXResult:
+    """Container for SARIMAX forecasting results."""
+    model: Any  # statsmodels SARIMAXResultsWrapper
+    order: tuple[int, int, int]
+    seasonal_order: tuple[int, int, int, int]
+    aic: float
+    bic: float
+    train_n: int
+    holdout_n: int
+    mae_holdout: float
+    rmse_holdout: float
+    r2_holdout: float
+    y_pred_holdout: np.ndarray
+    y_fitted_train: np.ndarray
+
+
+@dataclass
+class XGBResult:
+    """Container for XGBoost forecasting results."""
+    model: Any  # xgboost.XGBRegressor
+    train_n: int
+    holdout_n: int
+    r2_train: float
+    mae_train: float
+    r2_holdout: float
+    mae_holdout: float
+    rmse_holdout: float
+    y_pred_train: np.ndarray
+    y_pred_holdout: np.ndarray
+    feature_importance: pd.DataFrame
 
 
 @dataclass
@@ -199,6 +234,188 @@ def fit_random_forest(
         y_pred=y_pred,
         mdi_importance=mdi,
         perm_importance=perm_df,
+    )
+
+
+def fit_sarimax(
+    model_df: pd.DataFrame,
+    feature_cols: list[str],
+    reporter: Reporter,
+    *,
+    order: tuple[int, int, int] = (1, 0, 1),
+    seasonal_order: tuple[int, int, int, int] = (1, 0, 1, 7),
+    train_pct: float = 0.80,
+) -> SARIMAXResult:
+    """Fit SARIMAX with exogenous regressors and evaluate on a hold-out split.
+
+    Args:
+        model_df: DataFrame with ``date``, ``count``, and all ``feature_cols``.
+        feature_cols: Exogenous feature column names.
+        reporter: ``Reporter`` instance.
+        order: ARIMA order ``(p, d, q)``.
+        seasonal_order: Seasonal order ``(P, D, Q, s)``.
+        train_pct: Chronological train split ratio.
+
+    Returns:
+        ``SARIMAXResult`` with in-sample fit and hold-out metrics.
+    """
+    reporter.log("\n--- SARIMAX (Time-Series with Exogenous Regressors) ---")
+    sorted_df = model_df.sort_values("date").reset_index(drop=True)
+
+    split_idx = int(len(sorted_df) * train_pct)
+    if split_idx < 30 or len(sorted_df) - split_idx < 7:
+        raise ValueError(
+            "SARIMAX requires more data (need >=30 training rows and >=7 hold-out rows)."
+        )
+
+    train_df = sorted_df.iloc[:split_idx]
+    holdout_df = sorted_df.iloc[split_idx:]
+
+    endog_train = train_df["count"].astype(float)
+    exog_train = train_df[feature_cols].astype(float)
+    endog_hold = holdout_df["count"].astype(float)
+    exog_hold = holdout_df[feature_cols].astype(float)
+
+    model = SARIMAX(
+        endog=endog_train,
+        exog=exog_train,
+        order=order,
+        seasonal_order=seasonal_order,
+        enforce_stationarity=False,
+        enforce_invertibility=False,
+    )
+    fitted = model.fit(disp=False)
+
+    forecast_res = fitted.get_forecast(steps=len(holdout_df), exog=exog_hold)
+    y_pred_hold = np.asarray(forecast_res.predicted_mean)
+    y_fitted_train = np.asarray(fitted.fittedvalues)
+
+    mae_hold = mean_absolute_error(endog_hold, y_pred_hold)
+    rmse_hold = float(np.sqrt(mean_squared_error(endog_hold, y_pred_hold)))
+    r2_hold = r2_score(endog_hold, y_pred_hold)
+
+    reporter.log(
+        f"SARIMAX order={order}, seasonal_order={seasonal_order}"
+    )
+    reporter.log(f"SARIMAX AIC         = {fitted.aic:.2f}")
+    reporter.log(f"SARIMAX BIC         = {fitted.bic:.2f}")
+    reporter.log(
+        f"SARIMAX Hold-out MAE = {mae_hold:.1f}  RMSE = {rmse_hold:.1f}  R² = {r2_hold:.4f}"
+    )
+
+    return SARIMAXResult(
+        model=fitted,
+        order=order,
+        seasonal_order=seasonal_order,
+        aic=float(fitted.aic),
+        bic=float(fitted.bic),
+        train_n=len(train_df),
+        holdout_n=len(holdout_df),
+        mae_holdout=float(mae_hold),
+        rmse_holdout=rmse_hold,
+        r2_holdout=float(r2_hold),
+        y_pred_holdout=y_pred_hold,
+        y_fitted_train=y_fitted_train,
+    )
+
+
+def fit_xgboost(
+    model_df: pd.DataFrame,
+    feature_cols: list[str],
+    reporter: Reporter,
+    *,
+    xgb_params: dict[str, Any] | None = None,
+    train_pct: float = 0.80,
+) -> XGBResult:
+    """Fit XGBoost regressor with chronological hold-out validation.
+
+    Args:
+        model_df: DataFrame with ``date``, ``count``, and all ``feature_cols``.
+        feature_cols: Feature column names.
+        reporter: ``Reporter`` instance.
+        xgb_params: Hyperparameters for ``xgboost.XGBRegressor``.
+        train_pct: Chronological train split ratio.
+
+    Returns:
+        ``XGBResult`` with train and hold-out metrics.
+    """
+    try:
+        xgb_module = importlib.import_module("xgboost")
+    except ImportError as exc:
+        raise ImportError(
+            "XGBoost is not installed. Install it with `pip install xgboost` "
+            "or add it to your environment dependencies."
+        ) from exc
+    XGBRegressor = getattr(xgb_module, "XGBRegressor")
+
+    reporter.log("\n--- XGBoost Regressor (Predictive Layer) ---")
+    sorted_df = model_df.sort_values("date").reset_index(drop=True)
+
+    split_idx = int(len(sorted_df) * train_pct)
+    if split_idx < 30 or len(sorted_df) - split_idx < 7:
+        raise ValueError(
+            "XGBoost hold-out evaluation requires >=30 training rows and >=7 hold-out rows."
+        )
+
+    train_df = sorted_df.iloc[:split_idx]
+    holdout_df = sorted_df.iloc[split_idx:]
+
+    X_train = train_df[feature_cols].values
+    y_train = train_df["count"].values
+    X_hold = holdout_df[feature_cols].values
+    y_hold = holdout_df["count"].values
+
+    params = xgb_params or {
+        "n_estimators": 500,
+        "max_depth": 5,
+        "learning_rate": 0.05,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "objective": "reg:squarederror",
+        "random_state": 42,
+    }
+
+    model = XGBRegressor(**params)
+    model.fit(X_train, y_train)
+
+    y_pred_train = model.predict(X_train)
+    y_pred_hold = model.predict(X_hold)
+
+    r2_train = r2_score(y_train, y_pred_train)
+    mae_train = mean_absolute_error(y_train, y_pred_train)
+    r2_hold = r2_score(y_hold, y_pred_hold)
+    mae_hold = mean_absolute_error(y_hold, y_pred_hold)
+    rmse_hold = float(np.sqrt(mean_squared_error(y_hold, y_pred_hold)))
+
+    importance = pd.DataFrame(
+        {
+            "feature": feature_cols,
+            "importance": model.feature_importances_,
+        }
+    ).sort_values("importance", ascending=False)
+
+    reporter.log(f"XGB Train R²       = {r2_train:.4f}")
+    reporter.log(f"XGB Train MAE      = {mae_train:.1f}")
+    reporter.log(f"XGB Hold-out R²    = {r2_hold:.4f}")
+    reporter.log(f"XGB Hold-out MAE   = {mae_hold:.1f}")
+    reporter.log(f"XGB Hold-out RMSE  = {rmse_hold:.1f}")
+
+    reporter.log("\nXGBoost Feature Importance (gain proxy):")
+    for _, row in importance.head(10).iterrows():
+        reporter.log(f"  {row['feature']:35s}  {row['importance']:.4f}")
+
+    return XGBResult(
+        model=model,
+        train_n=len(train_df),
+        holdout_n=len(holdout_df),
+        r2_train=float(r2_train),
+        mae_train=float(mae_train),
+        r2_holdout=float(r2_hold),
+        mae_holdout=float(mae_hold),
+        rmse_holdout=rmse_hold,
+        y_pred_train=np.asarray(y_pred_train),
+        y_pred_holdout=np.asarray(y_pred_hold),
+        feature_importance=importance,
     )
 
 

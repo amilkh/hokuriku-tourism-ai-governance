@@ -176,8 +176,11 @@ def discomfort_index_analysis(
                     result["peak_di"] = peak_bin.mid
                     reporter.log(f"\n★ ATMOSPHERIC SATISFACTION PEAK: DI ≈ {peak_bin.mid:.1f}")
                     reporter.log(f"  Comfort zone: {peak_bin.left:.1f} – {peak_bin.right:.1f}")
-                except Exception:
-                    pass
+                except (ValueError, TypeError) as exc:
+                    reporter.log(
+                        "  Warning: Could not compute atmospheric satisfaction peak "
+                        f"from discomfort index bins: {exc}"
+                    )
 
             # NPS correlation
             if "mean_nps" in merged.columns:

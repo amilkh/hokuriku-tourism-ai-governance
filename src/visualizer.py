@@ -8,6 +8,7 @@ customisation if desired.
 from __future__ import annotations
 
 import contextlib
+import logging
 from collections.abc import Callable
 from pathlib import Path
 
@@ -22,6 +23,7 @@ import seaborn as sns
 from .report import Reporter
 
 _JP_FONT_NAME: str | None = None
+logger = logging.getLogger(__name__)
 
 
 def _configure_japanese_font() -> None:
@@ -37,8 +39,10 @@ def _configure_japanese_font() -> None:
         _JP_FONT_NAME = plt.rcParams.get("font.family", [None])[0] if isinstance(plt.rcParams.get("font.family"), list) else None
         plt.rcParams["axes.unicode_minus"] = False
         return
-    except Exception:
-        pass
+    except ImportError:
+        logger.debug("japanize_matplotlib is not installed; falling back to system font discovery.")
+    except AttributeError as exc:
+        logger.warning("japanize_matplotlib loaded but matplotlib font config was unavailable: %s", exc)
 
     candidates = [
         "Noto Sans CJK JP",
@@ -66,8 +70,8 @@ def _configure_japanese_font() -> None:
                 fm.fontManager.addfont(path)
                 if _JP_FONT_NAME is None:
                     _JP_FONT_NAME = fm.FontProperties(fname=path).get_name()
-            except Exception:
-                pass
+            except (OSError, RuntimeError, ValueError) as exc:
+                logger.warning("Could not register Japanese font file %s: %s", path, exc)
 
     installed = {f.name for f in fm.fontManager.ttflist}
     selected = next((name for name in candidates if name in installed), None)

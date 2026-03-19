@@ -15,9 +15,13 @@ from src.models import (
     OLSResult,
     RFResult,
     RobustnessResult,
+    XGBResult,
     fit_ols,
     fit_random_forest,
+    fit_sarimax,
+    fit_xgboost,
     robustness_suite,
+    SARIMAXResult,
 )
 from src.report import Reporter
 
@@ -191,6 +195,66 @@ class TestRandomForest:
             synthetic_daily, feature_cols, reporter, rf_params=params
         )
         assert result.r2_train > 0.5
+
+
+class TestSarimax:
+    """Verify SARIMAX with exogenous regressors on synthetic daily data."""
+
+    def test_sarimax_returns_correct_type(
+        self, synthetic_daily, feature_cols, reporter
+    ):
+        result = fit_sarimax(
+            synthetic_daily,
+            feature_cols,
+            reporter,
+            order=(1, 0, 1),
+            seasonal_order=(1, 0, 0, 7),
+            train_pct=0.8,
+        )
+        assert isinstance(result, SARIMAXResult)
+
+    def test_sarimax_holdout_shapes(
+        self, synthetic_daily, feature_cols, reporter
+    ):
+        result = fit_sarimax(
+            synthetic_daily,
+            feature_cols,
+            reporter,
+            order=(1, 0, 1),
+            seasonal_order=(1, 0, 0, 7),
+            train_pct=0.8,
+        )
+        assert result.holdout_n > 0
+        assert len(result.y_pred_holdout) == result.holdout_n
+
+
+class TestXGBoost:
+    """Verify XGBoost forecasting on synthetic daily data."""
+
+    def test_xgb_returns_correct_type(
+        self, synthetic_daily, feature_cols, reporter
+    ):
+        pytest.importorskip("xgboost")
+        result = fit_xgboost(
+            synthetic_daily,
+            feature_cols,
+            reporter,
+            train_pct=0.8,
+        )
+        assert isinstance(result, XGBResult)
+
+    def test_xgb_holdout_shapes(
+        self, synthetic_daily, feature_cols, reporter
+    ):
+        pytest.importorskip("xgboost")
+        result = fit_xgboost(
+            synthetic_daily,
+            feature_cols,
+            reporter,
+            train_pct=0.8,
+        )
+        assert result.holdout_n > 0
+        assert len(result.y_pred_holdout) == result.holdout_n
 
 
 # ══════════════════════════════════════════════════════════════════════════════
