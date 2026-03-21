@@ -89,6 +89,26 @@ kansei:
     - "盛り上が"
     - "人通り"
 
+# ─── Advanced NLP Pipeline ───────────────────────────────────────────────────
+nlp:
+  # Performance settings
+  batch_size: 32                                    # Batch size for BERT/sentence transformer processing
+  gpu_device: "auto"                               # "auto", "cpu", or cuda device id (0, 1, etc.)
+
+  # Model selection
+  sentence_transformer_model: "all-MiniLM-L12-v2"  # Sentence transformer for aspect attribution
+  topic_model_backend: "gensim"                     # "gensim", "sklearn" (ETM/ProdLDA planned)
+
+  # Dynamic learning
+  undervibrancy_threshold: null                     # null for dynamic GMM learning, float for fixed
+
+  # Topic modeling
+  lda_k_min: 4                                      # Minimum number of topics
+  lda_k_max: 12                                     # Maximum number of topics
+
+  # Backward compatibility
+  bert_device: -1                                   # Legacy BERT device parameter (-1=CPU, 0+=GPU)
+
 # ─── Visualization ────────────────────────────────────────────────────────────
 visualization:
   dpi: 150
