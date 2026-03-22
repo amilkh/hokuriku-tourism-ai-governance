@@ -36,6 +36,18 @@ paths:
   output: "output"
   figures: "output"
 
+# ─── Benchmarking (chronological hold-out vs baselines + RF ablation) ─────────
+benchmark:
+  enabled: true
+  train_pct: 0.80
+  baselines:
+    naive_lag1: true
+    rolling_mean_7: true
+  ablation:
+    weather: true
+    rsi_intent: true
+    calendar: true
+
 # ─── Model Hyperparameters ────────────────────────────────────────────────────
 model:
   random_forest:
@@ -94,6 +106,7 @@ visualization:
   dpi: 150
   dpi_high: 300
   figure_format: "png"
+  # When false: no fig_benchmark_comparison_ja.png / fig_ablation_impact_ja.png (English kept).
   ja_copy: true
 
 # ─── Thresholds ───────────────────────────────────────────────────────────────
