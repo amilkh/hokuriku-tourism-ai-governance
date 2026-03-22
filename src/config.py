@@ -37,7 +37,7 @@ def load_config(config_path: str | Path | None = None) -> dict[str, Any]:
         config_path = repo_dir / "config" / "settings.yaml"
 
     config_path = Path(config_path)
-    with open(config_path) as fh:
+    with open(config_path, encoding="utf-8") as fh:
         cfg: dict[str, Any] = yaml.safe_load(fh)
 
     workspace_root = repo_dir.parent

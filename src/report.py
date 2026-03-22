@@ -68,7 +68,7 @@ class Reporter:
         fname: str | Path,
         *,
         dpi: int | None = None,
-        ja_copy: bool = False,
+        ja_copy: bool | None = None,
     ) -> Path:
         """Save a matplotlib figure and optionally create a ``_ja`` copy.
 
@@ -76,7 +76,9 @@ class Reporter:
             fig: Matplotlib ``Figure`` to save.
             fname: Output file path (absolute or relative to ``fig_dir``).
             dpi: Resolution; defaults to value in ``settings.yaml``.
-            ja_copy: When ``True``, duplicate the file with a ``_ja`` suffix.
+            ja_copy: If ``True``, duplicate with a ``_ja`` suffix. If ``False``,
+                never duplicate (overrides ``visualization.ja_copy`` in config).
+                If ``None`` (default), use the reporter's config flag.
 
         Returns:
             The absolute path of the saved figure.
@@ -87,7 +89,8 @@ class Reporter:
         self._optimize_png(path)
         self.log(f"  Saved {path}")
 
-        if ja_copy or self._ja_copy:
+        duplicate_ja = self._ja_copy if ja_copy is None else ja_copy
+        if duplicate_ja:
             ja_path = path.with_name(path.stem + "_ja" + path.suffix)
             shutil.copyfile(str(path), str(ja_path))
             self._optimize_png(ja_path)
@@ -133,6 +136,6 @@ class Reporter:
         """
         out_path = self.out_dir / "analysis_metrics.txt"
         lines = self.metrics_lines if self.metrics_lines else self.report_lines
-        out_path.write_text("\n".join(lines))
+        out_path.write_text("\n".join(lines), encoding="utf-8")
         self.log(f">>> Metrics saved to {out_path}")
         return out_path
