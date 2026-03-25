@@ -248,14 +248,14 @@ git clone https://github.com/code4fukui/fukui-kanko-survey.git
 git clone https://github.com/code4fukui/hokuriku-tourism-ai-governance.git
 cd hokuriku-tourism-ai-governance
 git checkout submission/scs-v1
-pip install ".[dev]"
+pip install -e ".[dev]"
 ```
 
 ### Commands
 
 | Command | What it does |
 |---------|-------------|
-| `python -m src.run_analysis` | Run full pipeline → figures, metrics, LaTeX tables |
+| `python3 -m src.run_analysis` | Run full pipeline → figures, metrics, LaTeX tables |
 | `pytest` | Run test suite (verifies core math & formulas) |
 | `pytest --cov=src --cov-report=html` | Tests with coverage report |
 | `ruff check src/ tests/` | Lint check |
