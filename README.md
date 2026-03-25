@@ -168,10 +168,10 @@ Each node is modelled independently with local JMA weather, enabling:
 |-----------|-----------|---------------|
 | Durbin–Watson (OLS) | 1.005 | Corrected via Newey-West HAC |
 | Durbin–Watson (1st-diff) | 2.525 | **Clean** residuals |
-| Newey–West HAC | 8 significant | Robust to heteroskedasticity |
+| Newey–West HAC | lags = 8, 9 significant | Robust to heteroskedasticity |
 | First-Difference R² | 0.708 | Controls for trend |
 | LDV R² | 0.848 | Dynamic specification |
-| VIF (max) | < 10 | No multicollinearity |
+| VIF (max) | 15.0 (calendar interaction) | Elevated but does not invalidate significance |
 | Weather data value | +0.056 R² | JMA contribution quantified |
 
 ---
