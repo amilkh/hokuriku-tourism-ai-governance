@@ -255,6 +255,13 @@ cd hokuriku-tourism-ai-governance
 git checkout submission/scs-v1
 pip install -e ".[dev]"
 ```
+## IMPORTANT: Initialize Submodules
+
+This project requires Git submodules for dataset access. Before running any commands, initialize them:
+
+```bash
+git submodule update --init --recursive
+```
 
 ### Commands
 
@@ -267,7 +274,9 @@ pip install -e ".[dev]"
 | `pandoc output/pdf/executive_report_en.md -o output/pdf/executive_report_en.pdf --pdf-engine=xelatex` | Build English executive report PDF |
 | `pandoc output/pdf/executive_report_ja.md -o output/pdf/executive_report_ja.pdf --pdf-engine=xelatex` | Build Japanese executive report PDF |
 
-> **Note:** Set `HTAG_CONFIG=/path/to/settings.yaml` to use a custom config (default: `config/settings.yaml`).
+> **Note:** 
+> Set `HTAG_CONFIG=/path/to/settings.yaml` to use a custom config (default: `config/settings.yaml`). 
+> Use `python` on Windows and `python3` on Linux/macOS.
 
 > **PDF prerequisites (Debian/Ubuntu/WSL):** `sudo apt-get install -y pandoc texlive-xetex texlive-lang-japanese fonts-noto-cjk`
 
