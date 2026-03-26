@@ -63,6 +63,12 @@ def main() -> None:
     fig_num = 0
 
     # ══════════════════════════════════════════════════════════════════════
+    # CROSS-PLATFORM TEMP DIRECTORY (FIX FOR WINDOWS + REPRODUCIBILITY)
+    # ══════════════════════════════════════════════════════════════════════
+    TEMP_DIR = os.getenv("TMP_DIR", os.path.join(os.getcwd(), "tmp"))
+    os.makedirs(TEMP_DIR, exist_ok=True)
+
+    # ══════════════════════════════════════════════════════════════════════
     # 0. DATA INTEGRITY VALIDATION
     # ══════════════════════════════════════════════════════════════════════
     validation = validate_pipeline(cfg, rpt)
@@ -292,7 +298,7 @@ def main() -> None:
     # produced later as part of the spatial section and copied below.
     viz.plot_resurrection(
         sim_df, total_lost, mean_actual_rank, mean_hypo_rank,
-        os.path.join("/tmp", "fig16_resurrection_temp.png"),
+        os.path.join(TEMP_DIR, "fig16_resurrection_temp.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -354,7 +360,7 @@ def main() -> None:
     # do NOT overwrite with the bubble network diagram.
     viz.plot_weather_shield_network(
         spatial.get("valid_nodes", {}),
-        os.path.join("/tmp", "fig_weather_shield_network.png"),
+        os.path.join(TEMP_DIR, "fig_weather_shield_network.png"),
         rpt, dpi=300)
 
     fig_num += 1
