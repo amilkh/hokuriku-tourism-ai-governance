@@ -1,6 +1,6 @@
 ================================================================================
 BOLSTERED RESULTS – Tojinbo Demand Forecast Model
-Generated: 2026-03-13 11:30
+Generated: 2026-03-26 09:54
 ================================================================================
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -94,7 +94,7 @@ Generated: 2026-03-13 11:30
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  9. STATISTICAL RIGOR (効果量 / Prof. Takemoto Review)
+  9. STATISTICAL RIGOR (効果量 / Effect Sizes & Hold-Out Validation)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Top-3 Standardised β: is_weekend_or_holiday=+0.547, directions=+0.456, month=+0.331
   Cohen's f²:           4.2519
@@ -148,7 +148,7 @@ Multinode_Aggregate_Loss (nodes=4)
   Total_Lost_Billion_Yen=11.959
   USD_Exchange_Rate=164.7
   Total_Lost_USD_Million=72.6
-  ★ GEOGRAPHIC_SATURATION=ACHIEVED (North/Central/South/East)
+  GEOGRAPHIC_SATURATION=ACHIEVED (North/Central/South/East)
 Survey_Proxy_Validation
   Pearson_r=0.564
   p_value=1.448e-38
