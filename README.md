@@ -13,6 +13,9 @@
 
 </div>
 
+> **Executive Reports:** [English](EXECUTIVE_REPORT.en.md) · [日本語](EXECUTIVE_REPORT.ja.md)
+> **Read in:** [日本語](README.ja.md)
+
 ---
 
 ## Abstract
@@ -111,7 +114,7 @@ where $\bar{S} = ¥13{,}811$ is the mean spending per visitor (from Fukui survey
 | Gap days | 42 (high-friction days) |
 | Total lost visitors | 85,522 |
 | Mean spending per visitor | ¥13,811 (~$88) |
-| **Total annual revenue loss** | **¥11.96 billion (~USD 76.2M)** |
+| **Total annual revenue loss** | **¥11.96 billion (~USD 72.6M)** |
 
 ---
 
@@ -183,6 +186,8 @@ hokuriku-tourism-ai-governance/
 ├── pyproject.toml                # PEP 517/621 package definition → pip install .
 ├── requirements.txt              # Runtime dependencies (minimum versions)
 ├── SUPPLEMENT.md                 # Reproducibility supplement (params, schema, SHAs)
+├── EXECUTIVE_REPORT.en.md        # English executive report (pandoc → PDF source)
+├── EXECUTIVE_REPORT.ja.md        # Japanese executive report (pandoc → PDF source)
 ├── DATA_DICTIONARY.md            # Full variable reference
 ├── config/
 │   └── settings.yaml             # Pipeline configuration (all paths & params)
@@ -226,7 +231,7 @@ hokuriku-tourism-ai-governance/
 | **JMA** (Mikuni, Fukui, Katsuyama) | Hourly: precip, temp, sun, wind, humidity, snow | 2024-01 → 2026-02 | ~140K |
 | **Route Search Impressions (RSI)** | Daily: route searches, map views, reviews for 47 locations | 2024-01 → 2026-02 | ~35K |
 | **Hokuriku Tourism Survey** | Satisfaction, NPS, free text (Fukui/Ishikawa/Toyama) | 2023 → 2026 | **97,719** |
-| **Fukui Kanko Survey (raw)** | Spending, demographics, travel patterns | 2022 → 2025 | 90,350 records (576K raw CSV lines) |
+| **Fukui Kanko Survey (raw)** | Spending, demographics, travel patterns | 2022 → 2025 | 90,317 records (576K raw CSV lines) |
 
 **Total records:** ~530K
 
@@ -259,8 +264,12 @@ pip install -e ".[dev]"
 | `pytest` | Run test suite (verifies core math & formulas) |
 | `pytest --cov=src --cov-report=html` | Tests with coverage report |
 | `ruff check src/ tests/` | Lint check |
+| `pandoc output/pdf/executive_report_en.md -o output/pdf/executive_report_en.pdf --pdf-engine=xelatex` | Build English executive report PDF |
+| `pandoc output/pdf/executive_report_ja.md -o output/pdf/executive_report_ja.pdf --pdf-engine=xelatex` | Build Japanese executive report PDF |
 
 > **Note:** Set `HTAG_CONFIG=/path/to/settings.yaml` to use a custom config (default: `config/settings.yaml`).
+
+> **PDF prerequisites (Debian/Ubuntu/WSL):** `sudo apt-get install -y pandoc texlive-xetex texlive-lang-japanese fonts-noto-cjk`
 
 All artifacts are written to `output/`: paper figures and LaTeX tables.
 
