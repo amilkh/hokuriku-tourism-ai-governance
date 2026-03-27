@@ -21,7 +21,12 @@ header-includes: |
 
 \noindent\small\textbf{Project:} AI-driven demand forecasting and spatial optimization for Hokuriku tourism (Fukui Prefecture, Japan)
 
-\vspace{-4pt}\noindent\textbf{Author:} Amil Khanzada \enspace \textit{Specially Appointed Associate Professor, Headquarters for Regional Revitalization, University of Fukui} \hfill \textbf{Date:} March 26, 2026\normalsize
+\vspace{-5pt}\noindent\begin{minipage}[t]{0.72\linewidth}
+\textbf{Author:} Amil Khanzada \enspace \textit{Specially Appointed Associate Professor, Headquarters for Regional Revitalization, University of Fukui}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.26\linewidth}
+\raggedleft\textbf{Date:} March 26, 2026
+\end{minipage}\normalsize
 
 \vspace{3pt}\noindent\rule{\linewidth}{0.3pt}\vspace{4pt}
 
@@ -87,7 +92,7 @@ Text mining (71,623 reviews) reveals Fukui's essence is ``under-vibrancy.'' Low 
 Ishikawa tourism activity strongly leads Fukui visits ($r=0.549$). Hokuriku functions as a single ecosystem---regional governance and joint grants are essential.
 \end{minipage}
 
-\vspace{4pt}\noindent\rule{\linewidth}{0.3pt}\vspace{4pt}
+\clearpage\noindent\rule{\linewidth}{0.3pt}\vspace{4pt}
 
 ## 5. Policy Proposals / 6. Conclusion
 
@@ -96,7 +101,7 @@ Ishikawa tourism activity strongly leads Fukui visits ($r=0.549$). Hokuriku func
 \vspace{5pt}
 
 \noindent\centering
-\includegraphics[width=0.94\textwidth]{../paper_fig5_weather_shield_map.png}
+\includegraphics[width=0.96\textwidth,height=14cm,keepaspectratio]{../paper_fig5_weather_shield_map.png}
 \captionof{figure}{\small 4-node weather shield network. Geography-accurate map with weather sensitivity coefficients at each node. Rainbow Line shows strongest seasonality (1.85$\times$) and snow impact ($\beta=-0.0916$).}
 
 \vfill
