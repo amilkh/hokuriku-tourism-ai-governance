@@ -1,8 +1,8 @@
 ---
 geometry: "a4paper, margin=0.85cm, top=0.75cm, bottom=0.75cm"
 mainfont: "Latin Modern Roman"
-fontsize: 10pt
-linestretch: 1.0
+fontsize: 11pt
+linestretch: 0.97
 pagestyle: plain
 header-includes: |
   \usepackage{booktabs}
@@ -19,8 +19,9 @@ header-includes: |
 
 # Scientific Executive Report
 
-\noindent\small\textbf{Project:} AI-driven demand forecasting and spatial optimization for Hokuriku tourism (Fukui Prefecture, Japan)\\[3pt]
-\textbf{Author:} Amil Khanzada \enspace \textit{Specially Appointed Associate Professor, Headquarters for Regional Revitalization, University of Fukui} \hfill \textbf{Date:} March 26, 2026\normalsize
+\noindent\small\textbf{Project:} AI-driven demand forecasting and spatial optimization for Hokuriku tourism (Fukui Prefecture, Japan)
+
+\vspace{-4pt}\noindent\textbf{Author:} Amil Khanzada \enspace \textit{Specially Appointed Associate Professor, Headquarters for Regional Revitalization, University of Fukui} \hfill \textbf{Date:} March 26, 2026\normalsize
 
 \vspace{3pt}\noindent\rule{\linewidth}{0.3pt}\vspace{4pt}
 
