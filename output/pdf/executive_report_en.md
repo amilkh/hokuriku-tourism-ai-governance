@@ -19,7 +19,7 @@ header-includes: |
 
 # Scientific Executive Report
 
-\noindent\small\textbf{Project:} AI-driven demand forecasting and spatial optimization for Hokuriku tourism (Fukui Prefecture, Japan)\quad\textbf{Author:} Amil Khanzada, Associate Professor, University of Fukui\quad\textbf{Date:} February 27, 2026\normalsize
+\noindent\small\textbf{Project:} AI-driven demand forecasting and spatial optimization for Hokuriku tourism (Fukui Prefecture, Japan)\quad\textbf{Author:} Amil Khanzada, Associate Professor, University of Fukui\quad\textbf{Date:} March 26, 2026\normalsize
 
 \vspace{3pt}\noindent\rule{\linewidth}{0.3pt}\vspace{3pt}
 
@@ -35,7 +35,7 @@ Fukui Prefecture remains structurally weak in winter tourism (\textbf{47th/47}).
 \textbf{2. Distributed Human Data Engine (DHDE)}
 
 \smallskip
-Four data streams integrated: \textbf{Digital Intent} (Google search/route queries), \textbf{Environmental Filter} (JMA weather: temperature, precipitation, snow, wind), \textbf{Observed Data} (AI camera visitor counts), \textbf{Behavioral Sensor} (Hokuriku survey: 97,719 responses + 90,350 spending records).
+Four data streams integrated: \textbf{Digital Intent} (Google search/route queries), \textbf{Environmental Filter} (JMA weather: temperature, precipitation, snow, wind), \textbf{Observed Data} (AI camera visitor counts), \textbf{Behavioral Sensor} (Hokuriku survey: 97,719 responses + 90,317 spending records).
 \end{minipage}
 
 \vspace{6pt}
@@ -46,13 +46,13 @@ Four data streams integrated: \textbf{Digital Intent} (Google search/route queri
 \textbf{3.1 Forecast Performance \& Weather Shield Effect}
 
 \smallskip
-Accuracy: $R^2=0.810$ (adj.\ 0.802). 81\% of daily visitor variation explained. Top predictor: Google ``Directions'' intent ($r=0.781$). Adding JMA weather data boosts accuracy by +5.6\%, proving weather as an economic gatekeeper.
+Accuracy: $R^2=0.810$ (adj.\ 0.802). 81\% of daily visitor variation explained. Top predictor: Google ``Directions'' intent ($\beta=+0.456$). Adding JMA weather data boosts accuracy by +5.6\%, proving weather as an economic gatekeeper.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.48\textwidth}
 \textbf{3.2 Under-vibrancy Paradox \& Sacred Site Threshold}
 
 \smallskip
-Text mining (71,288 reviews) reveals Fukui's essence is ``under-vibrancy.'' Low satisfaction (1--2$\star$) complaints about ``loneliness/closed shops'' are 11.5$\times$ more frequent. Tojinbo (nature) satisfaction rises with crowding; Eiheiji (sacred site) requires density management (threshold $\approx42.4\%$).
+Text mining (71,623 reviews) reveals Fukui's essence is ``under-vibrancy.'' Low satisfaction (1--2$\star$) complaints about ``loneliness/closed shops'' are 11.5$\times$ more frequent. Tojinbo (nature) satisfaction rises with crowding; Eiheiji (sacred site) requires density management (threshold $\approx42.4\%$).
 \end{minipage}
 
 \vspace{4pt}
@@ -71,7 +71,7 @@ Text mining (71,288 reviews) reveals Fukui's essence is ``under-vibrancy.'' Low 
 \textbf{4.1 Opportunity Loss: \textasciitilde\yen{}11.96B (4 Nodes)}
 
 \smallskip
-4 nodes (Tojinbo/North, Fukui Stn/Central, Katsuyama/East, Rainbow Line/South) achieved geographic saturation. Lost visitors: \textbf{865,917/year}. Estimated aggregate revenue loss: \textbf{\textasciitilde\yen{}11.96B}. Winter sensitivity: \textbf{6.27$\times$} higher than summer.
+4 nodes (Tojinbo/North, Fukui Stn/Central, Katsuyama/East, Rainbow Line/South) achieved geographic saturation. Lost visitors: \textbf{865,917/year}. Estimated aggregate revenue loss: \textbf{\textasciitilde\yen{}11.96B}. Winter sensitivity: \textbf{6.26$\times$} higher than summer.
 
 \vspace{5pt}
 \textbf{4.2 Ishikawa Pipeline (Regional Linkage Evidence)}
