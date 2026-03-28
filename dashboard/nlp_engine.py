@@ -176,19 +176,22 @@ class TourismNLPEngine:
         tokenised = self.tokenise_documents(texts)
         joined = [" ".join(toks) for toks in tokenised]
         joined = [t for t in joined if t.strip()]
-        if not joined:
+        if len(joined) < 2:
             return []
 
-        tfidf = TfidfVectorizer(
-            max_features=500,
-            token_pattern=r"(?u)\b\w+\b",
-        )
-        matrix = tfidf.fit_transform(joined)
-        scores = np.asarray(matrix.mean(axis=0)).flatten()
-        terms = tfidf.get_feature_names_out()
+        try:
+            tfidf = TfidfVectorizer(
+                max_features=500,
+                token_pattern=r"(?u)\b\w+\b",
+            )
+            matrix = tfidf.fit_transform(joined)
+            scores = np.asarray(matrix.mean(axis=0)).flatten()
+            terms = tfidf.get_feature_names_out()
 
-        ranked = sorted(zip(terms, scores), key=lambda x: x[1], reverse=True)
-        return ranked[:top_n]
+            ranked = sorted(zip(terms, scores), key=lambda x: x[1], reverse=True)
+            return ranked[:top_n]
+        except Exception:
+            return []
 
     # ─── Topic Modelling (LDA) ──────────────
     def topic_modelling(
@@ -196,47 +199,48 @@ class TourismNLPEngine:
     ) -> Dict:
         """
         Perform LDA topic modelling.
-
-        Returns
-        -------
-        dict with keys:
-            topics    — list of {id, words, weight}
-            doc_topic — array (n_docs, n_topics) with topic probabilities
         """
         tokenised = self.tokenise_documents(texts)
         joined = [" ".join(toks) for toks in tokenised]
         joined_clean = [t for t in joined if len(t.strip()) > 0]
-        if len(joined_clean) < n_topics:
+        if len(joined_clean) < max(n_topics, 5):
             return {"topics": [], "doc_topic": np.array([])}
 
-        cv = CountVectorizer(
-            max_features=500,
-            token_pattern=r"(?u)\b\w+\b",
-        )
-        dtm = cv.fit_transform(joined_clean)
+        try:
+            cv = CountVectorizer(
+                max_features=500,
+                token_pattern=r"(?u)\b\w+\b",
+            )
+            dtm = cv.fit_transform(joined_clean)
 
-        lda = LatentDirichletAllocation(
-            n_components=n_topics,
-            random_state=42,
-            max_iter=20,
-            learning_method="online",
-        )
-        doc_topic = lda.fit_transform(dtm)
+            if dtm.shape[1] < n_topics:
+                return {"topics": [], "doc_topic": np.array([])}
 
-        terms = cv.get_feature_names_out()
-        topics = []
-        for idx, component in enumerate(lda.components_):
-            top_idx = component.argsort()[-top_words:][::-1]
-            words = [terms[i] for i in top_idx]
-            weight = float(component[top_idx].sum())
-            topics.append({
-                "id": idx,
-                "label": f"Topic {idx + 1}",
-                "words": words,
-                "weight": weight,
-            })
+            lda = LatentDirichletAllocation(
+                n_components=n_topics,
+                random_state=42,
+                max_iter=20,
+                learning_method="online",
+            )
+            doc_topic = lda.fit_transform(dtm)
 
-        return {"topics": topics, "doc_topic": doc_topic}
+            terms = cv.get_feature_names_out()
+            topics = []
+            for idx, component in enumerate(lda.components_):
+                top_idx = component.argsort()[-top_words:][::-1]
+                top_idx = [i for i in top_idx if i < len(terms)]
+                words = [terms[i] for i in top_idx]
+                weight = float(component[top_idx].sum()) if len(top_idx) > 0 else 0
+                topics.append({
+                    "id": idx,
+                    "label": f"Topic {idx + 1}",
+                    "words": words,
+                    "weight": weight,
+                })
+
+            return {"topics": topics, "doc_topic": doc_topic}
+        except Exception:
+            return {"topics": [], "doc_topic": np.array([])}
 
     # ─── Sentiment Analysis ────────────────
     def sentiment_analysis(self, texts: List[str]) -> pd.DataFrame:
@@ -290,9 +294,10 @@ class TourismNLPEngine:
         tokenised = self.tokenise_documents(texts)
         counter: Counter = Counter()
         for toks in tokenised:
-            for i in range(len(toks) - n + 1):
-                gram = " ".join(toks[i : i + n])
-                counter[gram] += 1
+            if len(toks) >= n:
+                for i in range(len(toks) - n + 1):
+                    gram = " ".join(toks[i : i + n])
+                    counter[gram] += 1
         return counter.most_common(top_k)
 
     # ─── Word Cloud Data ────────────────

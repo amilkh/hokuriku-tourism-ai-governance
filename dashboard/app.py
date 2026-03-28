@@ -947,7 +947,7 @@ def tab_nlp(survey):
             fig_wc, ax = plt.subplots(figsize=(12, 6))
             ax.imshow(wc, interpolation="bilinear")
             ax.axis("off")
-            st.pyplot(fig_wc, key="nlp_wc")
+            st.pyplot(fig_wc)
         except ImportError:
             wc_df = pd.DataFrame(list(wc_data.items()), columns=["Word", "Freq"])
             st.dataframe(wc_df.sort_values("Freq", ascending=False).head(30))
