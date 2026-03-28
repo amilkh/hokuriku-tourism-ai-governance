@@ -4,6 +4,8 @@ Hokuriku Tourism AI Governance — Interactive Dashboard
 Streamlit-based exploration of the Distributed Human Data Engine (DHDE).
 
 Run with:  streamlit run dashboard/app.py
+Author  : Dawood Imtiaz
+Date    : 2026-03
 """
 
 import sys
@@ -22,7 +24,7 @@ import numpy as np
 from dashboard.data_bridge import DataBridge, discomfort_index
 from dashboard.nlp_engine import TourismNLPEngine
 
-# ── Display name mapping (internal column → human-readable) ──
+# ---- Display name mapping (internal column → human-readable) ---
 DISPLAY_NAMES = {
     "snow_depth_cm":    "SnowDepth /cm",
     "snowfall_1h_cm":   "Snowfall per h /cm",
@@ -51,7 +53,7 @@ def internal_name(display: str) -> str:
     return REVERSE_NAMES.get(display, display)
 
 
-# ── Page Config ──
+# ---- Page Config ----
 st.set_page_config(
     page_title="Hokuriku Tourism AI Governance",
     page_icon="🏯",
@@ -75,7 +77,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ── Cached Resources ──
+# ---- Cached Resources -----
 @st.cache_resource
 def get_bridge():
     return DataBridge()
@@ -99,9 +101,9 @@ def metric_card(title, value, col):
     )
 
 
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 #  SIDEBAR
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 
 def render_sidebar(jma):
     st.sidebar.title("🏯 Hokuriku Dashboard")
@@ -147,9 +149,9 @@ def render_sidebar(jma):
     return station, date_range
 
 
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 #  TAB 1 — OVERVIEW
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 
 def tab_overview(jma, survey):
     st.header("📊  DHDE Framework Overview")
@@ -199,7 +201,7 @@ def tab_overview(jma, survey):
             fig.update_layout(showlegend=False, height=400)
             st.plotly_chart(fig, use_container_width=True, key="ov_precip_box")
 
-    # ── Survey Satisfaction Overview ──
+    # --- Survey Satisfaction Overview --
     st.subheader("📋 Survey Satisfaction Overview")
 
     survey_clean = survey.copy()
@@ -316,9 +318,9 @@ def tab_overview(jma, survey):
             fig.update_layout(height=350)
             st.plotly_chart(fig, use_container_width=True, key="ov_sat_bar")
 
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 #  TAB 2 — WEATHER & TOURISM
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 
 def tab_weather(jma, station, date_range):
     st.header("🌤️  Weather–Tourism Correlation Analysis")
@@ -414,9 +416,9 @@ def tab_weather(jma, station, date_range):
         st.plotly_chart(fig, use_container_width=True, key="wt_violin")
 
 
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 #  TAB 3 — OPPORTUNITY GAP
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 
 def tab_opportunity_gap(jma, station):
     st.header("💰  Opportunity Gap Analysis")
@@ -557,9 +559,9 @@ def tab_opportunity_gap(jma, station):
                 )
 
 
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 #  TAB 4 — KANSEI COMFORT
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 
 def tab_kansei(jma, station):
     st.header("🌡️  Kansei Environmental Comfort Assessment")
@@ -654,7 +656,7 @@ def tab_kansei(jma, station):
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True, key="ka_scatter")
 
-    # ── Seasonal Comfort Summary ──
+    # ---- Seasonal Comfort Summary ----
     if "season" in daily.columns and "discomfort_index" in daily.columns:
         st.subheader("🍂  Seasonal Comfort Summary")
 
@@ -675,9 +677,9 @@ def tab_kansei(jma, station):
         st.dataframe(season_stats, use_container_width=True)
 
 
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 #  TAB 5 — SPATIAL NETWORK
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 
 def tab_spatial(jma):
     st.header("🗺️  Spatial Saturation Network")
@@ -710,7 +712,7 @@ def tab_spatial(jma):
     stations = sorted(jma["station"].unique())
     bridge = get_bridge()
 
-    # ── Cross-Station Comparison with display names ──
+    # ----- Cross-Station Comparison with display names ----
     if len(stations) >= 2:
         st.subheader("⚖️  Cross-Station Weather Comparison")
 
@@ -747,7 +749,7 @@ def tab_spatial(jma):
         )
         st.plotly_chart(fig, use_container_width=True, key="sp_comparison")
 
-    # ── Cross-Station Correlation ──
+    # ---- Cross-Station Correlation ---
     if len(stations) >= 2:
         st.subheader("🔗  Cross-Station Correlation")
         dfs = {}
@@ -771,7 +773,7 @@ def tab_spatial(jma):
                 "reducing the Opportunity Gap."
             )
 
-    # ── Weather Divergence ──
+    # ---- Weather Divergence -----
     if len(stations) >= 2:
         st.subheader("🌦️  Weather Divergence Days (Shield Potential)")
         dfs_temp = {}
@@ -801,9 +803,9 @@ def tab_spatial(jma):
             )
 
 
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 #  TAB 6 — NLP INSIGHTS
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 
 def tab_nlp(survey):
     st.header("📝  NLP Survey Analysis")
@@ -908,7 +910,7 @@ def tab_nlp(survey):
 
     st.markdown("---")
 
-    # ── Keywords ──
+    # ---- Keywords ---
     st.subheader("🔑  Top Keywords (TF-IDF)")
     kw = results["keywords"]
     if kw:
@@ -928,7 +930,7 @@ def tab_nlp(survey):
 
     st.markdown("---")
 
-    # ── Word Cloud ──
+    # ------ Word Cloud ----
     st.subheader("☁️  Word Cloud")
     wc_data = results["wordcloud"]
     if wc_data:
@@ -952,7 +954,7 @@ def tab_nlp(survey):
 
     st.markdown("---")
 
-    # ── Topics ──
+    # ----- Topics --------
     st.subheader("📚  Topic Modelling (LDA)")
     topic_data = results["topics"]
     if topic_data["topics"]:
@@ -977,7 +979,7 @@ def tab_nlp(survey):
 
     st.markdown("---")
 
-    # ── N-grams ──
+    # ---- N-grams ----
     st.subheader("🔤  N-gram Analysis")
     col1, col2 = st.columns(2)
     with col1:
@@ -1007,7 +1009,7 @@ def tab_nlp(survey):
 
     st.markdown("---")
 
-    # ── Sample Reviews ──
+    # --- Sample Reviews ------
     st.subheader("🔍  Sample Reviews")
     n_samp = st.slider("Number of samples", 5, 50, 10, key="nlp_samp")
     sample = sent_df.sample(min(n_samp, len(sent_df)), random_state=42)
@@ -1021,9 +1023,9 @@ def tab_nlp(survey):
         )
 
 
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 #  MAIN
-# ══════════════════════════════════════════════════════════════
+# ---------------------------------------
 
 def main():
     try:
