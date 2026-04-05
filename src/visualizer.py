@@ -10,6 +10,7 @@ from __future__ import annotations
 import contextlib
 from collections.abc import Callable
 from pathlib import Path
+from typing import Literal
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -94,6 +95,40 @@ def _apply_japanese_font(fig: plt.Figure) -> None:
 
 
 _configure_japanese_font()
+
+# Installed-family fallback for benchmark / ablation ``lang="ja"`` figures only.
+_JA_BENCH_FONT_CANDIDATES: tuple[str, ...] = (
+    "Yu Gothic",
+    "Meiryo",
+    "MS Gothic",
+    "Noto Sans CJK JP",
+    "Noto Sans JP",
+    "IPAexGothic",
+    "Hiragino Sans",
+)
+
+
+def _resolve_japanese_benchmark_fontproperties() -> fm.FontProperties | None:
+    """Return first installed Japanese-capable font for benchmark figures."""
+    installed = {f.name for f in fm.fontManager.ttflist}
+    for name in _JA_BENCH_FONT_CANDIDATES:
+        if name in installed:
+            return fm.FontProperties(family=name)
+    for want in _JA_BENCH_FONT_CANDIDATES:
+        wanted = want.replace(" ", "").lower()
+        for got in installed:
+            if wanted in got.replace(" ", "").lower():
+                return fm.FontProperties(family=got)
+    return None
+
+
+def _apply_benchmark_japanese_font(fig: plt.Figure) -> None:
+    fp = _resolve_japanese_benchmark_fontproperties()
+    if fp is None:
+        return
+    for text_obj in fig.findobj(lambda obj: isinstance(obj, mpl.text.Text)):
+        with contextlib.suppress(Exception):
+            text_obj.set_fontproperties(fp)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1346,6 +1381,204 @@ def plot_dhde_architecture(
     reporter.log(f"  Saved {ja_path}")
 
     plt.close(fig)
+    return fig
+
+
+# ── Benchmark figures ─────────────────────────────────────────────────────────
+
+_BENCH_I18N: dict[str, dict[str, object]] = {
+    "en": {
+        "suptitle": "Chronological hold-out benchmark",
+        "no_data": "No benchmark data",
+        "metrics": [
+            ("MAE", "MAE", "MAE (visitors/day)"),
+            ("RMSE", "RMSE", "RMSE"),
+            ("R2", "R²", "R² (test)"),
+        ],
+        "model_labels": {
+            "naive_lag1": "naive_lag1",
+            "rolling_mean_7": "rolling_mean_7",
+            "ols": "ols",
+            "random_forest": "random_forest",
+        },
+    },
+    "ja": {
+        "suptitle": "時系列ホールドアウト・ベンチマーク",
+        "no_data": "ベンチマークデータがありません",
+        "metrics": [
+            ("MAE", "MAE", "MAE（来訪者数/日）"),
+            ("RMSE", "RMSE", "RMSE"),
+            ("R2", "R²", "R²（検証）"),
+        ],
+        "model_labels": {
+            "naive_lag1": "1日ラグ",
+            "rolling_mean_7": "7日移動平均",
+            "ols": "OLS",
+            "random_forest": "ランダムフォレスト",
+        },
+    },
+}
+
+_ABLATION_I18N: dict[str, dict[str, object]] = {
+    "en": {
+        "no_data": "No ablation data",
+        "no_scenarios": "No ablation scenarios",
+        "mae_title": "RF hold-out: cost of removing a feature family",
+        "mae_legend": "Higher = worse fit",
+        "mae_ylabel": "ΔMAE vs full\n(visitors/day)",
+        "r2_legend": "Negative = worse R²",
+        "r2_ylabel": "ΔR² vs full",
+        "xlabel": "Features removed",
+        "feature_labels": {
+            "weather": "weather",
+            "google_intent": "google_intent",
+            "calendar": "calendar",
+        },
+    },
+    "ja": {
+        "no_data": "アブレーションのデータがありません",
+        "no_scenarios": "アブレーションのシナリオがありません",
+        "mae_title": "RFホールドアウト：特徴量群を除去した場合の影響",
+        "mae_legend": "大きいほど適合が悪い",
+        "mae_ylabel": "フルモデル比 ΔMAE\n（来訪者数/日）",
+        "r2_legend": "負ほどR²が悪い",
+        "r2_ylabel": "フルモデル比 ΔR²",
+        "xlabel": "除去した特徴量",
+        "feature_labels": {
+            "weather": "気象",
+            "google_intent": "Google検索意向",
+            "calendar": "カレンダー",
+        },
+    },
+}
+
+
+def plot_benchmark_comparison(
+    summary_table: pd.DataFrame,
+    out_path: str,
+    reporter: Reporter,
+    *,
+    dpi: int = 150,
+    lang: Literal["en", "ja"] = "en",
+    ja_copy: bool = False,
+) -> plt.Figure:
+    """Grouped bar chart of test MAE / RMSE / R² across baselines and models."""
+    t = _BENCH_I18N[lang]
+    if summary_table.empty:
+        fig, ax = plt.subplots(figsize=(6, 3), layout="constrained")
+        ax.text(0.5, 0.5, str(t["no_data"]), ha="center", va="center")
+        ax.axis("off")
+        if lang == "ja":
+            _apply_benchmark_japanese_font(fig)
+        _save(fig, out_path, reporter, dpi=dpi, ja_copy=ja_copy)
+        return fig
+
+    df = summary_table.copy()
+    models = df["model"].astype(str).tolist()
+    model_map: dict[str, str] = t["model_labels"]  # type: ignore[assignment]
+    xtick_labels = [model_map.get(m, m) for m in models]
+    x = np.arange(len(models))
+
+    fig, axes = plt.subplots(1, 3, figsize=(11, 5.0), layout="constrained")
+    metrics = t["metrics"]  # type: ignore[assignment]
+    for ax, (col, title, ylab) in zip(axes, metrics):
+        vals = df[col].astype(float).values
+        ax.bar(x, vals, width=0.62, color="#4C72B0", edgecolor="black", linewidth=0.4)
+        ax.set_xticks(x)
+        ax.set_xticklabels(xtick_labels, rotation=30, ha="right", fontsize=8)
+        ax.set_ylabel(ylab)
+        ax.set_title(title)
+        ax.grid(axis="y", alpha=0.3)
+        ax.tick_params(axis="x", pad=2)
+
+    fig.suptitle(str(t["suptitle"]), fontsize=12, fontweight="bold")
+    if lang == "ja":
+        _apply_benchmark_japanese_font(fig)
+    _save(fig, out_path, reporter, dpi=dpi, ja_copy=ja_copy)
+    return fig
+
+
+def plot_ablation_impact(
+    ablation_table: pd.DataFrame,
+    out_path: str,
+    reporter: Reporter,
+    *,
+    dpi: int = 150,
+    lang: Literal["en", "ja"] = "en",
+    ja_copy: bool = False,
+) -> plt.Figure:
+    """Bar chart of ΔMAE and ΔR² vs full RF when feature families are removed."""
+    t = _ABLATION_I18N[lang]
+    if ablation_table.empty or len(ablation_table) < 2:
+        fig, ax = plt.subplots(figsize=(6, 3), layout="constrained")
+        ax.text(0.5, 0.5, str(t["no_data"]), ha="center", va="center")
+        ax.axis("off")
+        if lang == "ja":
+            _apply_benchmark_japanese_font(fig)
+        _save(fig, out_path, reporter, dpi=dpi, ja_copy=ja_copy)
+        return fig
+
+    sub = ablation_table[ablation_table["scenario"] != "full"].copy()
+    if sub.empty:
+        fig, ax = plt.subplots(figsize=(6, 3), layout="constrained")
+        ax.text(0.5, 0.5, str(t["no_scenarios"]), ha="center", va="center")
+        ax.axis("off")
+        if lang == "ja":
+            _apply_benchmark_japanese_font(fig)
+        _save(fig, out_path, reporter, dpi=dpi, ja_copy=ja_copy)
+        return fig
+
+    feat_map: dict[str, str] = t["feature_labels"]  # type: ignore[assignment]
+    raw_labels = [str(s).replace("no_", "") for s in sub["scenario"].astype(str).tolist()]
+    labels = [feat_map.get(lbl, lbl) for lbl in raw_labels]
+    x = np.arange(len(labels))
+
+    fig, (ax_mae, ax_r2) = plt.subplots(
+        2,
+        1,
+        figsize=(8, 5.5),
+        sharex=True,
+        height_ratios=[1.05, 1.0],
+        layout="constrained",
+    )
+    d_mae = sub["delta_MAE_vs_full"].astype(float).values
+    d_r2 = sub["delta_R2_vs_full"].astype(float).values
+
+    ax_mae.bar(
+        x,
+        d_mae,
+        width=0.55,
+        color="#DD8452",
+        edgecolor="black",
+        linewidth=0.5,
+        label=str(t["mae_legend"]),
+    )
+    ax_mae.axhline(0, color="black", linewidth=0.9)
+    ax_mae.set_ylabel(str(t["mae_ylabel"]))
+    ax_mae.grid(axis="y", alpha=0.3)
+    ax_mae.legend(loc="upper right", fontsize=7)
+    ax_mae.set_title(str(t["mae_title"]))
+
+    ax_r2.bar(
+        x,
+        d_r2,
+        width=0.55,
+        color="#55A868",
+        edgecolor="black",
+        linewidth=0.5,
+        label=str(t["r2_legend"]),
+    )
+    ax_r2.axhline(0, color="black", linewidth=0.9)
+    ax_r2.set_ylabel(str(t["r2_ylabel"]))
+    ax_r2.set_xticks(x)
+    ax_r2.set_xticklabels(labels, rotation=15, ha="center", fontsize=9)
+    ax_r2.set_xlabel(str(t["xlabel"]))
+    ax_r2.grid(axis="y", alpha=0.3)
+    ax_r2.legend(loc="lower right", fontsize=7)
+
+    if lang == "ja":
+        _apply_benchmark_japanese_font(fig)
+    _save(fig, out_path, reporter, dpi=dpi, ja_copy=ja_copy)
     return fig
 
 
