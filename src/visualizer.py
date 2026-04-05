@@ -96,7 +96,7 @@ def _apply_japanese_font(fig: plt.Figure) -> None:
 
 _configure_japanese_font()
 
-# Installed-family fallback for benchmark / ablation ``lang="ja"`` figures only.
+# Installed-family fallback for benchmark / ablation ``lang="ja"`` figures only (no font file paths).
 _JA_BENCH_FONT_CANDIDATES: tuple[str, ...] = (
     "Yu Gothic",
     "Meiryo",
@@ -109,15 +109,15 @@ _JA_BENCH_FONT_CANDIDATES: tuple[str, ...] = (
 
 
 def _resolve_japanese_benchmark_fontproperties() -> fm.FontProperties | None:
-    """Return first installed Japanese-capable font for benchmark figures."""
+    """First installed Japanese-capable font from ``_JA_BENCH_FONT_CANDIDATES``."""
     installed = {f.name for f in fm.fontManager.ttflist}
     for name in _JA_BENCH_FONT_CANDIDATES:
         if name in installed:
             return fm.FontProperties(family=name)
     for want in _JA_BENCH_FONT_CANDIDATES:
-        wanted = want.replace(" ", "").lower()
+        w = want.replace(" ", "").lower()
         for got in installed:
-            if wanted in got.replace(" ", "").lower():
+            if w in got.replace(" ", "").lower():
                 return fm.FontProperties(family=got)
     return None
 
@@ -134,7 +134,7 @@ def _apply_benchmark_japanese_font(fig: plt.Figure) -> None:
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _save(fig: plt.Figure, path: str, reporter: Reporter,
-          dpi: int = 150, ja_copy: bool = True) -> None:
+          dpi: int = 150, ja_copy: bool | None = None) -> None:
     reporter.save_fig(fig, path, dpi=dpi, ja_copy=ja_copy)
     plt.close(fig)
 
@@ -1462,7 +1462,20 @@ def plot_benchmark_comparison(
     lang: Literal["en", "ja"] = "en",
     ja_copy: bool = False,
 ) -> plt.Figure:
-    """Grouped bar chart of test MAE / RMSE / R² across baselines and models."""
+    """Grouped bar chart of test MAE / RMSE / R² across baselines and models.
+
+    Args:
+        summary_table: DataFrame with columns ``model``, ``MAE``, ``RMSE``, ``R2``.
+        out_path: Output PNG path (absolute or under ``fig_dir``).
+        reporter: Pipeline ``Reporter``.
+        dpi: Figure resolution.
+        lang: ``"en"`` or ``"ja"`` for titles and axis labels.
+        ja_copy: Passed to ``Reporter.save_fig`` (use ``False`` when saving
+            English and Japanese figures as separate explicit paths).
+
+    Returns:
+        The matplotlib ``Figure``.
+    """
     t = _BENCH_I18N[lang]
     if summary_table.empty:
         fig, ax = plt.subplots(figsize=(6, 3), layout="constrained")
@@ -1507,7 +1520,20 @@ def plot_ablation_impact(
     lang: Literal["en", "ja"] = "en",
     ja_copy: bool = False,
 ) -> plt.Figure:
-    """Bar chart of ΔMAE and ΔR² vs full RF when feature families are removed."""
+    """Bar chart of ΔMAE and ΔR² vs full RF when feature families are removed.
+
+    Args:
+        ablation_table: DataFrame with ``scenario``, ``delta_MAE_vs_full``,
+            ``delta_R2_vs_full`` (and other columns ignored).
+        out_path: Output PNG path.
+        reporter: Pipeline ``Reporter``.
+        dpi: Figure resolution.
+        lang: ``"en"`` or ``"ja"`` for titles and axis labels.
+        ja_copy: Passed to ``Reporter.save_fig``.
+
+    Returns:
+        The matplotlib ``Figure``.
+    """
     t = _ABLATION_I18N[lang]
     if ablation_table.empty or len(ablation_table) < 2:
         fig, ax = plt.subplots(figsize=(6, 3), layout="constrained")
@@ -1533,6 +1559,8 @@ def plot_ablation_impact(
     labels = [feat_map.get(lbl, lbl) for lbl in raw_labels]
     x = np.arange(len(labels))
 
+    # Two panels: twin y-axes mixed ΔMAE (≈10²) with ΔR² (≈10⁻¹) and broke bar
+    # alignment/clipping; stack separate axes with a shared x instead.
     fig, (ax_mae, ax_r2) = plt.subplots(
         2,
         1,

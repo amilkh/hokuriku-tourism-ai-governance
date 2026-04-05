@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
+import tempfile
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -22,6 +24,7 @@ matplotlib.use("Agg")
 import pandas as pd
 
 from src import visualizer as viz
+from src.benchmark import run_benchmark
 from src.config import load_config
 from src.data_loader import load_all_data
 from src.economics import (
@@ -48,12 +51,23 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
+    # Windows consoles often default to cp1252; pipeline output uses UTF-8.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8")
+        except (AttributeError, OSError, ValueError):
+            pass
+
     # ── Logging ──────────────────────────────────────────────────────────
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+    # Avoid hundreds of "Font family 'Ubuntu Sans' not found" lines on Windows
+    # when LaTeX table PNGs and other text use fonts not installed locally.
+    logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
+
     logger.info("Pipeline starting")
 
     # ── Configuration & Reporter ─────────────────────────────────────────
@@ -62,6 +76,12 @@ def main() -> None:
     fig_dir = str(rpt.fig_dir)
     dpi = cfg.get("visualization", {}).get("dpi", 150)
     fig_num = 0
+
+    # ══════════════════════════════════════════════════════════════════════
+    # CROSS-PLATFORM TEMP DIRECTORY (FIX FOR WINDOWS + REPRODUCIBILITY)
+    # ══════════════════════════════════════════════════════════════════════
+    TEMP_DIR = os.getenv("TMP_DIR", os.path.join(os.getcwd(), "tmp"))
+    os.makedirs(TEMP_DIR, exist_ok=True)
 
     # ══════════════════════════════════════════════════════════════════════
     # 0. DATA INTEGRITY VALIDATION
@@ -124,6 +144,59 @@ def main() -> None:
         model_df, feature_cols, rpt,
         rf_params=cfg.get("model", {}).get("random_forest"),
     )
+
+    # ══════════════════════════════════════════════════════════════════════
+    # 3B. BENCHMARKING & FEATURE ABLATION (chronological hold-out)
+    # ══════════════════════════════════════════════════════════════════════
+    rpt.section("3B", "Benchmarking & Feature Ablation")
+    bench_result = run_benchmark(
+        {
+            "model_df": model_df,
+            "feature_cols": feature_cols,
+            "route_col": route_col,
+            "cfg": cfg,
+        },
+        rpt,
+    )
+    # When visualization.ja_copy is false, skip dedicated Japanese benchmark/ablation PNGs
+    # (fig_*_ja.png). English figures are still written. Other plots use their own JA paths.
+    want_ja_figs = cfg.get("visualization", {}).get("ja_copy", True)
+    if not bench_result.summary_table.empty:
+        viz.plot_benchmark_comparison(
+            bench_result.summary_table,
+            os.path.join(fig_dir, "fig_benchmark_comparison.png"),
+            rpt,
+            dpi=dpi,
+            lang="en",
+            ja_copy=False,
+        )
+        if want_ja_figs:
+            viz.plot_benchmark_comparison(
+                bench_result.summary_table,
+                os.path.join(fig_dir, "fig_benchmark_comparison_ja.png"),
+                rpt,
+                dpi=dpi,
+                lang="ja",
+                ja_copy=False,
+            )
+    if not bench_result.ablation_table.empty:
+        viz.plot_ablation_impact(
+            bench_result.ablation_table,
+            os.path.join(fig_dir, "fig_ablation_impact.png"),
+            rpt,
+            dpi=dpi,
+            lang="en",
+            ja_copy=False,
+        )
+        if want_ja_figs:
+            viz.plot_ablation_impact(
+                bench_result.ablation_table,
+                os.path.join(fig_dir, "fig_ablation_impact_ja.png"),
+                rpt,
+                dpi=dpi,
+                lang="ja",
+                ja_copy=False,
+            )
 
     # ══════════════════════════════════════════════════════════════════════
     # 4. OPPORTUNITY GAP
@@ -319,7 +392,7 @@ def main() -> None:
     # produced later as part of the spatial section and copied below.
     viz.plot_resurrection(
         sim_df, total_lost, mean_actual_rank, mean_hypo_rank,
-        os.path.join("/tmp", "fig16_resurrection_temp.png"),
+        os.path.join(TEMP_DIR, "fig16_resurrection_temp.png"),
         rpt, dpi=dpi)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -381,7 +454,7 @@ def main() -> None:
     # do NOT overwrite with the bubble network diagram.
     viz.plot_weather_shield_network(
         spatial.get("valid_nodes", {}),
-        os.path.join("/tmp", "fig_weather_shield_network.png"),
+        os.path.join(TEMP_DIR, "fig_weather_shield_network.png"),
         rpt, dpi=300)
 
     fig_num += 1

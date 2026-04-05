@@ -4,26 +4,23 @@
 
 ### AI-Driven Visitor Demand Forecasting & Spatial Under-vibrancy Analysis
 
-**Amil Khanzada** — *Specially Appointed Professor, Regional Revitalization Lab, University of Fukui*
+**Amil Khanzada** — *Specially Appointed Professor, Headquarters for Regional Revitalization, University of Fukui*
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-pytest-green.svg)](tests/)
 [![Data Validated](https://img.shields.io/badge/rows%20audited-1.4M-brightgreen.svg)](src/validator.py)
 
-> **Executive Reports:**
-> [English](EXECUTIVE_REPORT.en.md) ·
-> [日本語](EXECUTIVE_REPORT.ja.md)
->
-> **他の言語で読む:** [日本語 (Japanese)](README.ja.md)
-
 </div>
+
+> **Executive Reports:** [English](EXECUTIVE_REPORT.en.md) · [日本語](EXECUTIVE_REPORT.ja.md)
+> **Read in:** [日本語](README.ja.md)
 
 ---
 
 ## Abstract
 
-This repository implements the **Distributed Human Data Engine (DHDE)** — a research framework that fuses heterogeneous tourism data sources (AI camera people-flow, JMA meteorological observations, Google Business Profile intent signals, and 95,653 Hokuriku survey responses) into a unified predictive and diagnostic pipeline.
+This repository implements the **Distributed Human Data Engine (DHDE)** — a research framework that fuses heterogeneous tourism data sources (AI camera people-flow, JMA meteorological observations, Google Business Profile intent signals, and 97,719 Hokuriku survey responses) into a unified predictive and diagnostic pipeline.
 
 The system quantifies Fukui Prefecture's structural tourism deficit: the **¥11.96 billion annual Opportunity Gap** — revenue lost due to weather-induced demand suppression during winter months, when Fukui ranks **47th out of 47 prefectures** nationally.
 
@@ -39,30 +36,30 @@ The DHDE integrates four sensor modalities into a single analytical pipeline:
 ┌─────────────────────────────────────────────────────────────────┐
 │                  DISTRIBUTED HUMAN DATA ENGINE                  │
 │                                                                 │
-│  ┌────────────┐  ┌────────────┐  ┌─────────────┐  ┌──────────┐│
-│  │ AI Camera  │  │ JMA Weather│  │ Google BizP  │  │ Hokuriku ││
-│  │ People-Flow│  │ 8-Variable │  │ Route Intent │  │  Survey  ││
-│  │  (Edge-AI) │  │ (Hourly)   │  │  (Daily)     │  │ (95,653) ││
-│  └─────┬──────┘  └─────┬──────┘  └──────┬───────┘  └────┬─────┘│
-│        │               │                │               │      │
-│        └───────────┬───┴────────────────┴───────┬───────┘      │
+│  ┌────────────┐  ┌────────────┐  ┌──────────────┐  ┌───────────┐│
+│  │ AI Camera  │  │ JMA Weather│  │ Google BizP  │  │ Hokuriku  ││
+│  │ People-Flow│  │ 8-Variable │  │ Route Intent │  │  Survey   ││
+│  │  (Edge-AI) │  │ (Hourly)   │  │  (Daily)     │  │ (97,719)  ││
+│  └─────┬──────┘  └─────┬──────┘  └──────┬───────┘  └─────┬─────┘│
+│        │               │                │                │      │
+│        └───────────┬───┴────────────────┴────────┬───────┘      │
 │                    │     Feature Engineering     │              │
-│                    │   Calendar · Weather Severity│              │
-│                    │   Lags · Rolling · Interaction│             │
-│                    └──────────────┬───────────────┘              │
+│                    │ Calendar · Weather Severity │              │
+│                    │ Lags · Rolling · Interaction│              │
+│                    └─────────────┬───────────────┘              │
 │                                  │                              │
 │              ┌───────────────────┴───────────────────┐          │
 │              │  OLS Regression + Random Forest (RF)  │          │
-│              │  Robustness: DW, NW-HAC, FD, LDV, VIF│          │
+│              │  Robustness: DW, NW-HAC, FD, LDV, VIF │          │
 │              └───────────────────┬───────────────────┘          │
 │                                  │                              │
 │         ┌────────────────────────┼────────────────────────┐     │
 │         │                        │                        │     │
-│  ┌──────▼──────┐  ┌─────────────▼───────────┐  ┌─────────▼───┐│
-│  │ Opportunity  │  │ Kansei Assessment       │  │ Spatial     ││
-│  │ Gap / Lost   │  │ DI · WC · Overtourism   │  │ Saturation  ││
-│  │ Population   │  │ Text Mining (NLP)        │  │ Multi-Node  ││
-│  └──────────────┘  └─────────────────────────┘  └─────────────┘│
+│  ┌──────▼───────┐  ┌─────────────▼───────────┐  ┌─────────▼────┐│
+│  │ Opportunity  │  │ Kansei Assessment       │  │ Spatial      ││
+│  │ Gap / Lost   │  │ DI · WC · Overtourism   │  │ Saturation   ││
+│  │ Population   │  │ Text Mining (NLP)       │  │ Multi-Node   ││
+│  └──────────────┘  └─────────────────────────┘  └──────────────┘│
 │                                                                 │
 │                   ──► analysis_metrics.txt                      │
 │                   ──► LaTeX tables for paper                    │
@@ -76,7 +73,7 @@ The DHDE integrates four sensor modalities into a single analytical pipeline:
 | A | Tojinbo (東尋坊) | tojinbo-shotaro | Mikuni (JMA) |
 | B | Fukui Station East | fukui-station-east | Fukui (JMA) |
 | C | Katsuyama (勝山) | katsuyama | Katsuyama (JMA) |
-| D | Rainbow Line (レインボーライン) | rainbow-line-parking-lot-1-gate | Fukui (proxy) |
+| D | Rainbow Line (レインボーライン) | rainbow-line-parking-lot-1-gate | Mihama (JMA) |
 
 ---
 
@@ -88,13 +85,13 @@ The DHDE integrates four sensor modalities into a single analytical pipeline:
 | **RF 5-fold CV R²** | 0.557 ± 0.131 | Out-of-sample predictive accuracy |
 | **First-Difference R²** | 0.708 | Autocorrelation-corrected |
 | **LDV R² / DW** | 0.848 / 1.899 | Dynamic model, clean residuals |
-| **#1 Predictor** | Google `directions` | Route-search intent, r = +0.781 |
-| **Ishikawa → Tojinbo lag** | r = +0.549 | Cross-prefectural demand pipeline |
-| **Visitors vs Satisfaction** | rs = +0.150 (p = 0.002) | **No overtourism** detected |
+| **#1 Predictor** | Google `directions` | Route-search intent, *β* = +0.456 |
+| **Ishikawa → Tojinbo lag** | *r* = +0.549 | Cross-prefectural demand pipeline |
+| **Visitors vs Satisfaction** | *r*<sub>s</sub> = +0.150 (*p* = 0.002) | **No overtourism** detected |
 | **Lost Visitors** | 85,522 (single-node) | Annual Opportunity Gap |
 | **Winter Weather Sensitivity** | 6.26× summer | Seasonal asymmetry |
 | **Under-vibrancy Ratio** | 11.5× | Low-satisfaction review prevalence |
-| **National Ranking (Winter)** | 47th / 47 | Fukui's structural deficit |
+| **National Ranking (Winter)** | 47th / 47 (lowest) | Fukui's structural deficit |
 
 ---
 
@@ -110,14 +107,14 @@ $$
 \text{Total Economic Loss} = \sum_{d \in \mathcal{G}} \text{Lost Visitors}_d \times \bar{S}
 $$
 
-where $\bar{S} = ¥13{,}811$ is the mean spending per visitor (from Fukui survey, $n = 95{,}653$), and $\mathcal{G}$ is the set of gap days.
+where $\bar{S} = ¥13{,}811$ is the mean spending per visitor (from Fukui survey, $n = 97{,}719$), and $\mathcal{G}$ is the set of gap days.
 
 | Component | Value |
 |-----------|-------|
 | Gap days | 42 (high-friction days) |
 | Total lost visitors | 85,522 |
-| Mean spending per visitor | ¥13,811 |
-| **Total annual revenue loss** | **¥11.96 billion** |
+| Mean spending per visitor | ¥13,811 (~$88) |
+| **Total annual revenue loss** | **¥11.96 billion (~USD 72.6M)** |
 
 ---
 
@@ -145,7 +142,7 @@ where $V$ is wind speed in km/h. Valid for $T \leq 10°C$ and $V > 4.8$ km/h.
 
 Spearman correlation between daily visitor count and mean satisfaction:
 
-rs(visitors, satisfaction) = +0.150 (p = 0.002)
+*r*<sub>s</sub>(visitors, satisfaction) = +0.150 (*p* = 0.002)
 
 The **positive** correlation confirms Fukui's problem is *under-vibrancy*, not overtourism. More visitors → higher satisfaction.
 
@@ -168,16 +165,16 @@ Each node is modelled independently with local JMA weather, enabling:
 
 ---
 
-## 6. Model Robustness (PhD-Level Diagnostics)
+## 6. Model Robustness
 
 | Diagnostic | Statistic | Interpretation |
 |-----------|-----------|---------------|
 | Durbin–Watson (OLS) | 1.005 | Corrected via Newey-West HAC |
 | Durbin–Watson (1st-diff) | 2.525 | **Clean** residuals |
-| Newey–West HAC | 8 significant | Robust to heteroskedasticity |
+| Newey–West HAC | lags = 8, 9 significant | Robust to heteroskedasticity |
 | First-Difference R² | 0.708 | Controls for trend |
 | LDV R² | 0.848 | Dynamic specification |
-| VIF (max) | < 10 | No multicollinearity |
+| VIF (max) | 15.0 (calendar interaction) | Elevated but does not invalidate significance |
 | Weather data value | +0.056 R² | JMA contribution quantified |
 
 ---
@@ -188,6 +185,10 @@ Each node is modelled independently with local JMA weather, enabling:
 hokuriku-tourism-ai-governance/
 ├── pyproject.toml                # PEP 517/621 package definition → pip install .
 ├── requirements.txt              # Runtime dependencies (minimum versions)
+├── SUPPLEMENT.md                 # Reproducibility supplement (params, schema, SHAs)
+├── EXECUTIVE_REPORT.en.md        # English executive report (pandoc → PDF source)
+├── EXECUTIVE_REPORT.ja.md        # Japanese executive report (pandoc → PDF source)
+├── DATA_DICTIONARY.md            # Full variable reference
 ├── config/
 │   └── settings.yaml             # Pipeline configuration (all paths & params)
 ├── src/
@@ -200,7 +201,7 @@ hokuriku-tourism-ai-governance/
 │   ├── economics.py              # Opportunity Gap, lost population, ranking
 │   ├── spatial.py                # Cross-prefectural CCF, multi-node governance
 │   ├── validator.py              # Data integrity auditing (schema, drift, outliers)
-│   ├── visualizer.py             # All figure generation (12+ figures, EN & JA)
+│   ├── visualizer.py             # Figure generation
 │   ├── latex_export.py           # LaTeX table generator for paper
 │   ├── report.py                 # Centralized Reporter for logging & metrics
 │   └── run_analysis.py           # Main pipeline entry-point
@@ -214,15 +215,10 @@ hokuriku-tourism-ai-governance/
 │   ├── fetch_jma_monthly.py      # Scraper for JMA hourly CSVs
 │   ├── merge_clean_jma.py        # Merge rawdata into per-station CSVs
 │   └── jma_*.csv                 # Merged per-station 8-field datasets
-├── EXECUTIVE_REPORT.en.md        # English executive report (pandoc → PDF source)
-├── EXECUTIVE_REPORT.ja.md        # Japanese executive report (pandoc → PDF source)
-├── output/                       # Generated artifacts (committed for reference)
-│   ├── analysis_metrics.txt      # Machine-readable key metrics
-│   ├── *.png                     # 12+ publication figures (EN & JA variants)
-│   ├── *.tex                     # LaTeX tables for paper submission
-│   └── pdf/                      # Compiled PDF reports (EN & JA)
-├── README.md
-└── README.ja.md
+└── output/                       # Key generated artifacts (committed)
+    ├── analysis_metrics.txt      # Machine-readable key metrics
+    ├── paper_fig{1-5}_*.png      # Paper figures (Figures 1–5)
+    └── table{1-3}_*.tex          # LaTeX tables (Tables 1–3)
 ```
 
 ---
@@ -234,10 +230,10 @@ hokuriku-tourism-ai-governance/
 | **AI Camera** (Tojinbo-Shotaro) | Edge-AI person counts (5-min intervals) | 2024-12 → 2026-02 | ~170K |
 | **JMA** (Mikuni, Fukui, Katsuyama) | Hourly: precip, temp, sun, wind, humidity, snow | 2024-01 → 2026-02 | ~140K |
 | **Google Business Profile** | Daily: route searches, map views, reviews for 47 locations | 2024-01 → 2026-02 | ~35K |
-| **Hokuriku Tourism Survey** | Satisfaction, NPS, free text (Fukui/Ishikawa/Toyama) | 2023 → 2026 | **95,653** |
-| **Fukui Kanko Survey (raw)** | Spending, demographics, travel patterns | 2022 → 2025 | ~1M |
+| **Hokuriku Tourism Survey** | Satisfaction, NPS, free text (Fukui/Ishikawa/Toyama) | 2023 → 2026 | **97,719** |
+| **Fukui Kanko Survey (raw)** | Spending, demographics, travel patterns | 2022 → 2025 | 90,317 records (576K raw CSV lines) |
 
-**Total rows audited by `validator.py`:** ~1.4M
+**Total records:** ~530K
 
 ---
 
@@ -250,31 +246,41 @@ hokuriku-tourism-ai-governance/
 mkdir hokuriku-workspace && cd hokuriku-workspace
 git clone https://github.com/code4fukui/fukui-kanko-people-flow-data.git
 git clone https://github.com/code4fukui/fukui-kanko-trend-report.git
-git clone https://github.com/code4fukui/opendata.git
+git clone https://github.com/hokuriku-inbound-kanko/opendata.git
 git clone https://github.com/code4fukui/fukui-kanko-survey.git
 
 # Clone and install this repository
-git clone https://github.com/amilkh/hokuriku-tourism-ai-governance.git
+git clone https://github.com/code4fukui/hokuriku-tourism-ai-governance.git
 cd hokuriku-tourism-ai-governance
-pip install ".[dev]"
+git checkout submission/scs-v1
+pip install -e ".[dev]"
+```
+## IMPORTANT: Initialize Submodules
+
+This project requires Git submodules for dataset access. Before running any commands, initialize them:
+
+```bash
+git submodule update --init --recursive
 ```
 
 ### Commands
 
 | Command | What it does |
 |---------|-------------|
-| `python -m src.run_analysis` | Run full pipeline → figures, metrics, LaTeX tables |
-| `pandoc EXECUTIVE_REPORT.en.md --pdf-engine=xelatex -o output/pdf/executive_report_en.pdf` | Build English executive PDF |
-| `pandoc EXECUTIVE_REPORT.ja.md --pdf-engine=xelatex -o output/pdf/executive_report_ja.pdf` | Build Japanese executive PDF |
-| `pytest` | Run test suite |
+| `python3 -m src.run_analysis` | Run full pipeline → figures, metrics, LaTeX tables |
+| `pytest` | Run test suite (verifies core math & formulas) |
 | `pytest --cov=src --cov-report=html` | Tests with coverage report |
 | `ruff check src/ tests/` | Lint check |
+| `pandoc output/pdf/executive_report_en.md -o output/pdf/executive_report_en.pdf --pdf-engine=xelatex` | Build English executive report PDF |
+| `pandoc output/pdf/executive_report_ja.md -o output/pdf/executive_report_ja.pdf --pdf-engine=xelatex` | Build Japanese executive report PDF |
 
-> **PDF prerequisites:** `sudo apt-get install -y pandoc texlive-xetex texlive-lang-japanese fonts-noto-cjk`
->
-> **Note:** Set `HTAG_CONFIG=/path/to/settings.yaml` to use a custom config (default: `config/settings.yaml`).
+> **Note:** 
+> Set `HTAG_CONFIG=/path/to/settings.yaml` to use a custom config (default: `config/settings.yaml`). 
+> Use `python` on Windows and `python3` on Linux/macOS.
 
-All artifacts are written to `output/`: figures (EN & JA), LaTeX tables, executive reports, and compiled PDFs.
+> **PDF prerequisites (Debian/Ubuntu/WSL):** `sudo apt-get install -y pandoc texlive-xetex texlive-lang-japanese fonts-noto-cjk`
+
+All artifacts are written to `output/`: paper figures and LaTeX tables.
 
 ---
 

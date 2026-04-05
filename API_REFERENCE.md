@@ -1,58 +1,50 @@
-# API Reference
+# API reference (selected modules)
 
-This document summarizes high-traffic public entry points used in the current
-pipeline, including privacy/zero-shot additions and benchmark visualization APIs.
+This document summarizes public entry points that extension authors and reviewers most often touch.  For full behaviour, see docstrings in the source files.
 
 ## Pipeline entry
 
-- **`python -m src.run_analysis`**: Loads config, validates data, runs analysis
-	sections, writes figures under `output/`, and flushes
-	`output/analysis_metrics.txt` via `Reporter.save()`.
+- **`python -m src.run_analysis`** — Loads config, validates data, runs analysis sections, writes figures under `output/`, and flushes `output/analysis_metrics.txt` via `Reporter.save()`.
 
 ## Configuration
 
-- **`src.config.load_config`**: Loads `config/settings.yaml` (or
-	`HTAG_CONFIG`), and resolves `repo_dir` plus `workspace_root` under
-	`_resolved`.
+- **`src.config.load_config`** — Loads `config/settings.yaml` (or `HTAG_CONFIG`), resolves `repo_dir` and `workspace_root` under `_resolved`.
 
-## src/privacy_nlp.py
+## Privacy (`src/privacy_nlp`)
 
-### get_nlp_model()
+### `get_nlp_model()`
 
-Lazy-loads the spaCy Japanese NER model (`ja_core_news_sm`) when installed.
+Lazy-loads the Japanese spaCy model (`ja_core_news_sm`) when available.
 
-### sanitize_text(text: str) -> str
+### `sanitize_text(text: str) -> str`
 
-Best-effort redaction for accidental PII in free text:
+Applies best-effort PII redaction for:
+
 - email addresses
 - phone numbers
 - PERSON entities (spaCy)
 
-Returns text with redaction tokens such as `[REDACTED_EMAIL]`.
+Returns redacted text with markers such as `[REDACTED_EMAIL]`.
 
-### apply_privacy_layer(df: pd.DataFrame, text_columns: list[str]) -> pd.DataFrame
+### `apply_privacy_layer(df: pd.DataFrame, text_columns: list[str]) -> pd.DataFrame`
 
-Applies `sanitize_text` to selected DataFrame columns and returns a sanitized
-copy.
+Returns a copied DataFrame with sanitization applied to selected text columns.
 
-## src/kansei.py
+## Kansei (`src.kansei`)
 
-### run_zero_shot_diagnostics(
-- `survey_df: pd.DataFrame`
-- `reporter: Reporter | None = None`
-- `max_samples: int | None = 3000`
-- `text_max_chars: int = 512`
-) -> dict[str, float]
+### `run_zero_shot_diagnostics(survey_df, reporter=None, max_samples=3000, text_max_chars=512) -> dict[str, float]`
 
-Runs zero-shot classification on detractor free text and returns percentage
+Runs zero-shot classification over detractor comments and returns percentage
 distribution by category.
 
-Execution is config-gated in `config/settings.yaml`:
+**Config gate (`config/settings.yaml`):**
+
 - `kansei.zero_shot_enabled` (default `false`)
 - `kansei.zero_shot_max_samples`
 - `kansei.zero_shot_text_max_chars`
 
-Current labels:
+**Current labels:**
+
 - `weather conditions`
 - `poor transportation`
 - `language barrier`
@@ -61,53 +53,74 @@ Current labels:
 
 ## Benchmarking (`src.benchmark`)
 
-### run_benchmark(data, reporter) -> BenchmarkResult
+### `run_benchmark(data, reporter) -> BenchmarkResult`
 
-Runs chronological train/test benchmark evaluation on the same `model_df` and
-`feature_cols` used by core model fitting.
+Runs a **chronological** train/test evaluation on the same `model_df` / `feature_cols` used by the main OLS and Random Forest fits.  Does **not** replace those fits; it adds an out-of-sample comparison layer.
 
-Expected `data` keys:
-- `model_df` (`pd.DataFrame` with `date`, `count`, and all `feature_cols`)
-- `feature_cols` (`list[str]`)
-- `route_col` (`str`)
+**`data` dict keys (required):**
 
-Optional:
-- `cfg`: full settings dict (reads `benchmark` and `model.random_forest`)
+| Key | Type | Description |
+|-----|------|-------------|
+| `model_df` | `pd.DataFrame` | Must include `date`, `count`, and all `feature_cols`. |
+| `feature_cols` | `list[str]` | Feature names (same list as `build_features`). |
+| `route_col` | `str` | Google intent column name (used to tag intent-related features for ablation). |
 
-`BenchmarkResult` tables:
-- `summary_table`: one row per model (`naive_lag1`, `rolling_mean_7`, `ols`,
-	`random_forest`) with `MAE`, `RMSE`, `R2`
-- `ablation_table`: RF ablation rows on same split, with `delta_MAE_vs_full`
-	and `delta_R2_vs_full`
-- `predictions_table`: test rows (`date`, `y_true`, optional `pred_*`)
+**Optional:**
+
+| Key | Description |
+|-----|-------------|
+| `cfg` | Full settings dict.  Reads `benchmark` and `model.random_forest` sections. |
+
+**`BenchmarkResult` fields:**
+
+| Field | Description |
+|-------|-------------|
+| `summary_table` | One row per approach: `naive_lag1`, `rolling_mean_7`, `ols`, `random_forest` with columns `model`, `MAE`, `RMSE`, `R2` (test set). |
+| `ablation_table` | Random Forest on the **same split**: row `full` plus rows `no_weather`, `no_google_intent`, `no_calendar` when enabled in config.  Includes `delta_MAE_vs_full` and `delta_R2_vs_full`. |
+| `predictions_table` | Test rows with `date`, `y_true`, and optional `pred_*` columns for each benchmarked predictor. |
+
+**Assumptions:**
+
+- Rows are ordered in time; the split is **not shuffled** (early segment = train, tail = test).
+- Baselines and models use the **same** test mask for fair comparison.
+- Feature families for ablation are defined in code: **weather** (`precip`, `temp`, `sun`, `wind`, `precip_lag1`, `weather_severity`, `weekend_x_severity`), **google_intent** (`route_col`, its `lag`/`roll` columns, `weekend_x_intent`), **calendar** (`is_weekend_or_holiday`, `month`, `dow_mean_count`).
+- If `benchmark.enabled` is `false`, returns empty tables without error.
+
+**YAML (`config/settings.yaml` → `benchmark`):**
+
+- `enabled`, `train_pct`, `baselines.naive_lag1`, `baselines.rolling_mean_7`, `ablation.weather`, `ablation.google_intent`, `ablation.calendar`.
 
 ## Visualizer (`src.visualizer`)
 
-### plot_opportunity_gap_drivers(
-- `driver_percentages: dict[str, float]`
-- `out_path: str`
-- `reporter: Reporter`
-- `dpi: int = 300`
-) -> `matplotlib.figure.Figure | None`
+### `plot_opportunity_gap_drivers(driver_percentages, out_path, reporter, dpi=300)`
 
-Plots complaint-driver percentages and writes EN/JA PNG outputs.
+Plots zero-shot complaint-driver percentages and writes EN/JA PNG outputs.
 
-### plot_benchmark_comparison(summary_table, out_path, reporter, *, dpi=150, lang="en", ja_copy=False)
+### `plot_benchmark_comparison(summary_table, out_path, reporter, *, dpi=150, lang="en", ja_copy=False)`
 
-Saves a three-panel bar chart (MAE, RMSE, R²) for each row in
-`summary_table`.
+Saves a three-panel bar chart (MAE, RMSE, R²) for each row in `summary_table`.
 
-### plot_ablation_impact(ablation_table, out_path, reporter, *, dpi=150, lang="en", ja_copy=False)
+| Parameter | Description |
+|-----------|-------------|
+| `lang` | `"en"` or `"ja"`. Titles, axis labels, legend text, and display names for known models use the corresponding strings. |
+| `ja_copy` | Passed to `Reporter.save_fig`. Use **`False`** when saving English and Japanese figures as **separate explicit paths** (as `run_analysis` does) so the reporter does not append a duplicate `_ja` file. |
 
-Saves stacked panels for `delta_MAE_vs_full` and `delta_R2_vs_full` on
-ablation scenarios (excluding `full`).
+Japanese figures (`lang="ja"`) apply a **Japanese-capable font** to all text on the figure when one is found among installed families (see `_resolve_japanese_benchmark_fontproperties` in source). Layout uses Matplotlib **constrained layout** so the suptitle is not clipped.
 
-### Reporter.save_fig(..., ja_copy=False)
+### `plot_ablation_impact(ablation_table, out_path, reporter, *, dpi=150, lang="en", ja_copy=False)`
 
-Pipeline convention for explicit bilingual outputs is to save EN and JA paths
-explicitly and pass `ja_copy=False` in those code paths.
+Saves **stacked** bar panels for `delta_MAE_vs_full` and `delta_R2_vs_full` on ablated scenarios (excludes the `full` row). Same `lang` / `ja_copy` semantics as `plot_benchmark_comparison`.
+
+### `Reporter.save_fig(..., ja_copy=None)`
+
+| `ja_copy` | Behaviour |
+|-----------|-----------|
+| `None` (default) | If `visualization.ja_copy` in config is `true`, saves an additional copy with a `_ja` suffix (same pixels as the primary file). |
+| `False` | Never creates the `_ja` copy, **even when** `visualization.ja_copy` is `true`. |
+| `True` | Always creates the `_ja` copy. |
+
+The pipeline saves benchmark and ablation figures twice (English path + Japanese path) with `ja_copy=False`; other figures may still use `_save_with_ja` or explicit paths. When **`visualization.ja_copy` is `false`**, `run_analysis` **does not** write `fig_benchmark_comparison_ja.png` or `fig_ablation_impact_ja.png` (see comment in `run_analysis.py`).
 
 ## Models (`src.models`)
 
-See module docstring for `fit_ols`, `fit_random_forest`, `robustness_suite`,
-and `statistical_rigor`.
+See module docstring for `fit_ols`, `fit_random_forest`, `robustness_suite`, and `statistical_rigor` — used in-sample on the full `model_df` after `dropna`.

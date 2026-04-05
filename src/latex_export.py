@@ -33,6 +33,16 @@ def _render_table_png(
     from PIL import Image, ImageChops
 
     FONT     = "Ubuntu Sans"
+    import matplotlib.font_manager as fm
+
+    available = {f.name for f in fm.fontManager.ttflist}
+
+    # fallback: Ubuntu → DejaVu → system default
+    FONT = (
+        "Ubuntu Sans" if "Ubuntu Sans" in available
+        else "DejaVu Sans" if "DejaVu Sans" in available
+        else "sans-serif"
+)
     FONTSIZE = 11
     ROW_H    = 0.28   # inches per row
     ncols    = len(col_labels)
