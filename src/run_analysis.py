@@ -39,6 +39,7 @@ from src.kansei import (
     eiheiji_atmospheric_resilience,
     overtourism_threshold,
     text_mine_undervibrancy,
+    run_zero_shot_diagnostics,
 )
 from src.latex_export import export_all_tables
 from src.models import fit_ols, fit_random_forest, robustness_suite, statistical_rigor
@@ -346,6 +347,32 @@ def main() -> None:
         text_all, rpt,
         keywords=cfg.get("kansei", {}).get("undervibrancy_keywords"),
     )
+    zero_shot_stats: dict[str, float] = {}
+    if cfg.get("kansei", {}).get("zero_shot_enabled", False):
+        zero_shot_stats = run_zero_shot_diagnostics(
+            data["text_all"],
+            reporter=rpt,
+            max_samples=cfg.get("kansei", {}).get("zero_shot_max_samples", 3000),
+            text_max_chars=cfg.get("kansei", {}).get("zero_shot_text_max_chars", 512),
+        )
+    else:
+        rpt.log("Zero-shot diagnostics disabled by config (kansei.zero_shot_enabled=false).")
+    
+    # Optional: Log the top driver to the final executive metrics buffer
+    if zero_shot_stats:
+        top_driver = list(zero_shot_stats.keys())[0]
+        rpt.metrics("=" * 40)
+        rpt.metrics(f"PRIMARY OPPORTUNITY GAP DRIVER: {top_driver.upper()}")
+        rpt.metrics("=" * 40)
+    
+    if zero_shot_stats:
+        fig_num += 1
+        viz.plot_opportunity_gap_drivers(
+            zero_shot_stats,
+            os.path.join(fig_dir, f"fig{fig_num:02d}_opportunity_gap_drivers.png"),
+            rpt,
+            dpi=dpi,
+        )
     undervibrancy_hits = text_result.get("undervibrancy_hits", 0)
     pct = text_result.get("pct", 0)
     ratio_vs_high = text_result.get("ratio_vs_high", 0.0)

@@ -233,7 +233,7 @@ def plot_feature_importance(
 
     perm = perm_df.sort_values("importance_mean", ascending=True)
     axes[1].barh(perm["feature"], perm["importance_mean"],
-                 xerr=perm["importance_std"], color="darkorange")
+                  xerr=perm["importance_std"], color="darkorange")
     axes[1].set_title("Permutation Importance")
     axes[1].set_xlabel("Mean decrease in R²")
     fig.tight_layout()
@@ -481,7 +481,7 @@ def plot_kansei_scatter(
     """Scatterplot: daily visitor count vs mean satisfaction."""
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.scatter(sat_merged["count"], sat_merged["mean_satisfaction"],
-               alpha=0.5, edgecolors="none", s=40)
+                alpha=0.5, edgecolors="none", s=40)
     ax.set_xlabel("Daily Visitor Count")
     ax.set_ylabel("Mean Satisfaction")
     ax.set_title("Kansei Feedback: Visitors vs Satisfaction")
@@ -548,7 +548,7 @@ def plot_resurrection(
                    for m in sim_df["month"]]
 
     fig, axes = plt.subplots(2, 1, figsize=(14, 10),
-                             gridspec_kw={"height_ratios": [3, 2]})
+                              gridspec_kw={"height_ratios": [3, 2]})
 
     # Top: rank gains
     axes[0].bar(x, gains, color=colors_gain, edgecolor="indigo", alpha=0.9)
@@ -651,7 +651,7 @@ def plot_hokuriku_heatmap(
     pref_map = {"石川": "Ishikawa", "福井": "Fukui", "富山": "Toyama"}
 
     fig, axes = plt.subplots(2, 1, figsize=(16, 10),
-                             gridspec_kw={"height_ratios": [3, 1]})
+                              gridspec_kw={"height_ratios": [3, 1]})
 
     # EN labels
     hm_en = hm_pivot.copy()
@@ -677,7 +677,7 @@ def plot_hokuriku_heatmap(
 
     # JA variant — fresh figure to avoid orphaned colorbar axes from the EN pass.
     fig_ja, axes_ja = plt.subplots(2, 1, figsize=(16, 10),
-                                   gridspec_kw={"height_ratios": [3, 1]})
+                                    gridspec_kw={"height_ratios": [3, 1]})
 
     hm_ja = hm_pivot.copy()
     hm_ja.index.name = "都道府県"
@@ -1064,7 +1064,7 @@ def plot_rank_resurrection_projection(
 
     for i, val in enumerate(monthly_rec_k):
         ax2.text(i, val + max(monthly_rec_k) * 0.01,
-                 f"{val:.0f}K", ha="center", va="bottom", fontsize=10)
+                  f"{val:.0f}K", ha="center", va="bottom", fontsize=10)
 
     ax2.legend(handles=[
         mpatches.Patch(color=C_WINTER, label="Winter (Dec-Feb)"),
@@ -1078,7 +1078,7 @@ def plot_rank_resurrection_projection(
 
     # ── JA version ────────────────────────────────────────────────────────────
     months_ja = ["1月", "2月", "3月", "4月", "5月", "6月",
-                 "7月", "8月", "9月", "10月", "11月", "12月"]
+                  "7月", "8月", "9月", "10月", "11月", "12月"]
     ax1.set_title("パネル（A）  -  現状 vs. 予測ランキング（4拠点回復）\n"
                   "4拠点のみで月次不足分の最大66%を補填；全県展開で全国35位圏を射程に",
                   fontsize=11, fontweight="bold")
@@ -1204,9 +1204,9 @@ def plot_dhde_architecture(
     # Visitor Surveys — 3-line body to avoid overflow on the 97,719 line
     sy = sy_starts[3]
     rbox(0.40, sy, 3.85, CH, C_CARD_S, C_BORDER_S, radius=0.25, lw=1.2)
-    txt(2.325, sy + 1.42, "Visitor Surveys",              size=14,   color=C_BORDER_S, weight="bold")
+    txt(2.325, sy + 1.42, "Visitor Surveys",               size=14,   color=C_BORDER_S, weight="bold")
     txt(2.325, sy + 1.02, "・97,719 Hokuriku responses",  size=14.0, color=C_MUTED)
-    txt(2.325, sy + 0.74, "  (NPS + satisfaction)",       size=12.0, color=C_MUTED)
+    txt(2.325, sy + 0.74, "  (NPS + satisfaction)",           size=12.0, color=C_MUTED)
     txt(2.325, sy + 0.46, "・71,623 free-text → Kansei NLP", size=14.0, color=C_MUTED)
 
     # ── Core: Feature Engineering ──────────────────────────────────────────
@@ -1248,7 +1248,7 @@ def plot_dhde_architecture(
     txt(8.675, 2.27, "Robustness Suite", size=14, color=C_BORDER_C, weight="bold")
     for i, ln in enumerate([
         "・First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8",
-        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.549",
+        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline   r=+0.549",
         "・Kansei Spearman r=+0.150 (p=0.002)   under-vibrancy positive correlation",
     ]):
         txt(8.675, 1.89 - i * 0.34, ln, size=12.5, color=C_MUTED)
@@ -1306,14 +1306,14 @@ def plot_dhde_architecture(
             "分散型人間データエンジン（DHDE）— AIガバナンスアーキテクチャ",
         "Hokuriku Tourism Demand Forecasting  |  Fukui Prefecture, Japan  |  2024-2026":
             "北陸観光需要予測 ｜ 福井県、日本 ｜ 2024-2026",
-        "INPUT SENSORS":        "入力センサー",
+        "INPUT SENSORS":         "入力センサー",
         "DHDE PROCESSING CORE": "DHDE処理コア",
-        "OUTPUT GOVERNANCE":    "出力ガバナンス",
+        "OUTPUT GOVERNANCE":     "出力ガバナンス",
         # sensor card titles
         "RSI Business Intent":  "RSIビジネスインテント",
-        "JMA Weather Stations":    "気象庁観測所",
-        "Edge-AI Cameras":         "エッジAIカメラ",
-        "Visitor Surveys":         "来訪者調査",
+        "JMA Weather Stations":     "気象庁観測所",
+        "Edge-AI Cameras":          "エッジAIカメラ",
+        "Visitor Surveys":          "来訪者調査",
         # sensor card lines
         "・47-site direction & search queries":            "・47サイトの経路・検索クエリ",
         "・Direction counts  ->  lag / roll features":     "・方向カウント → ラグ/ローリング特徴量",
@@ -1321,8 +1321,8 @@ def plot_dhde_architecture(
         "・Winter sensitivity: demand gating": "・冬季感応度：需要制約",
         "・Human detection, 5-min intervals":  "・人型検知、5分間隔",
         "・427 days, 4 spatial nodes":          "・4拠点427日分の有効データ",
-        "・97,719 Hokuriku responses":     "・北陸回答数 97,719件",
-        "  (NPS + satisfaction)":          "  （NPS＋満足度）",
+        "・97,719 Hokuriku responses":      "・北陸回答数 97,719件",
+        "  (NPS + satisfaction)":           "  （NPS＋満足度）",
         "・71,623 free-text → Kansei NLP": "・福井自由記述71,623件 → 感性NLP",
         # core card titles
         "Feature Engineering": "特徴量エンジニアリング",
@@ -1348,7 +1348,7 @@ def plot_dhde_architecture(
         "・Top: directions, month":       "・重要特徴量：方向数・月",
         "・First-Diff R2=0.708   LDV R2=0.849   Cohen f2=4.25   Newey-West sig=8":
             "・一階差分R²=0.708  LDV R²=0.849  Cohen f²=4.25  Newey-West有意=8",
-        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline  r=+0.549":
+        "・4-node spatial cross-correlation   Ishikawa -> Fukui pipeline   r=+0.549":
             "・4拠点空間交差相関  石川→福井パイプライン  r=+0.549",
         "・Kansei Spearman r=+0.150 (p=0.002)   under-vibrancy positive correlation":
             "・感性スピアマン r=+0.150（p=0.002）  過少賑わい正の相関",
@@ -1607,4 +1607,85 @@ def plot_ablation_impact(
     if lang == "ja":
         _apply_benchmark_japanese_font(fig)
     _save(fig, out_path, reporter, dpi=dpi, ja_copy=ja_copy)
+    return fig
+
+
+# ── Fig 17: Opportunity Gap Drivers ──────────────────────────────────────────
+
+def plot_opportunity_gap_drivers(
+    driver_percentages: dict[str, float],
+    out_path: str,
+    reporter: Reporter,
+    dpi: int = 300
+) -> plt.Figure | None:
+    """Horizontal bar chart of zero-shot complaint driver percentages."""
+    if not driver_percentages:
+        reporter.log("No zero-shot driver percentages found; skipping chart.")
+        return None
+
+    df_plot = (
+        pd.Series(driver_percentages, name="percentage")
+        .sort_values(ascending=True)
+        .rename_axis("driver")
+        .reset_index()
+    )
+
+    # Use local style context to avoid affecting unrelated figures globally.
+    with plt.style.context("seaborn-v0_8-whitegrid"):
+        fig, ax = plt.subplots(figsize=(10, 6))
+        bars = ax.barh(
+            df_plot["driver"],
+            df_plot["percentage"],
+            color="#2E6F95",
+            edgecolor="black",
+            linewidth=0.5,
+        )
+
+        for bar, pct in zip(bars, df_plot["percentage"]):
+            ax.text(
+                bar.get_width() + 0.8,
+                bar.get_y() + bar.get_height() / 2,
+                f"{pct:.1f}%",
+                va="center",
+                fontsize=10,
+            )
+
+        ax.set_title(
+            "Opportunity Gap Complaint Drivers (Zero-Shot NLP)",
+            fontsize=14,
+            weight="bold",
+            pad=15,
+        )
+        ax.set_ylabel("Root Cause", fontsize=12, weight="bold")
+        ax.set_xlabel("Percentage of Detractor Complaints (%)", fontsize=12, weight="bold")
+        ax.set_xlim(0, 100)
+        ax.grid(axis="x", linestyle="--", alpha=0.7)
+
+        fig.tight_layout()
+
+    # ── Japanese variant ──────────────────────────────────────────────────
+    def _ja(fig_ja: plt.Figure) -> None:
+        ax_ja = fig_ja.axes[0]
+        cause_map = {
+            "weather conditions": "天候条件",
+            "poor transportation": "交通インフラ不足",
+            "lack of information": "情報不足",
+            "language barrier": "言語の壁",
+            "pricing": "価格設定",
+        }
+
+        ax_ja.set_title(
+            "オポチュニティギャップ苦情要因（Zero-Shot NLP）",
+            fontsize=14,
+            weight="bold",
+            pad=15,
+        )
+        ax_ja.set_ylabel("根本原因", fontsize=12, weight="bold")
+        ax_ja.set_xlabel("低評価来訪者の苦情割合 (%)", fontsize=12, weight="bold")
+        y_ticks = ax_ja.get_yticks()
+        y_labels = [cause_map.get(t.get_text(), t.get_text()) for t in ax_ja.get_yticklabels()]
+        ax_ja.set_yticks(y_ticks)
+        ax_ja.set_yticklabels(y_labels)
+
+    _save_with_ja(fig, out_path, reporter, _ja, dpi=dpi)
     return fig

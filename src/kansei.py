@@ -6,10 +6,12 @@ Implements:
     2. **Wind Chill** – Cold-stress proxy for winter tourism friction.
     3. **Overtourism threshold** – Satisfaction vs crowd density analysis.
     4. **Text mining** – Under-vibrancy keyword extraction from surveys.
+    5. **Zero-Shot NLP** – Deep root-cause diagnostics for detractor complaints.
 """
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import numpy as np
@@ -17,6 +19,8 @@ import pandas as pd
 from scipy import stats
 
 from .report import Reporter
+
+logger = logging.getLogger(__name__)
 
 # ── Discomfort Index ─────────────────────────────────────────────────────────
 
@@ -119,7 +123,7 @@ def discomfort_index_analysis(
             weather_daily["temp"],
             weather_daily["humidity"],
             **{k: v for k, v in params.items() if k in
-               ("coeff_temp", "coeff_humidity", "inner_temp", "inner_offset", "constant")},
+                ("coeff_temp", "coeff_humidity", "inner_temp", "inner_offset", "constant")},
         )
         di_mean = weather_daily["discomfort_index"].mean()
         reporter.log(f"Discomfort Index computed. Mean DI: {di_mean:.1f}")
@@ -295,7 +299,7 @@ def overtourism_threshold(
         )
         result["spear_r_nps"] = r_nps
         result["spear_p_nps"] = p_nps
-        reporter.log(f"Spearman (monthly visitors vs NPS):          r = {r_nps:+.3f}, p = {p_nps:.4f}")
+        reporter.log(f"Spearman (monthly visitors vs NPS):           r = {r_nps:+.3f}, p = {p_nps:.4f}")
 
     return result
 
@@ -344,14 +348,14 @@ def text_mine_undervibrancy(
         + low_sat["inconvenience"].fillna("") + " "
         + low_sat["freetext"].fillna("")
     )
-    reporter.log(f"Low satisfaction (1-2★) responses: {len(low_sat)}")
+    # Filter out empty or extremely short garbled text
+    low_sat = low_sat[low_sat["all_text"].str.strip().str.len() > 3]
+    reporter.log(f"Low satisfaction (1-2★) valid responses: {len(low_sat)}")
 
     hits = 0
     examples: list[tuple[float, str, str]] = []
     for _, row in low_sat.iterrows():
         text = str(row["all_text"])
-        if text == "nan" or len(text.strip()) < 3:
-            continue
         for kw in kw_list:
             if kw in text:
                 hits += 1
@@ -402,6 +406,128 @@ def text_mine_undervibrancy(
         )
 
     return result
+
+
+def run_zero_shot_diagnostics(
+    survey_df: pd.DataFrame,
+    *,
+    reporter: Reporter | None = None,
+    max_samples: int | None = 3000,
+    text_max_chars: int = 512,
+) -> dict[str, float]:
+    """Diagnose root causes of 'Opportunity Gap' via Zero-Shot Classification.
+
+    Filters for low-satisfaction responses (detractors) and classifies the 
+    underlying complaints using a multilingual DeBERTa-v3 model.
+
+    Args:
+        survey_df: DataFrame containing satisfaction scores and text columns.
+        reporter: Optional ``Reporter`` for logging.
+        max_samples: Optional cap for number of detractor texts to classify.
+        text_max_chars: Maximum characters per text to classify.
+
+    Returns:
+        Dictionary mapping candidate labels to their percentage occurrence.
+    """
+    info = reporter.log if reporter else logger.info
+    warn = reporter.log if reporter else logger.warning
+    
+    # Check if satisfaction column exists to filter detractors
+    if "satisfaction" not in survey_df.columns:
+        warn("'satisfaction' column missing. Skipping zero-shot diagnostics.")
+        return {}
+
+    # 1. Filter for Detractors (Assuming 5-point scale, detractors are 1 or 2)
+    detractors = survey_df[survey_df["satisfaction"] <= 2].copy()
+    if detractors.empty:
+        info("No low-satisfaction responses found. Skipping Kansei analysis.")
+        return {}
+
+    # 2. Safely Aggregate Free-Text Features
+    text_cols = ["reason", "inconvenience", "freetext"]
+    available_cols = [c for c in text_cols if c in detractors.columns]
+
+    # Combine text from available columns, ignoring NAs and empty strings
+    detractors["combined_text"] = detractors[available_cols].apply(
+        lambda row: " ".join(str(val) for val in row if pd.notna(val) and str(val).strip()),
+        axis=1
+    )
+
+    # Filter out empty or extremely short garbled text
+    texts = detractors[detractors["combined_text"].str.len() > 3]["combined_text"].tolist()
+
+    if not texts:
+        info("No valid text found in detractor responses.")
+        return {}
+
+    if max_samples is not None and len(texts) > max_samples:
+        info(
+            f"Capping zero-shot inputs: using {max_samples} of {len(texts)} "
+            "detractor texts for stable runtime."
+        )
+        texts = texts[:max_samples]
+
+    # Bound sequence length to keep memory and latency predictable.
+    texts = [str(t)[:text_max_chars] for t in texts]
+
+    try:
+        from transformers import pipeline
+    except ImportError:
+        warn("transformers library not found. Skipping zero-shot diagnostics.")
+        return {}
+
+    info(f"Running Phase 2 Kansei Extraction on {len(texts)} detractor complaints...")
+    info("Booting MoritzLaurer/mDeBERTa-v3-base-mnli-xnli (Zero-Shot Mode)...")
+
+    # 3. Load the zero-shot pipeline
+    try:
+        classifier = pipeline(
+            "zero-shot-classification", 
+            model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
+        )
+    except Exception as e:
+        warn(f"Model loading failed: {e}")
+        return {}
+
+    # 4. The Candidate Labels (Directly mapping to the ¥11.96B thesis)
+    candidate_labels = [
+        "weather conditions",
+        "poor transportation",
+        "language barrier",
+        "lack of information",
+        "pricing"
+    ]
+
+    # Run classification (using batch_size to respect local memory limits)
+    results = classifier(
+        texts,
+        candidate_labels,
+        batch_size=8,
+        truncation=True,
+        multi_label=False,
+    )
+    
+    # Handle edge case where pipeline returns a dict instead of a list for a single item
+    if isinstance(results, dict):
+        results = [results]
+
+    # 5. Aggregate Results
+    counts = {label: 0 for label in candidate_labels}
+    for res in results:
+        top_label = res['labels'][0]  # The model's highest confidence prediction
+        counts[top_label] += 1
+
+    total = len(results)
+    percentages = {label: (count / total) * 100 for label, count in counts.items()}
+
+    # Sort descending for a cleaner log output
+    sorted_pct = dict(sorted(percentages.items(), key=lambda item: item[1], reverse=True))
+
+    info("\nOpportunity Gap Drivers (mDeBERTa-v3 Distribution):")
+    for label, pct in sorted_pct.items():
+        info(f"  - {label.title()}: {pct:.1f}%")
+
+    return sorted_pct
 
 
 # ── Eiheiji Atmospheric Resilience ───────────────────────────────────────────

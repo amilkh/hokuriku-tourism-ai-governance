@@ -10,6 +10,47 @@ This document summarizes public entry points that extension authors and reviewer
 
 - **`src.config.load_config`** — Loads `config/settings.yaml` (or `HTAG_CONFIG`), resolves `repo_dir` and `workspace_root` under `_resolved`.
 
+## Privacy (`src/privacy_nlp`)
+
+### `get_nlp_model()`
+
+Lazy-loads the Japanese spaCy model (`ja_core_news_sm`) when available.
+
+### `sanitize_text(text: str) -> str`
+
+Applies best-effort PII redaction for:
+
+- email addresses
+- phone numbers
+- PERSON entities (spaCy)
+
+Returns redacted text with markers such as `[REDACTED_EMAIL]`.
+
+### `apply_privacy_layer(df: pd.DataFrame, text_columns: list[str]) -> pd.DataFrame`
+
+Returns a copied DataFrame with sanitization applied to selected text columns.
+
+## Kansei (`src.kansei`)
+
+### `run_zero_shot_diagnostics(survey_df, reporter=None, max_samples=3000, text_max_chars=512) -> dict[str, float]`
+
+Runs zero-shot classification over detractor comments and returns percentage
+distribution by category.
+
+**Config gate (`config/settings.yaml`):**
+
+- `kansei.zero_shot_enabled` (default `false`)
+- `kansei.zero_shot_max_samples`
+- `kansei.zero_shot_text_max_chars`
+
+**Current labels:**
+
+- `weather conditions`
+- `poor transportation`
+- `language barrier`
+- `lack of information`
+- `pricing`
+
 ## Benchmarking (`src.benchmark`)
 
 ### `run_benchmark(data, reporter) -> BenchmarkResult`
@@ -50,6 +91,10 @@ Runs a **chronological** train/test evaluation on the same `model_df` / `feature
 - `enabled`, `train_pct`, `baselines.naive_lag1`, `baselines.rolling_mean_7`, `ablation.weather`, `ablation.rsi_intent`, `ablation.calendar`.
 
 ## Visualizer (`src.visualizer`)
+
+### `plot_opportunity_gap_drivers(driver_percentages, out_path, reporter, dpi=300)`
+
+Plots zero-shot complaint-driver percentages and writes EN/JA PNG outputs.
 
 ### `plot_benchmark_comparison(summary_table, out_path, reporter, *, dpi=150, lang="en", ja_copy=False)`
 

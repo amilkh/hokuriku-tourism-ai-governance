@@ -77,6 +77,13 @@ kansei:
   # Wind Chill: WC = 13.12 + 0.6215*T - 11.37*V^0.16 + 0.3965*T*V^0.16
   wind_chill:
     enabled: true
+  # Enable heavy zero-shot transformer diagnostics (opt-in by default).
+  zero_shot_enabled: false
+  # Zero-shot detractor diagnostics runtime controls
+  # Cap sample size to keep local memory/runtime bounded.
+  zero_shot_max_samples: 3000
+  # Truncate text length before transformer inference.
+  zero_shot_text_max_chars: 512
   # Keywords for under-vibrancy text mining (Japanese)
   undervibrancy_keywords:
     - "静か"

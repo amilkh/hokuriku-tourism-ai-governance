@@ -1,0 +1,6 @@
+# Optional NLP stack for privacy and zero-shot Kansei diagnostics
+# Install after base requirements: pip install -r requirements-nlp.txt
+spacy>=3.7.2
+transformers>=4.35.0
+torch>=2.1.0
+sentencepiece>=0.1.99
