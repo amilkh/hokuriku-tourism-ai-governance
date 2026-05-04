@@ -3,7 +3,8 @@
 **Paper:** Engineering Distributed Governance for Regional Prosperity: A Socio-Technical
 Framework for Mitigating Under-Vibrancy via Human Data Engines
 
-**Journal:** Sustainable Cities and Society (Elsevier)
+**Journal:** Expert Systems with Applications (Elsevier) — Manuscript ID: ESWA-D-26-09188
+*(Previously submitted to Sustainable Cities and Society; declined and resubmitted)*
 
 *For setup, installation, and full reproduction steps, see `README.md § 9`.*
 
