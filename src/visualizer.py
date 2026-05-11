@@ -166,25 +166,32 @@ def plot_timeseries(
     dpi: int = 150,
 ) -> plt.Figure:
     """Dual-axis time-series: visitor count vs RSI intent."""
-    fig, ax1 = plt.subplots(figsize=(14, 5))
+    DIRECTIONS_COLOR = "#C0392B"   # dark red — clearly distinct from blue
+    fig, ax1 = plt.subplots(figsize=(14, 5.8))
     ax1.plot(daily["date"], daily["count"], color="tab:blue", alpha=0.8, label="Visitor count")
     ax1.set_ylabel("Visitor Count", color="tab:blue")
     ax1.tick_params(axis="y", labelcolor="tab:blue")
     ax2 = ax1.twinx()
-    ax2.plot(daily["date"], daily[route_col], color="tab:orange", alpha=0.6, label=f"RSI {route_col}")
-    ax2.set_ylabel(f"RSI {route_col}", color="tab:orange")
-    ax2.tick_params(axis="y", labelcolor="tab:orange")
-    ax1.set_title("Tojinbo: Visitor Count vs RSI Intent (daily)")
+    ax2.plot(daily["date"], daily[route_col], color=DIRECTIONS_COLOR, alpha=0.65,
+             linestyle="--", label="Route search impressions (intent)")
+    # Hide right y-axis labels so right margin matches RF figure layout
+    ax2.set_ylabel("")
+    ax2.tick_params(axis="y", labelright=False, right=False)
+    # Combined legend inside plot area
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right", fontsize=10)
+    ax1.set_title("")
     ax1.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
     ax1.xaxis.set_major_locator(mdates.MonthLocator())
     fig.autofmt_xdate()
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0, 1, 0.965])
     def _ja(fig_ja: plt.Figure) -> None:
         ax1_ja = fig_ja.axes[0]
         ax2_ja = fig_ja.axes[1]
         ax1_ja.set_ylabel("来訪者数", color="tab:blue")
-        ax2_ja.set_ylabel(f"RSI {route_col}", color="tab:orange")
-        ax1_ja.set_title("東尋坊：来訪者数とRSI需要（⽇次）")
+        ax2_ja.set_ylabel("")
+        ax1_ja.set_title("")
 
     _save_with_ja(fig, out_path, reporter, _ja, dpi=dpi)
     return fig
