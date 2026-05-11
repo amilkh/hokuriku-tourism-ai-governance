@@ -43,5 +43,9 @@ output/.cache/
 # Temporary pipeline intermediates
 tmp/
 
-# Presentation/document binaries
+# Presentation/document binaries — track only the committed exec report PDFs
 *.pdf
+!output/pdf/*.pdf
+
+# Learning workspace generated figures (reproducible — run each step script)
+learning/output/
