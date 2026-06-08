@@ -51,10 +51,10 @@ tmp/
 # Learning workspace — thesis defense prep, not part of public pipeline
 learning/
 
-# Paper submission folder — scripts tracked, all docx/pdf outputs ignored
-paper/*.docx
+# Paper folder — scripts/prompts/review tracked, all docx/pdf binaries ignored
+paper/manuscript/
 paper/submission/
-paper/DECK_PROMPT.md
+paper/**/*.docx
 
 # Workshop scratchpad
 workshop/
