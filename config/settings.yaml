@@ -1,0 +1,154 @@
+# hokuriku-tourism-ai-governance – Pipeline Configuration
+# All relative paths resolve from the workspace root (parent of this repo).
+# Override via environment variable: HTAG_CONFIG=/path/to/custom.yaml
+
+project:
+  name: "hokuriku-tourism-ai-governance"
+
+# ─── Data Sources ─────────────────────────────────────────────────────────────
+paths:
+  # AI-camera people-flow CSVs (glob patterns, relative to workspace root)
+  # ★ Now includes Node D: Rainbow Line (Wakasa scenic route)
+  camera:
+    tojinbo: "fukui-kanko-people-flow-data/daily/tojinbo-shotaro/Person/**/*.csv"
+    fukui_station: "fukui-kanko-people-flow-data/daily/fukui-station-east-entrance/Person/**/*.csv"
+    katsuyama: "fukui-kanko-people-flow-data/daily/katsuyama*/Person/**/*.csv"
+    rainbow_line: "fukui-kanko-people-flow-data/daily/rainbow-line-parking-lot-1-gate/Face/**/*.csv"
+
+  # JMA hourly weather (relative to repo root)
+  # Station files: mikuni=Node A, fukuicity=Node B, katsuyama=Node C, mihama=Node D
+  weather:
+    mikuni: "jma/jma_mikuni_hourly_8.csv"
+    mikuni_legacy: "jma/jma_hourly_cleaned_merged_2024-01-01_2026-02-19.csv"
+    fukui: "jma/jma_fukuicity_hourly_8.csv"    # Fukui City (福井) main stn, co-located Node B
+    katsuyama: "jma/jma_katsuyama_hourly_8.csv"
+    rainbow_line: "jma/jma_mihama_hourly_8.csv" # Mihama (美浜) AMeDAS ~5km from Rainbow Line
+
+  # Route Search Impressions (RSI) daily metrics (relative to workspace root)
+  rsi_data: "fukui-kanko-trend-report/public/data"
+
+  # Hokuriku tourism survey data
+  survey:
+    merged_glob: "opendata/output_merge/merged_survey_*.csv"
+    raw_fukui: "fukui-kanko-survey/all.csv"
+
+  # Output directories (relative to repo root)
+  output: "output"
+  figures: "output"
+
+# ─── Benchmarking (chronological hold-out vs baselines + RF ablation) ─────────
+benchmark:
+  enabled: true
+  train_pct: 0.80
+  baselines:
+    naive_lag1: true
+    rolling_mean_7: true
+  ablation:
+    weather: true
+    rsi_intent: true
+    calendar: true
+
+# ─── Model Hyperparameters ────────────────────────────────────────────────────
+model:
+  random_forest:
+    n_estimators: 500
+    max_depth: 10
+    min_samples_leaf: 5
+    random_state: 42
+    n_jobs: -1
+  cross_validation:
+    folds: 5
+    scoring: "r2"
+
+# ─── Economics ────────────────────────────────────────────────────────────────
+economics:
+  spending_per_visitor_yen: 13811.0
+  usd_exchange_rate: 164.7
+
+# ─── Kansei Engineering ──────────────────────────────────────────────────────
+kansei:
+  # Discomfort Index: DI = 0.81*T + 0.01*H*(0.99*T - 14.3) + 46.3
+  discomfort_index:
+    coeff_temp: 0.81
+    coeff_humidity: 0.01
+    inner_temp: 0.99
+    inner_offset: -14.3
+    constant: 46.3
+  # Wind Chill: WC = 13.12 + 0.6215*T - 11.37*V^0.16 + 0.3965*T*V^0.16
+  wind_chill:
+    enabled: true
+  # Enable heavy zero-shot transformer diagnostics (opt-in by default).
+  zero_shot_enabled: false
+  # Zero-shot detractor diagnostics runtime controls
+  # Cap sample size to keep local memory/runtime bounded.
+  zero_shot_max_samples: 3000
+  # Truncate text length before transformer inference.
+  zero_shot_text_max_chars: 512
+  # Keywords for under-vibrancy text mining (Japanese)
+  undervibrancy_keywords:
+    - "静か"
+    - "寂し"
+    - "さびし"
+    - "さみし"
+    - "人が少な"
+    - "人がいな"
+    - "活気"
+    - "賑わ"
+    - "にぎわ"
+    - "閑散"
+    - "寂れ"
+    - "さびれ"
+    - "閉まっ"
+    - "店がな"
+    - "営業し"
+    - "何もな"
+    - "つまらな"
+    - "退屈"
+    - "物足りな"
+    - "盛り上が"
+    - "人通り"
+
+# ─── Visualization ────────────────────────────────────────────────────────────
+visualization:
+  dpi: 150
+  dpi_high: 300
+  figure_format: "png"
+  # When false: no fig_benchmark_comparison_ja.png / fig_ablation_impact_ja.png (English kept).
+  ja_copy: true
+
+# ─── Thresholds ───────────────────────────────────────────────────────────────
+thresholds:
+  wind_nudge_ms: 10.0
+  overtourism_satisfaction: 4.0
+  weather_severity:
+    precip_light: 0
+    precip_heavy: 10
+    wind_strong: 8
+
+# ─── National Ranking Baseline (2024-2025) ────────────────────────────────────
+ranking:
+  # Source: code4fukui/japan-kanko-stat overnight-stay data (宿泊旅行統計調査), 2025
+  fukui_rank_2025: [46, 47, 46, 47, 46, 45, 44, 43, 45, 47, 45, 47]
+  fukui_visitors_k: [522, 381, 707, 689, 890, 611, 752, 1229, 767, 766, 945, 493]
+  gap_to_rank41_k: [232, 309, 274, 310, 325, 301, 235, 178, 216, 316, 236, 405]
+
+# ─── Survey Value Mappings ────────────────────────────────────────────────────
+survey:
+  spending_map:
+    "1,000円未満": 500
+    "1,000円以上 3,000円未満": 2000
+    "3,000円以上 5,000円未満": 4000
+    "5,000円以上 10,000円未満": 7500
+    "10,000円以上 20,000円未満": 15000
+    "20,000円以上 30,000円未満": 25000
+    "30,000円以上 40,000円未満": 35000
+    "40,000円以上 50,000円未満": 45000
+    "50,000円以上 100,000円未満": 75000
+    "100,000円以上": 150000
+    "使わない": 0
+  satisfaction_map:
+    "とても不満": 1
+    "不満": 2
+    "どちらでもない": 3
+    "満足": 4
+    "とても満足": 5
