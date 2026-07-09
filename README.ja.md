@@ -7,7 +7,8 @@
 **Amil Khanzada** — *特命助教、地域創生推進本部、福井大学*
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21271429.svg)](https://doi.org/10.5281/zenodo.21271429)
 [![Tests](https://img.shields.io/badge/tests-pytest-green.svg)](tests/)
 [![Data Validated](https://img.shields.io/badge/rows%20audited-1.4M-brightgreen.svg)](src/validator.py)
 
@@ -25,7 +26,7 @@
 
 本リポジトリは **Distributed Human Data Engine (DHDE)** を実装します。AIカメラ人流データ、気象庁（JMA）観測値、経路検索インプレッション（RSI）の検索意図、および97,719件の北陸観光アンケート回答を統合した、観光分析・政策提言パイプラインです。
 
-このシステムは福井県の構造的観光赤字を定量化します。冬季に全国47都道府県中**最下位（47位）**となる背景には、需要（検索意図）は存在するにもかかわらず悪天候により来訪が阻まれる「計画摩擦」があり、これが年間**約119億6,000万円**の機会損失を生んでいます。
+このシステムは福井県の構造的観光赤字を定量化します。全国47都道府県中**最下位（47位）**の来訪者数となる背景には、需要（検索意図）は存在するにもかかわらず悪天候により来訪が阻まれる「計画摩擦」があり、これが年間**約119億6,000万円**の機会損失を生んでいます。
 
 **キーワード：** 観光需要予測 · 感性工学 · 不快指数 · 空間飽和度 · 過少賑わい · 北陸地域ガバナンス
 
@@ -318,6 +319,20 @@ tests/
 
 ## ライセンス
 
-Copyright © 2026 Amil Khanzada. All rights reserved.
+本プロジェクトは [MITライセンス](LICENSE) の下で公開されています。Copyright © 2026 Amil Khanzada.
+
+タグ付きリリース [v1.0.0](https://github.com/amilkh/hokuriku-tourism-ai-governance/releases/tag/v1.0.0) は Measurement 誌論文（DOI: [10.1016/j.measurement.2026.122500](https://doi.org/10.1016/j.measurement.2026.122500)）の再現性アーカイブであり、Zenodo（DOI: [10.5281/zenodo.21271429](https://doi.org/10.5281/zenodo.21271429)）に恒久保存されています。
+
+> 注: 本公開履歴は公開用に整理されています（内部原稿・会議資料・生成物を除外し、データソースの名称を出版論文と統一）。
+
+## コントリビューター
+
+カンザダ・アミルが開発し、以下のオープンソース貢献をいただきました。
+
+- **Ibrahim Mustafa** — 時系列ベンチマークとRFアブレーション（`src/benchmark.py`）
+- **Mohammed Abdullah** — プライバシー・サニタイズ層とゼロショット感性診断（`src/privacy_nlp.py`）
+- **Dina Belay** — 再現性ドキュメントとクロスプラットフォーム修正
+- **Dawood Imtiaz** — インタラクティブ・ダッシュボード（`dashboard/`）
+- **Mitali (Hacxmr)** — Windows エンコーディング修正
 
 現時点ではライセンスを付与していません。再利用・再配布・公開には著者による事前の書面許諾が必要です。

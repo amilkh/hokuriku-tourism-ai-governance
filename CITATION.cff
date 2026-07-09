@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the associated article below."
+title: "Distributed Human Data Engine (DHDE): analysis pipeline"
+abstract: "Source code and reproducibility pipeline for the Measurement (Elsevier) article on multi-modal sensor fusion for regional human-mobility measurement in Fukui, Japan."
+authors:
+  - family-names: Khanzada
+    given-names: Amil
+    orcid: "https://orcid.org/0000-0002-7065-5390"
+    affiliation: "University of Fukui"
+  - family-names: Takemoto
+    given-names: Takuji
+    orcid: "https://orcid.org/0000-0002-1150-2714"
+    affiliation: "University of Fukui"
+license: MIT
+version: "1.0.0"
+date-released: "2026-07-09"
+preferred-citation:
+  type: article
+  title: "A Multi-Modal Sensor Fusion Instrument for Measuring Regional Human Mobility: The Distributed Human Data Engine (DHDE)"
+  authors:
+    - family-names: Khanzada
+      given-names: Amil
+    - family-names: Takemoto
+      given-names: Takuji
+  journal: "Measurement"
+  publisher:
+    name: "Elsevier"
+  year: 2026
+  doi: "10.1016/j.measurement.2026.122500"

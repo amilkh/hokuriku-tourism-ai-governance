@@ -7,7 +7,8 @@
 **Amil Khanzada** — *Specially Appointed Professor, Headquarters for Regional Revitalization, University of Fukui*
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21271429.svg)](https://doi.org/10.5281/zenodo.21271429)
 [![Tests](https://img.shields.io/badge/tests-pytest-green.svg)](tests/)
 [![Data Validated](https://img.shields.io/badge/rows%20audited-1.4M-brightgreen.svg)](src/validator.py)
 
@@ -91,7 +92,7 @@ The DHDE integrates four sensor modalities into a single analytical pipeline:
 | **Lost Visitors** | 85,522 (single-node) | Annual Opportunity Gap |
 | **Winter Weather Sensitivity** | 6.26× summer | Seasonal asymmetry |
 | **Under-vibrancy Ratio** | 11.5× | Low-satisfaction review prevalence |
-| **National Ranking (Winter)** | 47th / 47 (lowest) | Fukui's structural deficit |
+| **National Ranking** | 47th / 47 (least-visited prefecture) | Fukui's structural deficit |
 
 ---
 
@@ -336,7 +337,19 @@ Results are included in `output/analysis_metrics.txt`.
 
 ## License
 
-Copyright © 2026 Amil Khanzada. All rights reserved.
+This project is released under the [MIT License](LICENSE). Copyright © 2026 Amil Khanzada.
 
-No license is granted at this time. Reuse, redistribution, or publication requires explicit written permission from the author.
+The tagged release [v1.0.0](https://github.com/amilkh/hokuriku-tourism-ai-governance/releases/tag/v1.0.0) is the reproducibility archive for the *Measurement* article (DOI: [10.1016/j.measurement.2026.122500](https://doi.org/10.1016/j.measurement.2026.122500)), permanently archived at Zenodo (DOI: [10.5281/zenodo.21271429](https://doi.org/10.5281/zenodo.21271429)).
+
+> Note: this public history has been curated for publication (internal manuscripts, meeting documents, and generated artifacts removed; data-source naming aligned with the published article).
+
+## Contributors
+
+Developed by Amil Khanzada with valued open-source contributions:
+
+- **Ibrahim Mustafa** — chronological benchmark and Random Forest ablation framework (`src/benchmark.py`)
+- **Mohammed Abdullah** — privacy sanitization layer and opt-in zero-shot Kansei diagnostics (`src/privacy_nlp.py`)
+- **Dina Belay** — reproducibility documentation and cross-platform runtime fixes
+- **Dawood Imtiaz** — interactive analytics dashboard (`dashboard/`)
+- **Mitali (Hacxmr)** — Windows encoding compatibility fix
 

@@ -1,0 +1,35 @@
+{
+  "title": "Distributed Human Data Engine (DHDE): analysis pipeline for 'A Multi-Modal Sensor Fusion Instrument for Measuring Regional Human Mobility'",
+  "upload_type": "software",
+  "description": "Source code and reproducibility pipeline for the Measurement (Elsevier) article (DOI: 10.1016/j.measurement.2026.122500). Reproduces the reported results (in-sample R2 = 0.810, chronological hold-out R2 = 0.683, MAE = 1,793 visits/day). Data provenance and the exact pinned data commit required to reproduce the published numbers are documented in DATA_PROVENANCE.md. Released under the MIT License.",
+  "creators": [
+    {
+      "name": "Khanzada, Amil",
+      "orcid": "0000-0002-7065-5390",
+      "affiliation": "University of Fukui"
+    },
+    {
+      "name": "Takemoto, Takuji",
+      "orcid": "0000-0002-1150-2714",
+      "affiliation": "University of Fukui"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1016/j.measurement.2026.122500",
+      "relation": "isSupplementTo",
+      "scheme": "doi"
+    }
+  ],
+  "keywords": [
+    "sensor fusion",
+    "human mobility",
+    "tourism demand forecasting",
+    "route search impressions",
+    "Kansei",
+    "Fukui",
+    "open data",
+    "reproducibility"
+  ],
+  "license": "mit"
+}
